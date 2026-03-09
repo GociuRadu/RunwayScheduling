@@ -1,89 +1,48 @@
 # =========================
-# DOCKER (most used)
+# RUN PROJECT
 # =========================
 
-# list running containers
-docker ps
+# start only the database in Docker
+docker compose up -d db
 
-# list all containers (including stopped)
-docker ps -a
-
-# start / stop / restart a container
-docker start runway_db
-docker stop runway_db
-docker restart runway_db
-
-# logs (follow)
-docker logs -f runway_db
-
-# enter container shell
-docker exec -it runway_db bash
-
-# run psql inside container
-docker exec -it runway_db psql -U postgres
-docker exec -it runway_db psql -U postgres -d RunwayScheduling
-
-# quick list tables
-docker exec -it runway_db psql -U postgres -d RunwayScheduling -c "\dt"
-
-# remove container + volumes (FULL RESET DB)
-docker compose down -v
-docker compose up -d
-
-# rebuild/start everything from compose
-docker compose up -d --build
-
-# =========================
-# EF CORE (most used)
-# =========================
-
-# check EF tools version
-dotnet ef --version
-
-# add migration
-dotnet ef migrations add InitialCreate --context Api.DataBase.AppDbContext --output-dir DataBase\Migrations
-
-# remove last migration (only if not applied)
-dotnet ef migrations remove --context Api.DataBase.AppDbContext
-
-# apply migrations
-dotnet ef database update --context Api.DataBase.AppDbContext --connection "Host=localhost;Port=5433;Database=RunwayScheduling;Username=postgres;Password=postgre1234"
-
-# drop database (WARNING)
-dotnet ef database drop --force --context Api.DataBase.AppDbContext --connection "Host=localhost;Port=5433;Database=RunwayScheduling;Username=postgres;Password=postgre1234"
-
-# list migrations
-dotnet ef migrations list --context Api.DataBase.AppDbContext
-
-# dbcontext info (sees connection)
-dotnet ef dbcontext info --context Api.DataBase.AppDbContext
-
-# =========================
-# DOTNET (build/run)
-# =========================
-
-dotnet build
+# start backend locally
 dotnet run --project Api
 
-# hot reload
-dotnet watch --project Api run
+# start frontend locally
+npm run dev
 
 # =========================
-# REFACTOR / CODE CLEANUP (commands)
+# FULL DOCKER RUN
 # =========================
 
-# format whole solution (C#)
+# start all containers
+docker compose up -d
+
+# rebuild and start all containers after code/config changes
+docker compose up --build -d
+
+# stop all containers
+docker compose down
+
+# =========================
+# DATABASE / EF CORE
+# =========================
+
+# create a new migration
+dotnet ef migrations add MigrationName --context Api.DataBase.AppDbContext --output-dir DataBase/Migrations
+
+# apply migrations to the database
+dotnet ef database update --context Api.DataBase.AppDbContext --connection "Host=localhost;Port=5433;Database=RunwayScheduling;Username=postgres;Password=postgre1234"
+
+# =========================
+# CODE QUALITY
+# =========================
+
+# format C# code
 dotnet format
 
-# format specific project
-dotnet format .\Api\Api.csproj
+# build project and check for compile errors
+dotnet build
 
-# run analyzers (if enabled) + treat warnings as errors (optional)
-dotnet build -warnaserror
-
-# run tests (if you have)
+# run tests
 dotnet test
-
-#frontend
-
-npm run dev
