@@ -1,0 +1,13 @@
+/* Animate only the text when hovering the login button */
+.loginBtn:hover .loginBtnText {
+  display: inline-block; /* required so transform works on inline text */
+  animation: rollOnce 0.7s ease-in-out 1;
+}
+
+/* Roll + fade out then come back in place */
+@keyframes rollOnce {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  40%  { transform: translateY(-10px) rotate(180deg); opacity: 0; }
+  60%  { transform: translateY(10px) rotate(180deg); opacity: 0; }
+  100% { transform: translateY(0) rotate(360deg); opacity: 1; }
+}

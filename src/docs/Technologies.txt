@@ -1,0 +1,17 @@
+Technologies & Architecture
+
+This project is built using .NET 10 with a Modular Monolith architecture, structured around clear domain boundaries (Airports, Aircrafts, Scenarios).
+
+It follows a CQRS pattern using MediatR for request/handler separation and clean application flow.
+
+Data persistence is handled via Entity Framework Core with PostgreSQL (running in Docker).
+
+The API layer is implemented using Minimal APIs, and OpenAPI documentation is generated through Swagger.
+
+The project applies:
+
+Dependency Injection (built-in .NET DI container)
+
+Clean separation between Domain, Application, and Infrastructure layers
+
+Scoped services and repository/store pattern for data access
