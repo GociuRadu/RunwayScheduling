@@ -29,7 +29,6 @@ public sealed class CreateWeatherIntervalsHandler
         if (cfg is null)
             throw new Exception("Scenario config not found");
 
-        // verific prin query-ul deja existent daca sunt deja generate
         var existingDtos = await _mediator.Send(
             new WeatherIntervalsQuery(request.ScenarioConfigId),
             ct);

@@ -73,4 +73,11 @@ if (app.Environment.IsDevelopment())
 // Maps all Minimal API endpoints (MapPost/MapGet) in one place
 Api.Endpoints.MapAll(app);
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
 app.Run();

@@ -11,6 +11,37 @@ services:
       - "5433:5432"
     volumes:
       - runway_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d RunwayScheduling"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Api/Dockerfile
+    container_name: runway_api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=db;Port=5432;Database=RunwayScheduling;Username=postgres;Password=postgre1234
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5186:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: runway_frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
 
 volumes:
   runway_db_data:

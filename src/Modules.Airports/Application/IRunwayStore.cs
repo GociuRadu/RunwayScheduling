@@ -7,5 +7,4 @@ public interface IRunwayStore
     IEnumerable<Runway> GetByAirportId(Guid airportId);
     Task<bool> Delete(Guid runwayId, CancellationToken ct);
     Task<bool> Update(Guid runwayId, string name, bool isActive, RunwayType runwayType, CancellationToken ct);
-
 }
