@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { apiFetch } from "../lib/api";
 
 type ScenarioConfigDto = {
   id: string;
@@ -206,7 +207,7 @@ export default function ScenarioConfigPage() {
         throw new Error("Select a scenario first");
       }
 
-      const res = await fetch(`/api/scenarios/configs/${scenarioId}`);
+      const res = await apiFetch(`/api/scenarios/configs/${scenarioId}`);
       if (!res.ok) {
         throw new Error(`Failed to load scenario data: ${res.status}`);
       }
@@ -255,7 +256,7 @@ export default function ScenarioConfigPage() {
         throw new Error("No airport selected");
       }
 
-      const res = await fetch("/api/scenarios/configs");
+      const res = await apiFetch("/api/scenarios/configs");
       if (!res.ok) {
         throw new Error(`Failed to load scenarios: ${res.status}`);
       }
@@ -288,7 +289,7 @@ export default function ScenarioConfigPage() {
         throw new Error("No airport selected");
       }
 
-      const res = await fetch("/api/scenarios/configs", {
+      const res = await apiFetch("/api/scenarios/configs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -352,7 +353,7 @@ export default function ScenarioConfigPage() {
     try {
       setError(null);
 
-      const res = await fetch(`/api/scenarios/configs/${scenarioId}`, {
+      const res = await apiFetch(`/api/scenarios/configs/${scenarioId}`, {
         method: "DELETE",
       });
 
@@ -378,7 +379,7 @@ async function generateWeatherIntervals() {
       throw new Error("Select a scenario first");
     }
 
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/weatherintervals/generate/${selectedScenarioId}`,
       {
         method: "POST",
@@ -404,7 +405,7 @@ async function generateWeatherIntervals() {
       throw new Error("Select a scenario first");
     }
 
-    const res = await fetch(`/api/flights/generate/${selectedScenarioId}`, {
+    const res = await apiFetch(`/api/flights/generate/${selectedScenarioId}`, {
       method: "POST",
     });
 

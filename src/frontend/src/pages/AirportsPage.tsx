@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { apiFetch } from "../lib/api";
 
 type AirportDto = {
   id: string;
@@ -101,7 +102,7 @@ export default function AirportsPage() {
       setError(null);
       setLoadingAirports(true);
 
-      const res = await fetch("/api/airports");
+      const res = await apiFetch("/api/airports");
       if (!res.ok) throw new Error(`Failed to load airports: ${res.status}`);
 
       const data = (await res.json()) as AirportDto[];
@@ -128,7 +129,7 @@ export default function AirportsPage() {
       setLoadingRunways(true);
       setEditingRunwayId(null);
 
-      const res = await fetch(`/api/airports/${airportId}/runways`);
+      const res = await apiFetch(`/api/airports/${airportId}/runways`);
       if (!res.ok) throw new Error(`Failed to load runways: ${res.status}`);
 
       const data = (await res.json()) as RunwayDto[];
@@ -156,7 +157,7 @@ export default function AirportsPage() {
       setError(null);
       setCreatingAirport(true);
 
-      const res = await fetch("/api/airport", {
+      const res = await apiFetch("/api/airport", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -196,7 +197,7 @@ export default function AirportsPage() {
       setError(null);
       setCreatingRunway(true);
 
-      const res = await fetch(`/api/airports/${selectedAirportId}/runways`, {
+      const res = await apiFetch(`/api/airports/${selectedAirportId}/runways`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -226,7 +227,7 @@ export default function AirportsPage() {
     try {
       setError(null);
 
-      const res = await fetch(`/api/airports/${airportId}`, {
+      const res = await apiFetch(`/api/airports/${airportId}`, {
         method: "DELETE",
       });
 
@@ -248,7 +249,7 @@ export default function AirportsPage() {
     try {
       setError(null);
 
-      const res = await fetch(`/api/runways/${runwayId}`, {
+      const res = await apiFetch(`/api/runways/${runwayId}`, {
         method: "DELETE",
       });
 
@@ -279,7 +280,7 @@ export default function AirportsPage() {
     try {
       setError(null);
 
-      const res = await fetch(`/api/runways/${runwayId}`, {
+      const res = await apiFetch(`/api/runways/${runwayId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

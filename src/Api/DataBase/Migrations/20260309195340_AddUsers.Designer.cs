@@ -3,6 +3,7 @@ using System;
 using Api.DataBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.DataBase.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309195340_AddUsers")]
+    partial class AddUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -134,32 +137,6 @@ namespace Api.DataBase.Migrations
                         .IsUnique();
 
                     b.ToTable("users", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAtUtc = new DateTime(2026, 3, 9, 2, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "admin1@gmail.com",
-                            PasswordHash = "Admin1234",
-                            Username = "admin1"
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedAtUtc = new DateTime(2026, 3, 9, 3, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "admin2@gmail.com",
-                            PasswordHash = "Admin1234",
-                            Username = "admin2"
-                        },
-                        new
-                        {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            CreatedAtUtc = new DateTime(2026, 3, 9, 4, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "admin3@gmail.com",
-                            PasswordHash = "Admin1234",
-                            Username = "admin3"
-                        });
                 });
 
             modelBuilder.Entity("Modules.Scenarios.Domain.Flight", b =>

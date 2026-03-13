@@ -46,3 +46,12 @@ dotnet build
 
 # run tests
 dotnet test
+
+
+netstat -ano | findstr :5186
+taskkill /PID 12345 /F
+
+
+setx JWT__KEY "..."
+setx JWT__ISSUER "..."
+setx JWT__AUDIENCE "..."

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Modules.Airports.Domain;
 using Modules.Scenarios.Domain;
 using Modules.Aircrafts.Domain;
+using Modules.Login.Domain;
 
 namespace Api.DataBase;
 
@@ -15,6 +16,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<WeatherInterval> WeatherIntervals => Set<WeatherInterval>();
     public DbSet<Flight> Flights => Set<Flight>();
     public DbSet<Aircraft> Aircrafts => Set<Aircraft>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -159,5 +161,56 @@ public sealed class AppDbContext : DbContext
 
             e.HasIndex(x => x.ScenarioConfigId);
         });
+
+        modelBuilder.Entity<User>(e =>
+        {
+            e.ToTable("users");
+            e.HasKey(x => x.Id);
+
+            e.Property(x => x.Email)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            e.Property(x => x.Username)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            e.Property(x => x.PasswordHash)
+                .HasMaxLength(300)
+                .IsRequired();
+
+            e.Property(x => x.CreatedAtUtc).IsRequired();
+
+            e.HasIndex(x => x.Email).IsUnique();
+
+            modelBuilder.Entity<User>().HasData(
+    new User
+    {
+        Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+        Email = "admin1@gmail.com",
+        Username = "admin1",
+        PasswordHash = "Admin1234",
+        CreatedAtUtc = new DateTime(2026, 3, 9, 2, 0, 0, DateTimeKind.Utc)
+    },
+    new User
+    {
+        Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+        Email = "admin2@gmail.com",
+        Username = "admin2",
+        PasswordHash = "Admin1234",
+        CreatedAtUtc = new DateTime(2026, 3, 9, 3, 0, 0, DateTimeKind.Utc)
+    },
+    new User
+    {
+        Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+        Email = "admin3@gmail.com",
+        Username = "admin3",
+        PasswordHash = "Admin1234",
+        CreatedAtUtc = new DateTime(2026, 3, 9, 4, 0, 0, DateTimeKind.Utc)
+    }
+);
+        });
+
+
     }
 }

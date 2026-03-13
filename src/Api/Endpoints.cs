@@ -16,6 +16,7 @@ using Modules.Scenarios.Application.UseCases.GetWeatherIntervals;
 using Modules.Scenarios.Application.UseCases.GetFlights;
 using Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig;
 using Modules.Airports.Application.UseCases.DeleteAirport;
+using Modules.Login.Application.UseCases.Login;
 
 namespace Api;
 
@@ -23,23 +24,26 @@ public static class Endpoints
 {
     public static void MapAll(WebApplication app)
     {
-        app.MapPost("/aircrafts/generate/{ScenarioId:guid}",
-    async (Guid scenarioId, GenerateRandomAircraftCommand cmd, IMediator mediator, CancellationToken ct) =>
-    {
-        var res = await mediator.Send(cmd, ct);
-        return Results.Ok(res);
-    })
-    .WithName("GenerateRandomAircraftsByAirport");
+        var secured = app.MapGroup("");
+        secured.RequireAuthorization();
 
-        app.MapGet("/aircrafts/{ScenarioId:guid}",
-        async (Guid scenarioId, IMediator mediator) =>
-        {
-            var res = await mediator.Send(new GetAircraftsQuery(scenarioId));
-            return Results.Ok(res);
-        })
-        .WithName("GetAircraftsByScenarioId");
+        secured.MapPost("/aircrafts/generate/{ScenarioId:guid}",
+            async (Guid scenarioId, GenerateRandomAircraftCommand cmd, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(cmd, ct);
+                return Results.Ok(res);
+            })
+            .WithName("GenerateRandomAircraftsByAirport");
 
-        app.MapPost("/airport",
+        secured.MapGet("/aircrafts/{ScenarioId:guid}",
+            async (Guid scenarioId, IMediator mediator) =>
+            {
+                var res = await mediator.Send(new GetAircraftsQuery(scenarioId));
+                return Results.Ok(res);
+            })
+            .WithName("GetAircraftsByScenarioId");
+
+        secured.MapPost("/airport",
             async (CreateAirportCommand cmd, IMediator mediator) =>
             {
                 var res = await mediator.Send(cmd);
@@ -47,69 +51,69 @@ public static class Endpoints
             })
             .WithName("CreateAirport");
 
-        app.MapGet("/airports",
-        async (IMediator mediator) =>
-        {
-            var res = await mediator.Send(new GetAirportsQuery());
-            return Results.Ok(res);
-        }).WithName("GetAirports");
+        secured.MapGet("/airports",
+            async (IMediator mediator) =>
+            {
+                var res = await mediator.Send(new GetAirportsQuery());
+                return Results.Ok(res);
+            })
+            .WithName("GetAirports");
 
-        app.MapPost("/airports/{airportId:guid}/runways",
-      async (Guid airportId, CreateRunwayCommand cmd, IMediator mediator) =>
-      {
-          var res = await mediator.Send(cmd with { AirportId = airportId });
-          return Results.Ok(res);
-      })
-      .WithName("CreateRunway");
+        secured.MapPost("/airports/{airportId:guid}/runways",
+            async (Guid airportId, CreateRunwayCommand cmd, IMediator mediator) =>
+            {
+                var res = await mediator.Send(cmd with { AirportId = airportId });
+                return Results.Ok(res);
+            })
+            .WithName("CreateRunway");
 
-        app.MapDelete("/runways/{runwayId:guid}",
-    async (Guid runwayId, IMediator mediator) =>
-    {
-        var res = await mediator.Send(new DeleteRunwayCommand(runwayId));
+        secured.MapDelete("/runways/{runwayId:guid}",
+            async (Guid runwayId, IMediator mediator) =>
+            {
+                var res = await mediator.Send(new DeleteRunwayCommand(runwayId));
 
-        if (res)
-            return Results.NoContent();
+                if (res)
+                    return Results.NoContent();
 
-        return Results.NotFound();
-    })
-    .WithName("DeleteRunway");
+                return Results.NotFound();
+            })
+            .WithName("DeleteRunway");
 
+        secured.MapPut("/runways/{runwayId:guid}",
+            async (Guid runwayId, UpdateRunwayCommand cmd, IMediator mediator) =>
+            {
+                var ok = await mediator.Send(cmd with { RunwayId = runwayId });
 
-        app.MapPut("/runways/{runwayId:guid}",
-        async (Guid runwayId, UpdateRunwayCommand cmd, IMediator mediator) =>
-        {
-            var ok = await mediator.Send(cmd with { RunwayId = runwayId });
+                if (ok) return Results.NoContent();
+                return Results.NotFound();
+            })
+            .WithName("UpdateRunway");
 
-            if (ok) return Results.NoContent();
-            return Results.NotFound();
-        })
-        .WithName("UpdateRunway");
+        secured.MapGet("/airports/{airportId:guid}/runways",
+            async (Guid airportId, IMediator mediator) =>
+            {
+                var res = await mediator.Send(new GetRunwaysByAirportIdQuery(airportId));
+                return Results.Ok(res);
+            })
+            .WithName("GetRunwaysByAirportId");
 
-        app.MapGet("/airports/{airportId:guid}/runways",
-        async (Guid airportId, IMediator mediator) =>
-        {
-            var res = await mediator.Send(new GetRunwaysByAirportIdQuery(airportId));
-            return Results.Ok(res);
-        })
-        .WithName("GetRunwaysByAirportId");
+        secured.MapPost("/scenarios/configs",
+            async (CreateScenarioConfigCommand cmd, IMediator mediator) =>
+            {
+                var res = await mediator.Send(cmd);
+                return Results.Ok(res);
+            })
+            .WithName("CreateScenarioConfig");
 
-        app.MapPost("/scenarios/configs",
-        async (CreateScenarioConfigCommand cmd, IMediator mediator) =>
-        {
-            var res = await mediator.Send(cmd);
-            return Results.Ok(res);
-        })
-        .WithName("CreateScenarioConfig");
-
-        app.MapGet("/scenarios/configs", async (IMediator mediator) =>
-        {
-            var res = await mediator.Send(new ScenarioConfigQuery());
-            return Results.Ok(res);
-        })
+        secured.MapGet("/scenarios/configs",
+            async (IMediator mediator) =>
+            {
+                var res = await mediator.Send(new ScenarioConfigQuery());
+                return Results.Ok(res);
+            })
             .WithName("GetScenarioConfigs");
 
-
-        app.MapPost("/flights/generate/{ScenarioConfigId:guid}",
+        secured.MapPost("/flights/generate/{ScenarioConfigId:guid}",
             async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
             {
                 var res = await mediator.Send(new CreateFlightsCommand(scenarioConfigId), ct);
@@ -117,17 +121,18 @@ public static class Endpoints
             })
             .WithName("CreateFlightsByScenarioConfig");
 
-        app.MapDelete("/scenarios/configs/{ScenarioConfigId:guid}",
-          async (Guid scenarioConfigId, IMediator mediator) =>
-         {
-             var res = await mediator.Send(new DeleteScenarioCommand(scenarioConfigId));
-             if (res)
-                 return Results.NoContent();
-             return Results.NotFound();
-         })
-         .WithName("DeleteScenarioConfig");
+        secured.MapDelete("/scenarios/configs/{ScenarioConfigId:guid}",
+            async (Guid scenarioConfigId, IMediator mediator) =>
+            {
+                var res = await mediator.Send(new DeleteScenarioCommand(scenarioConfigId));
+                if (res)
+                    return Results.NoContent();
 
-        app.MapPost("/weatherintervals/generate/{ScenarioConfigId:guid}",
+                return Results.NotFound();
+            })
+            .WithName("DeleteScenarioConfig");
+
+        secured.MapPost("/weatherintervals/generate/{ScenarioConfigId:guid}",
             async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
             {
                 var res = await mediator.Send(new CreateWeatherIntervalsCommand(scenarioConfigId), ct);
@@ -135,38 +140,55 @@ public static class Endpoints
             })
             .WithName("CreateWeatherIntervalsByScenarioConfig");
 
-        app.MapGet("/weatherintervals/{ScenarioConfigId:guid}",
-        async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
-        {
-            var res = await mediator.Send(new WeatherIntervalsQuery(scenarioConfigId), ct);
-            return Results.Ok(res);
-        })
-        .WithName("GetWeatherIntervalsByScenarioConfig");
+        secured.MapGet("/weatherintervals/{ScenarioConfigId:guid}",
+            async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new WeatherIntervalsQuery(scenarioConfigId), ct);
+                return Results.Ok(res);
+            })
+            .WithName("GetWeatherIntervalsByScenarioConfig");
 
-        app.MapGet("/flights/{scenarioConfigId:guid}",
-       async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
-        {
-            var res = await mediator.Send(new FlightQuery(scenarioConfigId), ct);
-            return Results.Ok(res);
-        })
+        secured.MapGet("/flights/{scenarioConfigId:guid}",
+            async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new FlightQuery(scenarioConfigId), ct);
+                return Results.Ok(res);
+            })
             .WithName("GetFlightsByScenarioConfig");
 
+        secured.MapGet("/scenarios/configs/{scenarioConfigId:guid}",
+            async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new GetAllDataScenarioConfigQuery(scenarioConfigId), ct);
+                return Results.Ok(res);
+            })
+            .WithName("GetAllDataScenarioConfig");
 
-        app.MapGet("/scenarios/configs/{scenarioConfigId:guid}",
-        async (Guid scenarioConfigId, IMediator mediator,CancellationToken ct) =>
-        {
-            var res = await mediator.Send(new GetAllDataScenarioConfigQuery(scenarioConfigId),ct);
-            return Results.Ok(res);
-        })
-        .WithName("GetAllDataScenarioConfig");
+        secured.MapDelete("/airports/{airportId:guid}",
+            async (Guid airportId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new DeleteAirportCommand(airportId), ct);
+                if (res)
+                    return Results.NoContent();
 
-        app.MapDelete("/airports/{airportId:guid}",
-        async (Guid airportId, IMediator mediator, CancellationToken ct) =>
-        {            var res = await mediator.Send(new DeleteAirportCommand(airportId), ct);
-            if (res)
-                return Results.NoContent();
-            return Results.NotFound();
-         })
-        .WithName("DeleteAirport");
+                return Results.NotFound();
+            })
+            .WithName("DeleteAirport");
+
+        app.MapPost("/login",
+     async (LoginCommand cmd, IMediator mediator, CancellationToken ct) =>
+     {
+         try
+         {
+             var res = await mediator.Send(cmd, ct);
+             return Results.Ok(res);
+         }
+         catch (UnauthorizedAccessException)
+         {
+             return Results.Unauthorized();
+         }
+     })
+     .AllowAnonymous()
+     .WithName("Login");
     }
 }

@@ -1,16 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), basicSsl()],
   server: {
- proxy: {
-  "/api": {
-    target: "http://localhost:5186",
-    changeOrigin: true,
-    secure: false,
-    rewrite: (path) => path.replace(/^\/api/, ""),
-  },
-},
+    proxy: {
+      "/api": {
+        target: "https://localhost:7286",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
   },
 });
