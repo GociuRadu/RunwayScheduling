@@ -17,6 +17,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Flight> Flights => Set<Flight>();
     public DbSet<Aircraft> Aircrafts => Set<Aircraft>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<RandomEvent> RandomEvents => Set<RandomEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -161,6 +162,40 @@ public sealed class AppDbContext : DbContext
 
             e.HasIndex(x => x.ScenarioConfigId);
         });
+
+        modelBuilder.Entity<RandomEvent>(e =>
+{
+    e.ToTable("random_events");
+
+    e.HasKey(x => x.Id);
+
+    e.Property(x => x.Id)
+        .IsRequired();
+
+    e.Property(x => x.ScenarioConfigId)
+        .IsRequired();
+
+    e.Property(x => x.Name)
+        .IsRequired()
+        .HasMaxLength(200);
+
+    e.Property(x => x.Description)
+        .HasMaxLength(1500);
+
+    e.Property(x => x.StartTime)
+        .IsRequired();
+
+    e.Property(x => x.EndTime)
+        .IsRequired();
+
+    e.Property(x => x.ImpactPercent)
+        .IsRequired();
+
+    e.HasOne<ScenarioConfig>()
+        .WithMany()
+        .HasForeignKey(x => x.ScenarioConfigId)
+        .OnDelete(DeleteBehavior.Cascade);
+});
 
         modelBuilder.Entity<User>(e =>
         {

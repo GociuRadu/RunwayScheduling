@@ -11,6 +11,7 @@
     <ProjectReference Include="..\Modules.Airports\Modules.Airports.csproj" />
     <ProjectReference Include="..\Modules.Scenarios\Modules.Scenarios.csproj" />
     <ProjectReference Include="..\Modules.Login\Modules.Login.csproj" />
+     <ProjectReference Include="..\Modules.Solver\Modules.Solver.csproj" />
   </ItemGroup>
 
   <ItemGroup>

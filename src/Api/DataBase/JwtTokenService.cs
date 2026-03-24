@@ -44,10 +44,11 @@ public sealed class JwtTokenService : ITokenService
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(7),
+            expires: DateTime.UtcNow.AddDays(3),
             signingCredentials: credentials
         );
-
+        //header.payload.signature
+            
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

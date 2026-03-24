@@ -55,3 +55,9 @@ taskkill /PID 12345 /F
 setx JWT__KEY "..."
 setx JWT__ISSUER "..."
 setx JWT__AUDIENCE "..."
+
+# create a new migration
+dotnet ef migrations add MigrationName --context Api.DataBase.AppDbContext --output-dir DataBase/Migrations
+
+# create a new migration without specifying context/output-dir
+dotnet ef migrations add MigrationName

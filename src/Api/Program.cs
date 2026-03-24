@@ -28,9 +28,15 @@ using Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig;
 using Modules.Scenarios.Application.UseCases.GetFlights;
 using Modules.Scenarios.Application.UseCases.GetScenarioConfigs;
 using Modules.Scenarios.Application.UseCases.GetWeatherIntervals;
-
+using Modules.Scenarios.Application.UseCases.CreateRandomEvent;
+using Modules.Scenarios.Application.UseCases.DeleteRandomEvent;
 using Modules.Login.Application;
 using Modules.Login.Application.UseCases.Login;
+using Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId;
+using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
+using Modules.Solver.Application.GreedySolver;
+using  Modules.Solver.Application;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +53,7 @@ var jwtKey = builder.Configuration["JWT:KEY"]!;
 var jwtIssuer = builder.Configuration["JWT:ISSUER"]!;
 var jwtAudience = builder.Configuration["JWT:AUDIENCE"]!;
 
-//simetric key for semnare și validare
+//how the user is identified
 builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
@@ -70,6 +76,7 @@ builder.Services
     };
 });
 
+//what the identified user is allowed to access
 builder.Services.AddAuthorization();
 
 
@@ -114,8 +121,9 @@ builder.Services.AddScoped<IFlightStore, EfFlightStore>();
 builder.Services.AddScoped<IWeatherIntervalStore, EFWeatherIntervalStore>();
 builder.Services.AddScoped<IUserStore, EfUserStore>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
-
-
+builder.Services.AddScoped<IRandomEventStore, EFRandomEvent>();
+builder.Services.AddScoped<IScenarioSnapshotLoader, ScenarioSnapshotLoader>();
+builder.Services.AddScoped<GreedyScenarioSolver>();
 
 // MediatR
 builder.Services.AddMediatR(cfg =>
@@ -137,11 +145,15 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(GetAllDataScenarioConfigHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(DeleteAirportHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(LoginHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(CreateRandomEventHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(DeleteRandomEventHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(GetRandomEventsByScenarioConfigIdHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(GreedySolverHandler).Assembly);
+
 });
 
 
-
-// CORS pentru frontend
+// CORS frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("frontend",

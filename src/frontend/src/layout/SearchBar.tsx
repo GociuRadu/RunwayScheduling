@@ -26,7 +26,7 @@ export default function SearchBar({ onRequireLogin }: Props) {
         justifyContent: "center",
       }}
     >
-      <div style={{ width: "70%", position: "relative" }}>
+      <div style={{ width: "55%", position: "relative" }}>
         <button
           onClick={() => {
             if (!isAuthenticated) {

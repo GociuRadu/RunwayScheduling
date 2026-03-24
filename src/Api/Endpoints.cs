@@ -17,7 +17,11 @@ using Modules.Scenarios.Application.UseCases.GetFlights;
 using Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig;
 using Modules.Airports.Application.UseCases.DeleteAirport;
 using Modules.Login.Application.UseCases.Login;
-
+using Modules.Scenarios.Application.UseCases.CreateRandomEvent;
+using Modules.Scenarios.Application.UseCases.DeleteRandomEvent;
+using Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId;
+using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
+using Modules.Solver.Application.GreedySolver;
 namespace Api;
 
 public static class Endpoints
@@ -190,5 +194,68 @@ public static class Endpoints
      })
      .AllowAnonymous()
      .WithName("Login");
+
+        secured.MapPost("/scenarios/{scenarioConfigId:guid}/random-events",
+       async (Guid scenarioConfigId, CreateRandomEventCommand cmd, IMediator mediator, CancellationToken ct) =>
+       {
+           var res = await mediator.Send(cmd with { ScenarioConfigId = scenarioConfigId }, ct);
+           return Results.Ok(res);
+       })
+       .WithName("CreateRandomEvent");
+
+
+        secured.MapDelete("/random-events/{randomEventId:guid}",
+         async (Guid randomEventId, IMediator mediator, CancellationToken ct) =>
+         {
+             var res = await mediator.Send(new DeleteRandomEventCommand(randomEventId), ct);
+
+             if (res)
+                 return Results.NoContent();
+
+             return Results.NotFound();
+         })
+         .WithName("DeleteRandomEvent");
+
+        secured.MapGet("/random-events/{ScenarioConfigId:guid}",
+        async (Guid ScenarioConfigId, IMediator mediator, CancellationToken ct) =>
+        {
+            var res = await mediator.Send(new GetRandomEventsByScenarioConfigIdQuery(ScenarioConfigId), ct);
+
+            return Results.Ok(res);
+        })
+        .WithName("GetRandomEventByScenarioId");
+
+        secured.MapPut("/random-events/{randomEventId:guid}",
+    async (Guid randomEventId, UpdateRandomEventCommand request, IMediator mediator, CancellationToken ct) =>
+    {
+        var res = await mediator.Send(
+            new UpdateRandomEventCommand(
+                randomEventId,
+                request.ScenarioConfigId,
+                request.Name,
+                request.Description,
+                request.StartTime,
+                request.EndTime,
+                request.ImpactPercent
+            ),
+            ct
+        );
+
+        if (res is null)
+            return Results.NotFound();
+
+        return Results.Ok(res);
+    })
+    .WithName("UpdateRandomEvent");
+
+        secured.MapGet("/greedy/{scenarioConfigId:guid}",
+         async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+         {
+             var res = await mediator.Send(new GreedySolverQuery(scenarioConfigId), ct);
+
+             return Results.Ok(res);
+         })
+         .WithName("SolveScenarioGreedy");
+
     }
 }
