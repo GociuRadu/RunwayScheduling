@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
-import { ToastContext, ToastItem, ToastType } from "../hooks/useToast";
+import { ToastContext } from "../hooks/useToast";
+import type { ToastItem, ToastType } from "../hooks/useToast";
 import { C } from "../styles/tokens";
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
