@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { C, S } from "../styles/tokens";
+import { Modal } from "../components/Modal";
+import { SkeletonCard } from "../components/Skeleton";
+import { useToast } from "../components/Toast";
 
 type AirportDto = {
   id: string;
@@ -21,16 +25,22 @@ type RunwayDto = {
 const STORAGE_AIRPORT_ID = "selectedAirportId";
 const STORAGE_AIRPORT_NAME = "selectedAirportName";
 
+function runwayTypeLabel(type: number) {
+  switch (type) {
+    case 0: return "Landing";
+    case 1: return "Takeoff";
+    case 2: return "Both";
+    default: return `Type ${type}`;
+  }
+}
+
 export default function AirportsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { showToast } = useToast();
 
   const [airports, setAirports] = useState<AirportDto[]>([]);
   const [runways, setRunways] = useState<RunwayDto[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const [airportsLoaded, setAirportsLoaded] = useState(false);
-  const [runwaysLoaded, setRunwaysLoaded] = useState(false);
   const [loadingAirports, setLoadingAirports] = useState(false);
   const [loadingRunways, setLoadingRunways] = useState(false);
 
@@ -43,7 +53,6 @@ export default function AirportsPage() {
 
   const [showNewAirport, setShowNewAirport] = useState(false);
   const [creatingAirport, setCreatingAirport] = useState(false);
-
   const [newAirportName, setNewAirportName] = useState("");
   const [newAirportStandCapacity, setNewAirportStandCapacity] = useState(20);
   const [newAirportLatitude, setNewAirportLatitude] = useState(0);
@@ -60,38 +69,49 @@ export default function AirportsPage() {
   const [editIsActive, setEditIsActive] = useState(true);
   const [editRunwayType, setEditRunwayType] = useState<number>(2);
 
-  const selectedAirport = useMemo(() => {
-    return airports.find((a) => a.id === selectedAirportId) ?? null;
-  }, [airports, selectedAirportId]);
+  const selectedAirport = useMemo(
+    () => airports.find((a) => a.id === selectedAirportId) ?? null,
+    [airports, selectedAirportId],
+  );
 
+  // Sync selectedAirportId to URL and localStorage
   useEffect(() => {
     if (!selectedAirportId) return;
-
     localStorage.setItem(STORAGE_AIRPORT_ID, selectedAirportId);
-
     const params = new URLSearchParams(searchParams);
     params.set("airportId", selectedAirportId);
     setSearchParams(params, { replace: true });
   }, [selectedAirportId, searchParams, setSearchParams]);
 
+  // Sync selectedAirport name to state and localStorage
   useEffect(() => {
-    const airportNameFromList = selectedAirport?.name;
-    if (!airportNameFromList) return;
-
-    setSelectedAirportName(airportNameFromList);
-    localStorage.setItem(STORAGE_AIRPORT_NAME, airportNameFromList);
+    const name = selectedAirport?.name;
+    if (!name) return;
+    setSelectedAirportName(name);
+    localStorage.setItem(STORAGE_AIRPORT_NAME, name);
   }, [selectedAirport]);
+
+  // Auto-load airports on mount
+  useEffect(() => {
+    fetchAirports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-load runways when airport selected
+  useEffect(() => {
+    if (selectedAirportId) {
+      fetchRunways(selectedAirportId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAirportId]);
 
   function clearSelectedAirport() {
     setSelectedAirportId(null);
     setSelectedAirportName("");
     setRunways([]);
-    setRunwaysLoaded(false);
     setEditingRunwayId(null);
-
     localStorage.removeItem(STORAGE_AIRPORT_ID);
     localStorage.removeItem(STORAGE_AIRPORT_NAME);
-
     const params = new URLSearchParams(searchParams);
     params.delete("airportId");
     setSearchParams(params, { replace: true });
@@ -99,16 +119,11 @@ export default function AirportsPage() {
 
   async function fetchAirports() {
     try {
-      setError(null);
       setLoadingAirports(true);
-
       const res = await apiFetch("/api/airports");
-      if (!res.ok) throw new Error(`Failed to load airports: ${res.status}`);
-
+      if (!res.ok) throw new Error(`Failed to load airports (${res.status})`);
       const data = (await res.json()) as AirportDto[];
       setAirports(data);
-      setAirportsLoaded(true);
-
       if (selectedAirportId) {
         const matched = data.find((a) => a.id === selectedAirportId);
         if (matched) {
@@ -117,7 +132,7 @@ export default function AirportsPage() {
         }
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      showToast(e instanceof Error ? e.message : "Failed to load airports", "error");
     } finally {
       setLoadingAirports(false);
     }
@@ -125,18 +140,14 @@ export default function AirportsPage() {
 
   async function fetchRunways(airportId: string) {
     try {
-      setError(null);
       setLoadingRunways(true);
       setEditingRunwayId(null);
-
       const res = await apiFetch(`/api/airports/${airportId}/runways`);
-      if (!res.ok) throw new Error(`Failed to load runways: ${res.status}`);
-
+      if (!res.ok) throw new Error(`Failed to load runways (${res.status})`);
       const data = (await res.json()) as RunwayDto[];
       setRunways(data);
-      setRunwaysLoaded(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      showToast(e instanceof Error ? e.message : "Failed to load runways", "error");
     } finally {
       setLoadingRunways(false);
     }
@@ -148,18 +159,14 @@ export default function AirportsPage() {
     localStorage.setItem(STORAGE_AIRPORT_ID, airport.id);
     localStorage.setItem(STORAGE_AIRPORT_NAME, airport.name);
     setRunways([]);
-    setRunwaysLoaded(false);
     setEditingRunwayId(null);
   }
 
   async function createAirport() {
     try {
-      setError(null);
       setCreatingAirport(true);
-
       const res = await apiFetch("/api/airport", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newAirportName.trim(),
           standCapacity: newAirportStandCapacity,
@@ -167,24 +174,18 @@ export default function AirportsPage() {
           longitude: newAirportLongitude,
         }),
       });
-
-      if (!res.ok) throw new Error(`Failed to create airport: ${res.status}`);
-
+      if (!res.ok) throw new Error(`Failed to create airport (${res.status})`);
       const created = (await res.json()) as AirportDto;
-
-      if (airportsLoaded) {
-        setAirports((prev) => [created, ...prev]);
-      }
-
+      setAirports((prev) => [created, ...prev]);
       selectAirport(created);
       setShowNewAirport(false);
-
       setNewAirportName("");
       setNewAirportStandCapacity(20);
       setNewAirportLatitude(0);
       setNewAirportLongitude(0);
+      showToast("Airport created", "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      showToast(e instanceof Error ? e.message : "Failed to create airport", "error");
     } finally {
       setCreatingAirport(false);
     }
@@ -192,14 +193,10 @@ export default function AirportsPage() {
 
   async function createRunway() {
     if (!selectedAirportId) return;
-
     try {
-      setError(null);
       setCreatingRunway(true);
-
       const res = await apiFetch(`/api/airports/${selectedAirportId}/runways`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           airportId: selectedAirportId,
           name: newRunwayName.trim(),
@@ -207,17 +204,15 @@ export default function AirportsPage() {
           runwayType: newRunwayType,
         }),
       });
-
-      if (!res.ok) throw new Error(`Failed to create runway: ${res.status}`);
-
+      if (!res.ok) throw new Error(`Failed to create runway (${res.status})`);
       setShowNewRunway(false);
       setNewRunwayName("");
       setNewRunwayIsActive(true);
       setNewRunwayType(2);
-
       await fetchRunways(selectedAirportId);
+      showToast("Runway created", "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      showToast(e instanceof Error ? e.message : "Failed to create runway", "error");
     } finally {
       setCreatingRunway(false);
     }
@@ -225,45 +220,25 @@ export default function AirportsPage() {
 
   async function deleteAirport(airportId: string) {
     try {
-      setError(null);
-
-      const res = await apiFetch(`/api/airports/${airportId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok && res.status !== 204) {
-        throw new Error(`Failed to delete airport: ${res.status}`);
-      }
-
+      const res = await apiFetch(`/api/airports/${airportId}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 204) throw new Error(`Failed to delete airport (${res.status})`);
       setAirports((prev) => prev.filter((a) => a.id !== airportId));
-
-      if (selectedAirportId === airportId) {
-        clearSelectedAirport();
-      }
+      if (selectedAirportId === airportId) clearSelectedAirport();
+      showToast("Airport deleted", "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      showToast(e instanceof Error ? e.message : "Failed to delete airport", "error");
     }
   }
 
   async function deleteRunway(runwayId: string) {
     try {
-      setError(null);
-
-      const res = await apiFetch(`/api/runways/${runwayId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok && res.status !== 204) {
-        throw new Error(`Failed to delete runway: ${res.status}`);
-      }
-
+      const res = await apiFetch(`/api/runways/${runwayId}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 204) throw new Error(`Failed to delete runway (${res.status})`);
       setRunways((prev) => prev.filter((r) => r.id !== runwayId));
-
-      if (editingRunwayId === runwayId) {
-        setEditingRunwayId(null);
-      }
+      if (editingRunwayId === runwayId) setEditingRunwayId(null);
+      showToast("Runway deleted", "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      showToast(e instanceof Error ? e.message : "Failed to delete runway", "error");
     }
   }
 
@@ -276,13 +251,9 @@ export default function AirportsPage() {
 
   async function saveRunway(runwayId: string) {
     if (!selectedAirportId) return;
-
     try {
-      setError(null);
-
       const res = await apiFetch(`/api/runways/${runwayId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           airportId: selectedAirportId,
           name: editName.trim(),
@@ -290,285 +261,112 @@ export default function AirportsPage() {
           runwayType: editRunwayType,
         }),
       });
-
-      if (!res.ok && res.status !== 204) {
-        throw new Error(`Failed to update runway: ${res.status}`);
-      }
-
+      if (!res.ok && res.status !== 204) throw new Error(`Failed to update runway (${res.status})`);
       setRunways((prev) =>
         prev.map((r) =>
-          r.id === runwayId
-            ? {
-                ...r,
-                name: editName.trim(),
-                isActive: editIsActive,
-                runwayType: editRunwayType,
-              }
-            : r,
+          r.id === runwayId ? { ...r, name: editName.trim(), isActive: editIsActive, runwayType: editRunwayType } : r,
         ),
       );
-
       setEditingRunwayId(null);
+      showToast("Runway updated", "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      showToast(e instanceof Error ? e.message : "Failed to update runway", "error");
     }
   }
-
-  function runwayTypeLabel(type: number) {
-    switch (type) {
-      case 0:
-        return "Landing";
-      case 1:
-        return "Takeoff";
-      case 2:
-        return "Both";
-      default:
-        return `Type ${type}`;
-    }
-  }
-
-  const pageStyle: React.CSSProperties = {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "8px 8px 40px",
-  };
-
-  const cardStyle: React.CSSProperties = {
-    border: "1px solid rgba(255,255,255,0.12)",
-    borderRadius: "16px",
-    background: "rgba(255,255,255,0.04)",
-    padding: "18px",
-  };
-
-  const primaryBtn: React.CSSProperties = {
-    background: "#0f766e",
-    color: "white",
-    border: "none",
-    borderRadius: "12px",
-    padding: "10px 14px",
-    cursor: "pointer",
-    fontWeight: 700,
-  };
-
-  const secondaryBtn: React.CSSProperties = {
-    background: "transparent",
-    color: "white",
-    border: "1px solid rgba(255,255,255,0.16)",
-    borderRadius: "12px",
-    padding: "10px 14px",
-    cursor: "pointer",
-    fontWeight: 700,
-  };
-
-  const dangerBtn: React.CSSProperties = {
-    background: "transparent",
-    color: "#ff7a7a",
-    border: "1px solid rgba(255,122,122,0.5)",
-    borderRadius: "12px",
-    padding: "10px 14px",
-    cursor: "pointer",
-    fontWeight: 700,
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: "10px",
-    border: "1px solid rgba(255,255,255,0.16)",
-    background: "rgba(0,0,0,0.28)",
-    color: "white",
-    outline: "none",
-  };
 
   return (
-    <div style={pageStyle}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "16px",
-          marginBottom: "20px",
-          flexWrap: "wrap",
-        }}
-      >
+    <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      {/* Page header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
         <div>
-          <h1 style={{ margin: 0 }}>Airports</h1>
-          <div style={{ opacity: 0.75, marginTop: "6px" }}>
-          </div>
+          <div style={S.label}>AIRPORT MANAGEMENT</div>
+          <h1 style={{ margin: "6px 0 0", fontSize: "22px", fontWeight: 800 }}>Airports</h1>
         </div>
-
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <button onClick={fetchAirports} style={secondaryBtn}>
-            {loadingAirports ? "Loading..." : "Show airports"}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <button onClick={() => setShowNewAirport(true)} style={S.primaryBtn}>
+            + Create airport
           </button>
-
-          <button onClick={() => setShowNewAirport(true)} style={primaryBtn}>
-            Create airport
-          </button>
-
           {selectedAirportId && (
-            <button
-              onClick={() =>
-                navigate(`/scenario-config?airportId=${selectedAirportId}`)
-              }
-              style={secondaryBtn}
-            >
-              Go to Scenario Config
+            <button onClick={() => navigate(`/scenario-config?airportId=${selectedAirportId}`)} style={S.secondaryBtn}>
+              Scenarios →
             </button>
           )}
         </div>
       </div>
 
-      {error && (
-        <div
-          style={{
-            ...cardStyle,
-            borderColor: "rgba(255,80,80,0.45)",
-            color: "#ff9d9d",
-            marginBottom: "18px",
-          }}
-        >
-          {error}
+      {/* Selected airport stat bar */}
+      {(selectedAirport || selectedAirportName) && (
+        <div style={{ ...S.cardAccent, marginBottom: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
+            <div>
+              <div style={S.label}>Selected airport</div>
+              <div style={{ fontSize: "18px", fontWeight: 800, marginTop: "4px" }}>
+                {selectedAirport?.name || selectedAirportName}
+              </div>
+            </div>
+            {selectedAirport && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "8px" }}>
+                {[
+                  { label: "Stands", value: selectedAirport.standCapacity },
+                  { label: "Runways", value: runways.length || "—" },
+                  { label: "Lat/Lng", value: `${selectedAirport.latitude}, ${selectedAirport.longitude}` },
+                ].map((stat) => (
+                  <div key={stat.label} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "6px", padding: "8px 12px", textAlign: "center" }}>
+                    <div style={S.label}>{stat.label}</div>
+                    <div style={{ color: C.primary, fontSize: "16px", fontWeight: 800, marginTop: "2px" }}>{stat.value}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <button onClick={() => setShowNewRunway(true)} style={S.secondaryBtn} disabled={!selectedAirportId}>
+                + Runway
+              </button>
+              <button onClick={clearSelectedAirport} style={S.dangerBtn}>
+                Clear
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      <div
-        style={{
-          ...cardStyle,
-          marginBottom: "20px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "18px",
-          flexWrap: "wrap",
-        }}
-      >
+      {/* Two-column grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "20px", alignItems: "start" }}>
+        {/* Airports column */}
         <div>
-          <div style={{ fontSize: "13px", opacity: 0.7 }}>Selected airport</div>
-          <div style={{ fontSize: "22px", fontWeight: 800, marginTop: "4px" }}>
-            {selectedAirport?.name || selectedAirportName || "No airport selected"}
-          </div>
+          <div style={S.sectionTitle}>Airports</div>
 
-          {(selectedAirport || selectedAirportName) && (
-            <div style={{ marginTop: "10px", opacity: 0.86, fontSize: "14px" }}>
-              {selectedAirport && (
-                <>
-                  <div>Stand capacity: {selectedAirport.standCapacity}</div>
-                  <div>
-                    Coordinates: {selectedAirport.latitude}, {selectedAirport.longitude}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <button
-            onClick={() => {
-              if (selectedAirportId) fetchRunways(selectedAirportId);
-            }}
-            style={secondaryBtn}
-            disabled={!selectedAirportId || loadingRunways}
-          >
-            {loadingRunways ? "Loading..." : "Show runways"}
-          </button>
-
-          <button
-            onClick={() => setShowNewRunway(true)}
-            style={primaryBtn}
-            disabled={!selectedAirportId}
-          >
-            Create runway
-          </button>
-
-          <button
-            onClick={clearSelectedAirport}
-            style={dangerBtn}
-            disabled={!selectedAirportId}
-          >
-            Clear selection
-          </button>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.1fr 1fr",
-          gap: "22px",
-          alignItems: "start",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: "20px", fontWeight: 800, marginBottom: "14px" }}>
-            Airports
-          </div>
-
-          {!airportsLoaded ? (
-            <div style={cardStyle}>
-              Airports are hidden by default. Click <b>Show airports</b>.
+          {loadingAirports ? (
+            <div style={{ display: "grid", gap: "12px" }}>
+              {[0, 1, 2].map((i) => <SkeletonCard key={i} />)}
             </div>
           ) : airports.length === 0 ? (
-            <div style={cardStyle}>No airports found.</div>
+            <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>No airports found.</div>
           ) : (
-            <div style={{ display: "grid", gap: "14px" }}>
+            <div style={{ display: "grid", gap: "10px" }}>
               {airports.map((airport) => {
                 const isSelected = airport.id === selectedAirportId;
-
                 return (
                   <div
                     key={airport.id}
                     style={{
-                      ...cardStyle,
-                      borderColor: isSelected
-                        ? "rgba(15,118,110,0.95)"
-                        : "rgba(255,255,255,0.12)",
+                      ...S.card,
+                      borderColor: isSelected ? C.borderAccentRed : C.border,
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "14px",
-                        flexWrap: "wrap",
-                      }}
-                    >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                       <div>
-                        <div style={{ fontSize: "18px", fontWeight: 800 }}>
-                          {airport.name}
-                        </div>
-                        <div style={{ marginTop: "10px", opacity: 0.86, fontSize: "14px" }}>
-                          <div>Stand capacity: {airport.standCapacity}</div>
-                          <div>
-                            Coordinates: {airport.latitude}, {airport.longitude}
-                          </div>
+                        <div style={{ fontSize: "15px", fontWeight: 700 }}>{airport.name}</div>
+                        <div style={{ marginTop: "6px", color: C.textSub, fontSize: "12px" }}>
+                          <div>Stands: {airport.standCapacity}</div>
+                          <div>Coords: {airport.latitude}, {airport.longitude}</div>
                         </div>
                       </div>
-
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                        <button
-                          onClick={() => selectAirport(airport)}
-                          style={isSelected ? primaryBtn : secondaryBtn}
-                        >
-                          {isSelected ? "Selected" : "Select"}
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "flex-start" }}>
+                        <button onClick={() => selectAirport(airport)} style={isSelected ? S.primaryBtn : S.secondaryBtn}>
+                          {isSelected ? "✓ Selected" : "Select"}
                         </button>
-
-                        <button
-                          onClick={() => {
-                            selectAirport(airport);
-                            fetchRunways(airport.id);
-                          }}
-                          style={secondaryBtn}
-                        >
-                          Show runways
-                        </button>
-
-                        <button
-                          onClick={() => deleteAirport(airport.id)}
-                          style={dangerBtn}
-                        >
+                        <button onClick={() => deleteAirport(airport.id)} style={S.dangerBtn}>
                           Delete
                         </button>
                       </div>
@@ -580,106 +378,55 @@ export default function AirportsPage() {
           )}
         </div>
 
+        {/* Runways column */}
         <div>
-          <div style={{ fontSize: "20px", fontWeight: 800, marginBottom: "14px" }}>
-            Runways
-          </div>
+          <div style={S.sectionTitle}>Runways</div>
 
           {!selectedAirportId ? (
-            <div style={cardStyle}>Select an airport first.</div>
-          ) : !runwaysLoaded ? (
-            <div style={cardStyle}>
-              Runways are hidden by default. Click <b>Show runways</b>.
+            <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>Select an airport first.</div>
+          ) : loadingRunways ? (
+            <div style={{ display: "grid", gap: "12px" }}>
+              {[0, 1].map((i) => <SkeletonCard key={i} />)}
             </div>
           ) : runways.length === 0 ? (
-            <div style={cardStyle}>No runways for this airport.</div>
+            <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>No runways for this airport.</div>
           ) : (
-            <div style={{ display: "grid", gap: "14px" }}>
+            <div style={{ display: "grid", gap: "10px" }}>
               {runways.map((runway) => {
                 const isEditing = editingRunwayId === runway.id;
-
                 return (
-                  <div key={runway.id} style={cardStyle}>
+                  <div key={runway.id} style={S.card}>
                     {!isEditing ? (
-                      <>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: "14px",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontSize: "18px", fontWeight: 800 }}>
-                              {runway.name}
-                            </div>
-
-                            <div style={{ marginTop: "10px", opacity: 0.86, fontSize: "14px" }}>
-                              <div>Status: {runway.isActive ? "Active" : "Inactive"}</div>
-                              <div>Type: {runwayTypeLabel(runway.runwayType)}</div>
-                            </div>
-                          </div>
-
-                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                            <button
-                              onClick={() => startEditRunway(runway)}
-                              style={secondaryBtn}
-                            >
-                              Edit
-                            </button>
-
-                            <button
-                              onClick={() => deleteRunway(runway.id)}
-                              style={dangerBtn}
-                            >
-                              Delete
-                            </button>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                        <div>
+                          <div style={{ fontSize: "15px", fontWeight: 700 }}>{runway.name}</div>
+                          <div style={{ marginTop: "6px", fontSize: "12px" }}>
+                            <span style={{ color: runway.isActive ? C.activeGreen : C.textMuted, fontWeight: 600 }}>
+                              {runway.isActive ? "● Active" : "○ Inactive"}
+                            </span>
+                            <span style={{ color: C.textSub, marginLeft: "8px" }}>{runwayTypeLabel(runway.runwayType)}</span>
                           </div>
                         </div>
-                      </>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "flex-start" }}>
+                          <button onClick={() => startEditRunway(runway)} style={S.secondaryBtn}>Edit</button>
+                          <button onClick={() => deleteRunway(runway.id)} style={S.dangerBtn}>Delete</button>
+                        </div>
+                      </div>
                     ) : (
-                      <div style={{ display: "grid", gap: "10px" }}>
-                        <input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          placeholder="Runway name"
-                          style={inputStyle}
-                        />
-
-                        <select
-                          value={editIsActive ? "true" : "false"}
-                          onChange={(e) => setEditIsActive(e.target.value === "true")}
-                          style={inputStyle}
-                        >
+                      <div style={{ display: "grid", gap: "8px" }}>
+                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Runway name" style={S.input} />
+                        <select value={editIsActive ? "true" : "false"} onChange={(e) => setEditIsActive(e.target.value === "true")} style={S.input}>
                           <option value="true">Active</option>
                           <option value="false">Inactive</option>
                         </select>
-
-                        <select
-                          value={editRunwayType}
-                          onChange={(e) => setEditRunwayType(Number(e.target.value))}
-                          style={inputStyle}
-                        >
+                        <select value={editRunwayType} onChange={(e) => setEditRunwayType(Number(e.target.value))} style={S.input}>
                           <option value={0}>Landing</option>
                           <option value={1}>Takeoff</option>
                           <option value={2}>Both</option>
                         </select>
-
-                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                          <button
-                            onClick={() => saveRunway(runway.id)}
-                            style={primaryBtn}
-                          >
-                            Save
-                          </button>
-
-                          <button
-                            onClick={() => setEditingRunwayId(null)}
-                            style={secondaryBtn}
-                          >
-                            Cancel
-                          </button>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button onClick={() => saveRunway(runway.id)} style={S.primaryBtn}>Save</button>
+                          <button onClick={() => setEditingRunwayId(null)} style={S.secondaryBtn}>Cancel</button>
                         </div>
                       </div>
                     )}
@@ -691,52 +438,19 @@ export default function AirportsPage() {
         </div>
       </div>
 
+      {/* Create airport modal */}
       {showNewAirport && (
         <Modal onClose={() => setShowNewAirport(false)} title="Create airport">
           <div style={{ display: "grid", gap: "10px" }}>
-            <input
-              value={newAirportName}
-              onChange={(e) => setNewAirportName(e.target.value)}
-              placeholder="Airport name"
-              style={inputStyle}
-            />
-
-            <input
-              type="number"
-              value={newAirportStandCapacity}
-              onChange={(e) => setNewAirportStandCapacity(Number(e.target.value))}
-              placeholder="Stand capacity"
-              style={inputStyle}
-            />
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              <input
-                type="number"
-                value={newAirportLatitude}
-                onChange={(e) => setNewAirportLatitude(Number(e.target.value))}
-                placeholder="Latitude"
-                style={inputStyle}
-              />
-
-              <input
-                type="number"
-                value={newAirportLongitude}
-                onChange={(e) => setNewAirportLongitude(Number(e.target.value))}
-                placeholder="Longitude"
-                style={inputStyle}
-              />
+            <input value={newAirportName} onChange={(e) => setNewAirportName(e.target.value)} placeholder="Airport name" style={S.input} />
+            <input type="number" value={newAirportStandCapacity} onChange={(e) => setNewAirportStandCapacity(Number(e.target.value))} placeholder="Stand capacity" style={S.input} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <input type="number" value={newAirportLatitude} onChange={(e) => setNewAirportLatitude(Number(e.target.value))} placeholder="Latitude" style={S.input} />
+              <input type="number" value={newAirportLongitude} onChange={(e) => setNewAirportLongitude(Number(e.target.value))} placeholder="Longitude" style={S.input} />
             </div>
-
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-              <button onClick={() => setShowNewAirport(false)} style={secondaryBtn}>
-                Cancel
-              </button>
-
-              <button
-                onClick={createAirport}
-                style={primaryBtn}
-                disabled={creatingAirport || newAirportName.trim().length === 0}
-              >
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
+              <button onClick={() => setShowNewAirport(false)} style={S.secondaryBtn}>Cancel</button>
+              <button onClick={createAirport} style={S.primaryBtn} disabled={creatingAirport || newAirportName.trim().length === 0}>
                 {creatingAirport ? "Creating..." : "Create"}
               </button>
             </div>
@@ -744,93 +458,29 @@ export default function AirportsPage() {
         </Modal>
       )}
 
+      {/* Create runway modal */}
       {showNewRunway && (
         <Modal onClose={() => setShowNewRunway(false)} title="Create runway">
           <div style={{ display: "grid", gap: "10px" }}>
-            <input
-              value={newRunwayName}
-              onChange={(e) => setNewRunwayName(e.target.value)}
-              placeholder="Runway name"
-              style={inputStyle}
-            />
-
-            <select
-              value={newRunwayIsActive ? "true" : "false"}
-              onChange={(e) => setNewRunwayIsActive(e.target.value === "true")}
-              style={inputStyle}
-            >
+            <input value={newRunwayName} onChange={(e) => setNewRunwayName(e.target.value)} placeholder="Runway name" style={S.input} />
+            <select value={newRunwayIsActive ? "true" : "false"} onChange={(e) => setNewRunwayIsActive(e.target.value === "true")} style={S.input}>
               <option value="true">Active</option>
               <option value="false">Inactive</option>
             </select>
-
-            <select
-              value={newRunwayType}
-              onChange={(e) => setNewRunwayType(Number(e.target.value))}
-              style={inputStyle}
-            >
+            <select value={newRunwayType} onChange={(e) => setNewRunwayType(Number(e.target.value))} style={S.input}>
               <option value={0}>Landing</option>
               <option value={1}>Takeoff</option>
               <option value={2}>Both</option>
             </select>
-
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-              <button onClick={() => setShowNewRunway(false)} style={secondaryBtn}>
-                Cancel
-              </button>
-
-              <button
-                onClick={createRunway}
-                style={primaryBtn}
-                disabled={creatingRunway || newRunwayName.trim().length === 0}
-              >
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
+              <button onClick={() => setShowNewRunway(false)} style={S.secondaryBtn}>Cancel</button>
+              <button onClick={createRunway} style={S.primaryBtn} disabled={creatingRunway || newRunwayName.trim().length === 0}>
                 {creatingRunway ? "Creating..." : "Create"}
               </button>
             </div>
           </div>
         </Modal>
       )}
-    </div>
-  );
-}
-
-function Modal({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.55)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 1000,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "520px",
-          maxWidth: "calc(100vw - 24px)",
-          borderRadius: "16px",
-          padding: "18px",
-          background: "#111",
-          border: "1px solid rgba(255,255,255,0.12)",
-        }}
-      >
-        <div style={{ fontSize: "18px", fontWeight: 900, marginBottom: "14px" }}>
-          {title}
-        </div>
-        {children}
-      </div>
     </div>
   );
 }

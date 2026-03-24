@@ -112,8 +112,13 @@ src/**/obj/
 
 src/.qodo/
 
+.superpowers/
+
+.claude/
+
 dotnet
 tasklist
 type
 .env
+src/.env
 CLAUDE.md

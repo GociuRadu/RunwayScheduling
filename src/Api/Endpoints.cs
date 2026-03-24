@@ -193,6 +193,7 @@ public static class Endpoints
          }
      })
      .AllowAnonymous()
+     .RequireRateLimiting("login")
      .WithName("Login");
 
         secured.MapPost("/scenarios/{scenarioConfigId:guid}/random-events",

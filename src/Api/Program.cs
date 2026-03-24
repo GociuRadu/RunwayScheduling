@@ -1,5 +1,7 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using MediatR;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -153,6 +155,20 @@ builder.Services.AddMediatR(cfg =>
 });
 
 
+// Rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddSlidingWindowLimiter("login", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.SegmentsPerWindow = 6;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // CORS frontend
 builder.Services.AddCors(options =>
 {
@@ -182,6 +198,7 @@ if (app.Environment.IsDevelopment())
 
 // pipeline
 app.UseCors("frontend");
+app.UseRateLimiter();
 
 app.UseHttpsRedirection();
 

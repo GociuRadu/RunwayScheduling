@@ -1,3 +1,4 @@
+using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
 using Modules.Login.Application;
 using Modules.Login.Domain;
@@ -22,6 +23,6 @@ public sealed class EfUserStore : IUserStore
 
     public bool Verify(string password, string passwordHash)
     {
-        return password == passwordHash;
+        return BCrypt.Net.BCrypt.Verify(password, passwordHash);
     }
 }

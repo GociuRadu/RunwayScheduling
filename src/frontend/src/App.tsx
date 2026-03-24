@@ -4,18 +4,21 @@ import HomePage from "./pages/HomePage";
 import ContactPage from "./pages/ContactPage";
 import ScenarioConfigPage from "./pages/ScenarioConfigPage";
 import AirportsPage from "./pages/AirportsPage";
+import { ToastProvider } from "./components/Toast";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<AppShell />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/scenario-config" element={<ScenarioConfigPage />} />
-          <Route path="/airports" element={<AirportsPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <ToastProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/scenario-config" element={<ScenarioConfigPage />} />
+            <Route path="/airports" element={<AirportsPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }
