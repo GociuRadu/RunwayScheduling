@@ -6,6 +6,7 @@ COPY Modules.Aircrafts/Modules.Aircrafts.csproj Modules.Aircrafts/
 COPY Modules.Airports/Modules.Airports.csproj Modules.Airports/
 COPY Modules.Scenarios/Modules.Scenarios.csproj Modules.Scenarios/
 COPY Modules.Login/Modules.Login.csproj Modules.Login/
+COPY Modules.Solver/Modules.Solver.csproj Modules.Solver/
 
 RUN dotnet restore Api/Api.csproj
 
@@ -14,6 +15,7 @@ COPY Modules.Aircrafts/ Modules.Aircrafts/
 COPY Modules.Airports/ Modules.Airports/
 COPY Modules.Scenarios/ Modules.Scenarios/
 COPY Modules.Login/ Modules.Login/
+COPY Modules.Solver/ Modules.Solver/
 
 WORKDIR /src/Api
 RUN dotnet publish Api.csproj -c Release -o /app/publish /p:UseAppHost=false

@@ -4,7 +4,7 @@ import { apiFetch } from "../lib/api";
 import { C, S } from "../styles/tokens";
 import { Modal } from "../components/Modal";
 import { SkeletonCard } from "../components/Skeleton";
-import { useToast } from "../components/Toast";
+import { useToast } from "../hooks/useToast";
 
 type AirportDto = {
   id: string;
