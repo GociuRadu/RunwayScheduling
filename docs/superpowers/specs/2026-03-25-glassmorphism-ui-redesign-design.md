@@ -67,17 +67,18 @@ All glassmorphism styling is implemented via CSS custom properties in `index.css
 @keyframes fadeInUp       /* cards on load: opacity 0→1, translateY 8px→0 */
 @keyframes glowPulse      /* selected card: box-shadow pulses orange */
 @keyframes modalIn        /* modal open: scale 0.96→1 + fadeIn */
-@keyframes slideInRight   /* toast: translateX 110%→0 (already exists, keep) */
-@keyframes skeletonPulse  /* loading (already exists, keep) */
+/* Existing animations kept as-is: toast-in (toast slide), skeleton-pulse (loading) */
 ```
 
 Staggered `fadeInUp` on card lists: each card gets `animation-delay: calc(index * 50ms)` via inline style.
 
 ---
 
-## Token Additions (`tokens.ts`)
+## Token Additions (`tokens.ts`) and `S` object strategy
 
-Add glass-specific values for use in JSX where inline styles are still needed (e.g., conditional border colors):
+The `S` object (inline style presets: `S.card`, `S.input`, `S.primaryBtn`, etc.) is **kept as-is** — it is not deleted. Pages that switch to CSS classes simply stop referencing `S.card`/`S.input` in favour of `className="glass-card"` / `className="glass-input"`. `S.label`, `S.statValue`, `S.sectionTitle`, `S.dangerBtn`, etc. remain in use where no CSS class replacement exists.
+
+Add glass-specific values to `C` for use in JSX where inline styles are still needed (e.g., conditional border colors):
 
 ```ts
 glassBg: "rgba(255,255,255,0.04)",
@@ -92,7 +93,7 @@ glowOrange: "rgba(249,115,22,0.1)",
 
 ### AppShell (Navbar)
 - Class: `.glass-nav` — `backdrop-filter: blur(20px)`, `background: rgba(8,8,8,0.8)`, `border-bottom: 1px solid rgba(255,255,255,0.06)`
-- Logo: full text `runwayscheduling` — `runway` bold white, `scheduling` light orange
+- Logo: full text `runwayscheduling` — first span `runway` bold white, second span changes from `sched` to `scheduling` in light orange weight-300
 - Active nav item: orange pill badge instead of bottom border
 - Login button: `.glass-btn-primary`
 - Logout button: `.glass-btn-danger`
@@ -141,6 +142,7 @@ glowOrange: "rgba(249,115,22,0.1)",
 | `src/frontend/src/pages/HomePage.tsx` | Modify | Full landing page implementation |
 | `src/frontend/src/pages/AirportsPage.tsx` | Modify | Glass cards, fadeInUp stagger |
 | `src/frontend/src/pages/ScenarioConfigPage.tsx` | Modify | Glass cards, glass modals |
+| `src/frontend/src/components/Modal.tsx` | Modify | Apply `.glass-modal` panel styling to shared Modal component |
 
 ---
 
