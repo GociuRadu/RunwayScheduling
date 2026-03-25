@@ -17,6 +17,10 @@ export const C = {
   textSub: "#888888",
   textMuted: "#444444",
   activeGreen: "#22c55e",
+  glassBg: "rgba(255,255,255,0.04)",
+  glassBorder: "rgba(255,255,255,0.08)",
+  glassBorderSelected: "rgba(249,115,22,0.3)",
+  glowOrange: "rgba(249,115,22,0.1)",
 } as const;
 
 export const S: Record<string, React.CSSProperties> = {
