@@ -27,7 +27,7 @@ function Logo() {
         ✈
       </div>
       <span style={{ color: C.text, fontWeight: 800, fontSize: "14px", letterSpacing: "0.3px" }}>
-        runway<span style={{ color: C.primary, fontWeight: 300 }}>sched</span>
+        runway<span style={{ color: C.primary, fontWeight: 300 }}>scheduling</span>
       </span>
     </div>
   );
@@ -52,10 +52,10 @@ export default function AppShell() {
   return (
     <div style={{ minHeight: "100vh", background: C.bg }}>
       <header
+        className="glass-nav"
         style={{
           width: "100%",
           height: "56px",
-          borderBottom: `1px solid ${C.border}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -65,7 +65,6 @@ export default function AppShell() {
           position: "sticky",
           top: 0,
           zIndex: 100,
-          background: C.bg,
         }}
       >
         <button
@@ -83,15 +82,15 @@ export default function AppShell() {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 style={{
-                  background: "transparent",
-                  border: "none",
+                  background: active ? "rgba(249,115,22,0.12)" : "transparent",
+                  border: active ? "1px solid rgba(249,115,22,0.3)" : "1px solid transparent",
                   color: active ? C.primary : C.textSub,
                   fontSize: "13px",
                   fontWeight: active ? 700 : 400,
                   cursor: "pointer",
-                  padding: "6px 12px",
-                  borderRadius: "5px",
-                  borderBottom: active ? `2px solid ${C.primary}` : "2px solid transparent",
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  transition: "all 0.2s ease",
                 }}
               >
                 {item.label}
@@ -118,32 +117,16 @@ export default function AppShell() {
           {!isLoggedIn ? (
             <button
               onClick={() => setShowLogin(true)}
-              style={{
-                background: C.gradient,
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                padding: "7px 16px",
-                fontSize: "12px",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
+              className="glass-btn-primary"
+              style={{ fontSize: "12px", padding: "7px 16px" }}
             >
               Login
             </button>
           ) : (
             <button
               onClick={handleLogout}
-              style={{
-                background: "rgba(220,38,38,0.1)",
-                color: C.danger,
-                border: `1px solid rgba(220,38,38,0.3)`,
-                borderRadius: "5px",
-                padding: "7px 16px",
-                fontSize: "12px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
+              className="glass-btn-danger"
+              style={{ fontSize: "12px", padding: "7px 16px" }}
             >
               Logout
             </button>
