@@ -9,26 +9,16 @@ interface ModalProps {
 export function Modal({ title, children, onClose }: ModalProps) {
   return (
     <div
+      className="glass-modal-backdrop"
       onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.7)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 1000,
-      }}
     >
       <div
+        className="glass-modal-panel"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "520px",
           maxWidth: "calc(100vw - 24px)",
-          borderRadius: "8px",
           padding: "20px",
-          background: C.bgModal,
-          border: `1px solid ${C.border}`,
         }}
       >
         <div
