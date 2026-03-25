@@ -75,28 +75,17 @@ export default function LoginModal({ onClose }: Props) {
 
   return (
     <div
+      className="glass-modal-backdrop"
       onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.75)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 2000,
-      }}
     >
       <div
+        className="glass-modal-panel"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "380px",
           maxWidth: "calc(100vw - 32px)",
-          background: C.bgModal,
-          borderRadius: "8px",
           padding: "28px",
           color: C.text,
-          border: `1px solid ${C.border}`,
-          boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
@@ -120,7 +109,7 @@ export default function LoginModal({ onClose }: Props) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            style={S.input}
+            className="glass-input"
           />
 
           <input
@@ -130,7 +119,7 @@ export default function LoginModal({ onClose }: Props) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            style={S.input}
+            className="glass-input"
           />
 
           <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: C.textSub, cursor: "pointer" }}>
