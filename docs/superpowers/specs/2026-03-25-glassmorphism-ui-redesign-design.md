@@ -93,7 +93,7 @@ glowOrange: "rgba(249,115,22,0.1)",
 
 ### AppShell (Navbar)
 - Class: `.glass-nav` — `backdrop-filter: blur(20px)`, `background: rgba(8,8,8,0.8)`, `border-bottom: 1px solid rgba(255,255,255,0.06)`
-- Logo: full text `runwayscheduling` — first span `runway` bold white, second span changes from `sched` to `scheduling` in light orange weight-300
+- Logo: two spans. Before: `<span>runway</span><span style="color:C.primary;fontWeight:300">sched</span>`. After: `<span>runway</span><span style="color:C.primary;fontWeight:300">scheduling</span>` — only the text content of the second span changes.
 - Active nav item: orange pill badge instead of bottom border
 - Login button: `.glass-btn-primary`
 - Logout button: `.glass-btn-danger`
