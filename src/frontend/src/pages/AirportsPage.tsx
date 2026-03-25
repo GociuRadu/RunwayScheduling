@@ -283,11 +283,11 @@ export default function AirportsPage() {
           <h1 style={{ margin: "6px 0 0", fontSize: "22px", fontWeight: 800 }}>Airports</h1>
         </div>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <button onClick={() => setShowNewAirport(true)} style={S.primaryBtn}>
+          <button onClick={() => setShowNewAirport(true)} className="glass-btn-primary">
             + Create airport
           </button>
           {selectedAirportId && (
-            <button onClick={() => navigate(`/scenario-config?airportId=${selectedAirportId}`)} style={S.secondaryBtn}>
+            <button onClick={() => navigate(`/scenario-config?airportId=${selectedAirportId}`)} className="glass-btn-ghost">
               Scenarios →
             </button>
           )}
@@ -296,7 +296,7 @@ export default function AirportsPage() {
 
       {/* Selected airport stat bar */}
       {(selectedAirport || selectedAirportName) && (
-        <div style={{ ...S.cardAccent, marginBottom: "20px" }}>
+        <div className="glass-card--selected" style={{ marginBottom: "20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <div style={S.label}>Selected airport</div>
@@ -311,7 +311,7 @@ export default function AirportsPage() {
                   { label: "Runways", value: runways.length || "—" },
                   { label: "Lat/Lng", value: `${selectedAirport.latitude}, ${selectedAirport.longitude}` },
                 ].map((stat) => (
-                  <div key={stat.label} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "6px", padding: "8px 12px", textAlign: "center" }}>
+                  <div key={stat.label} className="glass-card" style={{ padding: "8px 12px", textAlign: "center" }}>
                     <div style={S.label}>{stat.label}</div>
                     <div style={{ color: C.primary, fontSize: "16px", fontWeight: 800, marginTop: "2px" }}>{stat.value}</div>
                   </div>
@@ -319,10 +319,10 @@ export default function AirportsPage() {
               </div>
             )}
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              <button onClick={() => setShowNewRunway(true)} style={S.secondaryBtn} disabled={!selectedAirportId}>
+              <button onClick={() => setShowNewRunway(true)} className="glass-btn-ghost" disabled={!selectedAirportId}>
                 + Runway
               </button>
-              <button onClick={clearSelectedAirport} style={S.dangerBtn}>
+              <button onClick={clearSelectedAirport} className="glass-btn-danger">
                 Clear
               </button>
             </div>
@@ -344,15 +344,13 @@ export default function AirportsPage() {
             <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>No airports found.</div>
           ) : (
             <div style={{ display: "grid", gap: "10px" }}>
-              {airports.map((airport) => {
+              {airports.map((airport, index) => {
                 const isSelected = airport.id === selectedAirportId;
                 return (
                   <div
                     key={airport.id}
-                    style={{
-                      ...S.card,
-                      borderColor: isSelected ? C.borderAccentRed : C.border,
-                    }}
+                    className={isSelected ? "glass-card--selected" : "glass-card"}
+                    style={{ animation: `fadeInUp 0.3s ease ${index * 50}ms both` }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                       <div>
@@ -363,10 +361,10 @@ export default function AirportsPage() {
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "flex-start" }}>
-                        <button onClick={() => selectAirport(airport)} style={isSelected ? S.primaryBtn : S.secondaryBtn}>
+                        <button onClick={() => selectAirport(airport)} className={isSelected ? "glass-btn-primary" : "glass-btn-ghost"}>
                           {isSelected ? "✓ Selected" : "Select"}
                         </button>
-                        <button onClick={() => deleteAirport(airport.id)} style={S.dangerBtn}>
+                        <button onClick={() => deleteAirport(airport.id)} className="glass-btn-danger">
                           Delete
                         </button>
                       </div>
@@ -392,10 +390,14 @@ export default function AirportsPage() {
             <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>No runways for this airport.</div>
           ) : (
             <div style={{ display: "grid", gap: "10px" }}>
-              {runways.map((runway) => {
+              {runways.map((runway, index) => {
                 const isEditing = editingRunwayId === runway.id;
                 return (
-                  <div key={runway.id} style={S.card}>
+                  <div
+                    key={runway.id}
+                    className="glass-card"
+                    style={{ animation: `fadeInUp 0.3s ease ${index * 50}ms both` }}
+                  >
                     {!isEditing ? (
                       <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                         <div>
@@ -408,25 +410,25 @@ export default function AirportsPage() {
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: "6px", alignItems: "flex-start" }}>
-                          <button onClick={() => startEditRunway(runway)} style={S.secondaryBtn}>Edit</button>
-                          <button onClick={() => deleteRunway(runway.id)} style={S.dangerBtn}>Delete</button>
+                          <button onClick={() => startEditRunway(runway)} className="glass-btn-ghost">Edit</button>
+                          <button onClick={() => deleteRunway(runway.id)} className="glass-btn-danger">Delete</button>
                         </div>
                       </div>
                     ) : (
                       <div style={{ display: "grid", gap: "8px" }}>
-                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Runway name" style={S.input} />
-                        <select value={editIsActive ? "true" : "false"} onChange={(e) => setEditIsActive(e.target.value === "true")} style={S.input}>
+                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Runway name" className="glass-input" />
+                        <select value={editIsActive ? "true" : "false"} onChange={(e) => setEditIsActive(e.target.value === "true")} className="glass-input">
                           <option value="true">Active</option>
                           <option value="false">Inactive</option>
                         </select>
-                        <select value={editRunwayType} onChange={(e) => setEditRunwayType(Number(e.target.value))} style={S.input}>
+                        <select value={editRunwayType} onChange={(e) => setEditRunwayType(Number(e.target.value))} className="glass-input">
                           <option value={0}>Landing</option>
                           <option value={1}>Takeoff</option>
                           <option value={2}>Both</option>
                         </select>
                         <div style={{ display: "flex", gap: "8px" }}>
-                          <button onClick={() => saveRunway(runway.id)} style={S.primaryBtn}>Save</button>
-                          <button onClick={() => setEditingRunwayId(null)} style={S.secondaryBtn}>Cancel</button>
+                          <button onClick={() => saveRunway(runway.id)} className="glass-btn-primary">Save</button>
+                          <button onClick={() => setEditingRunwayId(null)} className="glass-btn-ghost">Cancel</button>
                         </div>
                       </div>
                     )}
@@ -442,15 +444,15 @@ export default function AirportsPage() {
       {showNewAirport && (
         <Modal onClose={() => setShowNewAirport(false)} title="Create airport">
           <div style={{ display: "grid", gap: "10px" }}>
-            <input value={newAirportName} onChange={(e) => setNewAirportName(e.target.value)} placeholder="Airport name" style={S.input} />
-            <input type="number" value={newAirportStandCapacity} onChange={(e) => setNewAirportStandCapacity(Number(e.target.value))} placeholder="Stand capacity" style={S.input} />
+            <input value={newAirportName} onChange={(e) => setNewAirportName(e.target.value)} placeholder="Airport name" className="glass-input" />
+            <input type="number" value={newAirportStandCapacity} onChange={(e) => setNewAirportStandCapacity(Number(e.target.value))} placeholder="Stand capacity" className="glass-input" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-              <input type="number" value={newAirportLatitude} onChange={(e) => setNewAirportLatitude(Number(e.target.value))} placeholder="Latitude" style={S.input} />
-              <input type="number" value={newAirportLongitude} onChange={(e) => setNewAirportLongitude(Number(e.target.value))} placeholder="Longitude" style={S.input} />
+              <input type="number" value={newAirportLatitude} onChange={(e) => setNewAirportLatitude(Number(e.target.value))} placeholder="Latitude" className="glass-input" />
+              <input type="number" value={newAirportLongitude} onChange={(e) => setNewAirportLongitude(Number(e.target.value))} placeholder="Longitude" className="glass-input" />
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
-              <button onClick={() => setShowNewAirport(false)} style={S.secondaryBtn}>Cancel</button>
-              <button onClick={createAirport} style={S.primaryBtn} disabled={creatingAirport || newAirportName.trim().length === 0}>
+              <button onClick={() => setShowNewAirport(false)} className="glass-btn-ghost">Cancel</button>
+              <button onClick={createAirport} className="glass-btn-primary" disabled={creatingAirport || newAirportName.trim().length === 0}>
                 {creatingAirport ? "Creating..." : "Create"}
               </button>
             </div>
@@ -462,19 +464,19 @@ export default function AirportsPage() {
       {showNewRunway && (
         <Modal onClose={() => setShowNewRunway(false)} title="Create runway">
           <div style={{ display: "grid", gap: "10px" }}>
-            <input value={newRunwayName} onChange={(e) => setNewRunwayName(e.target.value)} placeholder="Runway name" style={S.input} />
-            <select value={newRunwayIsActive ? "true" : "false"} onChange={(e) => setNewRunwayIsActive(e.target.value === "true")} style={S.input}>
+            <input value={newRunwayName} onChange={(e) => setNewRunwayName(e.target.value)} placeholder="Runway name" className="glass-input" />
+            <select value={newRunwayIsActive ? "true" : "false"} onChange={(e) => setNewRunwayIsActive(e.target.value === "true")} className="glass-input">
               <option value="true">Active</option>
               <option value="false">Inactive</option>
             </select>
-            <select value={newRunwayType} onChange={(e) => setNewRunwayType(Number(e.target.value))} style={S.input}>
+            <select value={newRunwayType} onChange={(e) => setNewRunwayType(Number(e.target.value))} className="glass-input">
               <option value={0}>Landing</option>
               <option value={1}>Takeoff</option>
               <option value={2}>Both</option>
             </select>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
-              <button onClick={() => setShowNewRunway(false)} style={S.secondaryBtn}>Cancel</button>
-              <button onClick={createRunway} style={S.primaryBtn} disabled={creatingRunway || newRunwayName.trim().length === 0}>
+              <button onClick={() => setShowNewRunway(false)} className="glass-btn-ghost">Cancel</button>
+              <button onClick={createRunway} className="glass-btn-primary" disabled={creatingRunway || newRunwayName.trim().length === 0}>
                 {creatingRunway ? "Creating..." : "Create"}
               </button>
             </div>
