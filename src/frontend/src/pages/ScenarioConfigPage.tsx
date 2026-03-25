@@ -100,16 +100,18 @@ const tdStyle: React.CSSProperties = {
 function LargeModal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
     <div
+      className="glass-modal-backdrop"
+      style={{ padding: "20px" }}
       onClick={onClose}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1200, padding: "20px" }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: "1200px", maxWidth: "95vw", maxHeight: "88vh", overflow: "hidden", borderRadius: "8px", padding: "20px", background: C.bgModal, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: "14px" }}
+        className="glass-modal-panel"
+        style={{ width: "1200px", maxWidth: "95vw", maxHeight: "88vh", overflow: "hidden", padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontWeight: 800, fontSize: "16px" }}>{title}</div>
-          <button onClick={onClose} style={S.secondaryBtn}>Close</button>
+          <button onClick={onClose} className="glass-btn-ghost">Close</button>
         </div>
         <div style={{ minHeight: 0, flex: 1, overflowY: "auto" }}>{children}</div>
       </div>
@@ -355,14 +357,14 @@ export default function ScenarioConfigPage() {
           <h1 style={{ margin: "6px 0 0", fontSize: "22px", fontWeight: 800 }}>Scenarios</h1>
         </div>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <button onClick={() => setShowCreateScenario(true)} style={{ ...S.primaryBtn, opacity: !airportId ? 0.5 : 1 }} disabled={!airportId}>
+          <button onClick={() => setShowCreateScenario(true)} className="glass-btn-primary" style={{ opacity: !airportId ? 0.5 : 1 }} disabled={!airportId}>
             + Create scenario
           </button>
         </div>
       </div>
 
       {/* Context bar */}
-      <div style={{ ...S.cardAccent, marginBottom: "20px" }}>
+      <div className="glass-card--selected" style={{ marginBottom: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
           <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
             <div>
@@ -384,7 +386,7 @@ export default function ScenarioConfigPage() {
                   { label: "Difficulty", value: selectedScenario.difficulty },
                   { label: "Sep (s)", value: selectedScenario.baseSeparationSeconds },
                 ].map((stat) => (
-                  <div key={stat.label} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "6px", padding: "6px 10px", textAlign: "center" }}>
+                  <div key={stat.label} className="glass-card" style={{ padding: "6px 10px", textAlign: "center" }}>
                     <div style={S.label}>{stat.label}</div>
                     <div style={{ color: C.primary, fontSize: "14px", fontWeight: 800, marginTop: "2px" }}>{stat.value}</div>
                   </div>
@@ -394,19 +396,19 @@ export default function ScenarioConfigPage() {
           </div>
 
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            <button onClick={openFlightsModal} style={S.secondaryBtn} disabled={!hasValidSelectedScenario || loadingScenarioData}>
+            <button onClick={openFlightsModal} className="glass-btn-ghost" disabled={!hasValidSelectedScenario || loadingScenarioData}>
               Flights
             </button>
-            <button onClick={openWeatherModal} style={S.secondaryBtn} disabled={!hasValidSelectedScenario || loadingScenarioData}>
+            <button onClick={openWeatherModal} className="glass-btn-ghost" disabled={!hasValidSelectedScenario || loadingScenarioData}>
               Weather
             </button>
-            <button onClick={generateWeatherIntervals} style={S.secondaryBtn} disabled={!hasValidSelectedScenario}>
+            <button onClick={generateWeatherIntervals} className="glass-btn-ghost" disabled={!hasValidSelectedScenario}>
               Gen. weather
             </button>
-            <button onClick={generateFlights} style={S.primaryBtn} disabled={!hasValidSelectedScenario}>
+            <button onClick={generateFlights} className="glass-btn-primary" disabled={!hasValidSelectedScenario}>
               Gen. flights
             </button>
-            <button onClick={clearScenarioSelection} style={S.dangerBtn} disabled={!hasValidSelectedScenario}>
+            <button onClick={clearScenarioSelection} className="glass-btn-danger" disabled={!hasValidSelectedScenario}>
               Clear
             </button>
           </div>
@@ -428,10 +430,14 @@ export default function ScenarioConfigPage() {
         <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>No scenarios for this airport.</div>
       ) : (
         <div style={{ display: "grid", gap: "10px" }}>
-          {scenarios.map((s) => {
+          {scenarios.map((s, index) => {
             const isSelected = selectedScenarioId === s.id;
             return (
-              <div key={s.id} style={{ ...S.card, borderColor: isSelected ? C.borderAccentRed : C.border }}>
+              <div
+                key={s.id}
+                className={isSelected ? "glass-card--selected" : "glass-card"}
+                style={{ animation: `fadeInUp 0.3s ease ${index * 60}ms both` }}
+              >
                 {/* Header row */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
                   <div>
@@ -442,10 +448,10 @@ export default function ScenarioConfigPage() {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                    <button onClick={() => selectScenario(s)} style={isSelected ? S.primaryBtn : S.secondaryBtn} disabled={loadingScenarioData}>
+                    <button onClick={() => selectScenario(s)} className={isSelected ? "glass-btn-primary" : "glass-btn-ghost"} disabled={loadingScenarioData}>
                       {isSelected ? "✓ Selected" : "Select"}
                     </button>
-                    <button onClick={() => deleteScenario(s.id)} style={S.dangerBtn}>Delete</button>
+                    <button onClick={() => deleteScenario(s.id)} className="glass-btn-danger">Delete</button>
                   </div>
                 </div>
 
@@ -461,7 +467,7 @@ export default function ScenarioConfigPage() {
                         { label: "Sep (s)", value: s.baseSeparationSeconds },
                         { label: "Wake %", value: `${s.wakePercent}%` },
                       ].map((stat) => (
-                        <div key={stat.label} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "5px", padding: "5px 8px" }}>
+                        <div key={stat.label} className="glass-card" style={{ padding: "5px 8px" }}>
                           <div style={{ ...S.label, fontSize: "8px" }}>{stat.label}</div>
                           <div style={{ color: C.text, fontSize: "12px", fontWeight: 700, marginTop: "1px" }}>{stat.value}</div>
                         </div>
@@ -480,7 +486,7 @@ export default function ScenarioConfigPage() {
                         { label: "Inbound", value: s.inboundAircraftCount },
                         { label: "Rem. ground", value: s.remainingOnGroundAircraftCount },
                       ].map((stat) => (
-                        <div key={stat.label} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "5px", padding: "5px 8px" }}>
+                        <div key={stat.label} className="glass-card" style={{ padding: "5px 8px" }}>
                           <div style={{ ...S.label, fontSize: "8px" }}>{stat.label}</div>
                           <div style={{ color: C.text, fontSize: "12px", fontWeight: 700, marginTop: "1px" }}>{stat.value}</div>
                         </div>
@@ -498,7 +504,7 @@ export default function ScenarioConfigPage() {
                         { label: "Intervals", value: s.weatherIntervalCount },
                         { label: "Min interval", value: `${s.minWeatherIntervalMinutes}m` },
                       ].map((stat) => (
-                        <div key={stat.label} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "5px", padding: "5px 8px" }}>
+                        <div key={stat.label} className="glass-card" style={{ padding: "5px 8px" }}>
                           <div style={{ ...S.label, fontSize: "8px" }}>{stat.label}</div>
                           <div style={{ color: C.text, fontSize: "12px", fontWeight: 700, marginTop: "1px" }}>{stat.value}</div>
                         </div>
@@ -580,25 +586,25 @@ export default function ScenarioConfigPage() {
       {showCreateScenario && (
         <Modal onClose={() => setShowCreateScenario(false)} title="Create Scenario">
           <div style={{ display: "grid", gap: "10px", maxHeight: "70vh", overflowY: "auto", paddingRight: "4px" }}>
-            <Field label="Scenario name"><input value={name} onChange={(e) => setName(e.target.value)} style={S.input} /></Field>
-            <Field label="Difficulty"><input type="number" value={difficulty} onChange={(e) => setDifficulty(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Start time"><input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={S.input} /></Field>
-            <Field label="End time"><input type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={S.input} /></Field>
-            <Field label="Seed"><input type="number" value={seed} onChange={(e) => setSeed(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Aircraft count"><input type="number" value={aircraftCount} onChange={(e) => setAircraftCount(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Aircraft difficulty"><input type="number" value={aircraftDifficulty} onChange={(e) => setAircraftDifficulty(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="On ground aircraft"><input type="number" value={onGroundAircraftCount} onChange={(e) => setOnGroundAircraftCount(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Inbound aircraft"><input type="number" value={inboundAircraftCount} onChange={(e) => setInboundAircraftCount(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Remaining on ground"><input type="number" value={remainingOnGroundAircraftCount} onChange={(e) => setRemainingOnGroundAircraftCount(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Base separation (s)"><input type="number" value={baseSeparationSeconds} onChange={(e) => setBaseSeparationSeconds(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Wake %"><input type="number" value={wakePercent} onChange={(e) => setWakePercent(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Weather %"><input type="number" value={weatherPercent} onChange={(e) => setWeatherPercent(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Weather interval count"><input type="number" value={weatherIntervalCount} onChange={(e) => setWeatherIntervalCount(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Min interval (min)"><input type="number" value={minWeatherIntervalMinutes} onChange={(e) => setMinWeatherIntervalMinutes(Number(e.target.value))} style={S.input} /></Field>
-            <Field label="Weather difficulty"><input type="number" value={weatherDifficulty} onChange={(e) => setWeatherDifficulty(Number(e.target.value))} style={S.input} /></Field>
+            <Field label="Scenario name"><input value={name} onChange={(e) => setName(e.target.value)} className="glass-input" /></Field>
+            <Field label="Difficulty"><input type="number" value={difficulty} onChange={(e) => setDifficulty(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Start time"><input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="glass-input" /></Field>
+            <Field label="End time"><input type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="glass-input" /></Field>
+            <Field label="Seed"><input type="number" value={seed} onChange={(e) => setSeed(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Aircraft count"><input type="number" value={aircraftCount} onChange={(e) => setAircraftCount(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Aircraft difficulty"><input type="number" value={aircraftDifficulty} onChange={(e) => setAircraftDifficulty(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="On ground aircraft"><input type="number" value={onGroundAircraftCount} onChange={(e) => setOnGroundAircraftCount(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Inbound aircraft"><input type="number" value={inboundAircraftCount} onChange={(e) => setInboundAircraftCount(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Remaining on ground"><input type="number" value={remainingOnGroundAircraftCount} onChange={(e) => setRemainingOnGroundAircraftCount(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Base separation (s)"><input type="number" value={baseSeparationSeconds} onChange={(e) => setBaseSeparationSeconds(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Wake %"><input type="number" value={wakePercent} onChange={(e) => setWakePercent(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Weather %"><input type="number" value={weatherPercent} onChange={(e) => setWeatherPercent(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Weather interval count"><input type="number" value={weatherIntervalCount} onChange={(e) => setWeatherIntervalCount(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Min interval (min)"><input type="number" value={minWeatherIntervalMinutes} onChange={(e) => setMinWeatherIntervalMinutes(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Weather difficulty"><input type="number" value={weatherDifficulty} onChange={(e) => setWeatherDifficulty(Number(e.target.value))} className="glass-input" /></Field>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
-              <button onClick={() => setShowCreateScenario(false)} style={S.secondaryBtn}>Cancel</button>
-              <button onClick={createScenario} style={{ ...S.primaryBtn, opacity: creatingScenario || !airportId || name.trim().length === 0 ? 0.5 : 1 }} disabled={creatingScenario || !airportId || name.trim().length === 0}>
+              <button onClick={() => setShowCreateScenario(false)} className="glass-btn-ghost">Cancel</button>
+              <button onClick={createScenario} className="glass-btn-primary" style={{ opacity: creatingScenario || !airportId || name.trim().length === 0 ? 0.5 : 1 }} disabled={creatingScenario || !airportId || name.trim().length === 0}>
                 {creatingScenario ? "Creating..." : "Create"}
               </button>
             </div>
