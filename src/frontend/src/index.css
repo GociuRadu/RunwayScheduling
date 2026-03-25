@@ -4,6 +4,148 @@
   padding: 0;
 }
 
+/* ── Glass design system ──────────────────────────────── */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(249, 115, 22, 0.3);
+  --glass-blur: blur(12px);
+  --glass-nav-blur: blur(20px);
+  --glow-orange: rgba(249, 115, 22, 0.1);
+  --glow-orange-strong: rgba(249, 115, 22, 0.2);
+  --transition-fast: 0.2s ease;
+  --transition-med: 0.3s ease;
+}
+
+/* ── Glass utility classes ───────────────────────────── */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: 16px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.glass-card:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 0 20px var(--glow-orange);
+}
+
+.glass-card--selected {
+  background: var(--glass-bg);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: 10px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: 16px;
+  box-shadow: 0 0 16px var(--glow-orange);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.glass-nav {
+  background: rgba(8, 8, 8, 0.85);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-nav-blur);
+  -webkit-backdrop-filter: var(--glass-nav-blur);
+}
+
+.glass-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  outline: none;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.glass-input:focus {
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 0 10px var(--glow-orange);
+}
+
+.glass-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.glass-modal-panel {
+  background: rgba(13, 13, 13, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(249, 115, 22, 0.04);
+  animation: modalIn var(--transition-med) ease forwards;
+}
+
+.glass-btn-primary {
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  transition: filter var(--transition-fast), transform var(--transition-fast);
+}
+.glass-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+.glass-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.glass-btn-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: #888888;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+.glass-btn-ghost:hover:not(:disabled) {
+  border-color: var(--glass-border-hover);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+.glass-btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.glass-btn-danger {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.glass-btn-danger:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.08);
+  transform: translateY(-1px);
+}
+.glass-btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 body {
   background: #080808;
   color: #ffffff;
@@ -36,6 +178,37 @@ input[type="number"]::-webkit-outer-spin-button {
 @keyframes toast-in {
   from { transform: translateX(110%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px var(--glow-orange);
+  }
+  50% {
+    box-shadow: 0 0 24px var(--glow-orange-strong);
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Scrollbar */
