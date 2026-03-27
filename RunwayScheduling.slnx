@@ -7,4 +7,7 @@
     <Project Path="src/Modules.Login/Modules.Login.csproj" />
     <Project Path="src/Modules.Solver/Modules.Solver.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RunwayScheduling.Tests/RunwayScheduling.Tests.csproj" />
+  </Folder>
 </Solution>

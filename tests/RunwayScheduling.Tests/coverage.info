@@ -1,0 +1,2635 @@
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Domain\Aircraft.cs
+FN:4,System.Guid Modules.Aircrafts.Domain.Aircraft::get_Id()
+FNDA:0,System.Guid Modules.Aircrafts.Domain.Aircraft::get_Id()
+DA:5,0
+FN:5,System.Guid Modules.Aircrafts.Domain.Aircraft::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Aircrafts.Domain.Aircraft::get_ScenarioConfigId()
+DA:6,0
+FN:6,System.String Modules.Aircrafts.Domain.Aircraft::get_TailNumber()
+FNDA:0,System.String Modules.Aircrafts.Domain.Aircraft::get_TailNumber()
+DA:7,0
+FN:7,System.String Modules.Aircrafts.Domain.Aircraft::get_Model()
+FNDA:0,System.String Modules.Aircrafts.Domain.Aircraft::get_Model()
+DA:8,0
+FN:8,System.Int32 Modules.Aircrafts.Domain.Aircraft::get_MaxPassengers()
+FNDA:0,System.Int32 Modules.Aircrafts.Domain.Aircraft::get_MaxPassengers()
+DA:9,0
+FN:9,Modules.Aircrafts.Domain.WakeTurbulenceCategory Modules.Aircrafts.Domain.Aircraft::get_WakeCategory()
+FNDA:0,Modules.Aircrafts.Domain.WakeTurbulenceCategory Modules.Aircrafts.Domain.Aircraft::get_WakeCategory()
+DA:10,0
+LF:6
+LH:0
+BRF:0
+BRH:0
+FNF:6
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Application\UseCases\GetAircrafts\GetAircraftsDto.cs
+FN:4,System.Guid Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_Id()
+FNDA:0,System.Guid Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_Id()
+DA:5,0
+FN:5,System.String Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_TailNumber()
+FNDA:0,System.String Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_TailNumber()
+DA:6,0
+FN:6,System.String Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_Model()
+FNDA:0,System.String Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_Model()
+DA:7,0
+FN:7,System.Int32 Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_MaxPassengers()
+FNDA:0,System.Int32 Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_MaxPassengers()
+DA:8,0
+FN:8,Modules.Aircrafts.Domain.WakeTurbulenceCategory Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_WakeCategory()
+FNDA:0,Modules.Aircrafts.Domain.WakeTurbulenceCategory Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::get_WakeCategory()
+DA:9,0
+FN:3,System.Void Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::.ctor(System.Guid,System.String,System.String,System.Int32,Modules.Aircrafts.Domain.WakeTurbulenceCategory)
+FNDA:0,System.Void Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsDto::.ctor(System.Guid,System.String,System.String,System.Int32,Modules.Aircrafts.Domain.WakeTurbulenceCategory)
+DA:4,0
+DA:10,0
+LF:7
+LH:0
+BRF:0
+BRH:0
+FNF:6
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Application\UseCases\GetAircrafts\GetAircraftsHandler.cs
+FN:8,System.Void Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsHandler::.ctor(Modules.Aircrafts.Application.IAircraftStore)
+FNDA:0,System.Void Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsHandler::.ctor(Modules.Aircrafts.Application.IAircraftStore)
+DA:9,0
+DA:10,0
+DA:11,0
+DA:12,0
+FN:14,System.Void Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsHandler/<Handle>d__2::MoveNext()
+DA:15,0
+DA:16,0
+DA:18,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
+DA:31,0
+BRDA:20,302,1,0
+BRDA:20,302,0,0
+LF:19
+LH:0
+BRF:2
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Application\UseCases\GetAircrafts\GetAircraftsQuery.cs
+FN:3,System.Guid Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsQuery::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Aircrafts.Application.UseCases.GetAircrafts.GetAircraftsQuery::get_ScenarioConfigId()
+DA:4,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Application\UseCases\CreateAircraft\GenerateRandomAircraftCommand.cs
+FN:5,System.Int32 Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft.GenerateRandomAircraftCommand::get_Count()
+FNDA:0,System.Int32 Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft.GenerateRandomAircraftCommand::get_Count()
+DA:6,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Application\UseCases\CreateAircraft\GenerateRandomAircraftHandler.cs
+FN:12,System.Void Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft.GenerateRandomAircraftHandler::.ctor(Modules.Aircrafts.Application.IAircraftStore)
+FNDA:0,System.Void Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft.GenerateRandomAircraftHandler::.ctor(Modules.Aircrafts.Application.IAircraftStore)
+DA:13,0
+FN:15,System.Void Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft.GenerateRandomAircraftHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft.GenerateRandomAircraftHandler/<Handle>d__2::MoveNext()
+DA:16,0
+DA:17,0
+DA:18,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:24,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:30,0
+DA:31,0
+DA:32,0
+DA:34,0
+DA:36,0
+DA:37,0
+DA:39,0
+DA:41,0
+DA:42,0
+BRDA:21,105,0,0
+BRDA:21,105,1,0
+BRDA:26,310,1,0
+BRDA:26,310,0,0
+LF:20
+LH:0
+BRF:4
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Application\Generators\AircraftGenerator.cs
+FN:10,System.String Modules.Aircrafts.Application.Generators.AircraftGenerator::Pick(System.String[])
+FNDA:0,System.String Modules.Aircrafts.Application.Generators.AircraftGenerator::Pick(System.String[])
+DA:11,0
+DA:12,0
+DA:13,0
+DA:14,0
+FN:16,Modules.Aircrafts.Domain.Aircraft Modules.Aircrafts.Application.Generators.AircraftGenerator::Generate(System.String,Modules.Aircrafts.Domain.WakeTurbulenceCategory)
+FNDA:0,Modules.Aircrafts.Domain.Aircraft Modules.Aircrafts.Application.Generators.AircraftGenerator::Generate(System.String,Modules.Aircrafts.Domain.WakeTurbulenceCategory)
+DA:17,0
+DA:21,0
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
+DA:31,0
+DA:34,0
+DA:35,0
+DA:36,0
+DA:37,0
+DA:38,0
+DA:39,0
+DA:40,0
+DA:41,0
+DA:44,0
+DA:45,0
+DA:46,0
+DA:47,0
+DA:48,0
+DA:49,0
+DA:50,0
+DA:51,0
+DA:54,0
+DA:55,0
+DA:56,0
+DA:57,0
+DA:58,0
+DA:59,0
+DA:60,0
+DA:61,0
+DA:64,0
+DA:65,0
+DA:66,0
+DA:69,0
+DA:70,0
+DA:71,0
+DA:72,0
+DA:73,0
+DA:74,0
+DA:75,0
+DA:76,0
+BRDA:21,6,1,0
+BRDA:21,6,2,0
+BRDA:21,6,3,0
+BRDA:21,6,4,0
+BRDA:21,6,0,0
+FN:7,System.Void Modules.Aircrafts.Application.Generators.AircraftGenerator::.cctor()
+FNDA:0,System.Void Modules.Aircrafts.Application.Generators.AircraftGenerator::.cctor()
+DA:8,0
+LF:50
+LH:0
+BRF:5
+BRH:0
+FNF:3
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Application\Generators\TailNumberGenerator.cs
+FN:5,System.String Modules.Aircrafts.Application.Generators.TailNumberGenerator::Generate(System.Int32)
+FNDA:0,System.String Modules.Aircrafts.Application.Generators.TailNumberGenerator::Generate(System.Int32)
+DA:6,0
+DA:7,0
+DA:8,0
+LF:3
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Aircrafts\Application\Generators\WakeCategorySelection.cs
+FN:9,Modules.Aircrafts.Domain.WakeTurbulenceCategory Modules.Aircrafts.Application.Generators.WakeCategorySelection::Generate(System.Int32)
+FNDA:0,Modules.Aircrafts.Domain.WakeTurbulenceCategory Modules.Aircrafts.Application.Generators.WakeCategorySelection::Generate(System.Int32)
+DA:10,0
+DA:11,0
+DA:13,0
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:23,0
+DA:25,0
+DA:26,0
+DA:28,0
+DA:29,0
+DA:31,0
+DA:32,0
+DA:34,0
+DA:35,0
+BRDA:13,18,1,0
+BRDA:13,18,2,0
+BRDA:13,18,3,0
+BRDA:13,18,4,0
+BRDA:13,18,5,0
+BRDA:13,18,0,0
+BRDA:26,197,0,0
+BRDA:26,197,1,0
+BRDA:29,218,0,0
+BRDA:29,218,1,0
+BRDA:32,239,0,0
+BRDA:32,239,1,0
+FN:6,System.Void Modules.Aircrafts.Application.Generators.WakeCategorySelection::.cctor()
+FNDA:0,System.Void Modules.Aircrafts.Application.Generators.WakeCategorySelection::.cctor()
+DA:7,0
+LF:21
+LH:0
+BRF:12
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Domain\Airport.cs
+FN:4,System.Guid Modules.Airports.Domain.Airport::get_Id()
+FNDA:19,System.Guid Modules.Airports.Domain.Airport::get_Id()
+DA:5,19
+FN:5,System.String Modules.Airports.Domain.Airport::get_Name()
+FNDA:34,System.String Modules.Airports.Domain.Airport::get_Name()
+DA:6,34
+FN:6,System.Int32 Modules.Airports.Domain.Airport::get_StandCapacity()
+FNDA:22,System.Int32 Modules.Airports.Domain.Airport::get_StandCapacity()
+DA:7,22
+FN:7,System.Double Modules.Airports.Domain.Airport::get_Latitude()
+FNDA:8,System.Double Modules.Airports.Domain.Airport::get_Latitude()
+DA:8,8
+FN:8,System.Double Modules.Airports.Domain.Airport::get_Longitude()
+FNDA:8,System.Double Modules.Airports.Domain.Airport::get_Longitude()
+DA:9,8
+LF:5
+LH:5
+BRF:0
+BRH:0
+FNF:5
+FNH:5
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Domain\Runway.cs
+FN:4,System.Guid Modules.Airports.Domain.Runway::get_Id()
+FNDA:0,System.Guid Modules.Airports.Domain.Runway::get_Id()
+DA:5,0
+FN:5,System.Guid Modules.Airports.Domain.Runway::get_AirportId()
+FNDA:0,System.Guid Modules.Airports.Domain.Runway::get_AirportId()
+DA:6,0
+FN:7,System.String Modules.Airports.Domain.Runway::get_Name()
+FNDA:0,System.String Modules.Airports.Domain.Runway::get_Name()
+DA:8,0
+FN:8,System.Boolean Modules.Airports.Domain.Runway::get_IsActive()
+FNDA:0,System.Boolean Modules.Airports.Domain.Runway::get_IsActive()
+DA:9,0
+FN:10,Modules.Airports.Domain.RunwayType Modules.Airports.Domain.Runway::get_RunwayType()
+FNDA:0,Modules.Airports.Domain.RunwayType Modules.Airports.Domain.Runway::get_RunwayType()
+DA:11,0
+LF:5
+LH:0
+BRF:0
+BRH:0
+FNF:5
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\UpdateRunway\UpdateRunwayCommand.cs
+FN:6,System.Guid Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::get_RunwayId()
+FNDA:0,System.Guid Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::get_RunwayId()
+DA:7,0
+FN:7,System.String Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::get_Name()
+FNDA:0,System.String Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::get_Name()
+DA:8,0
+FN:8,System.Boolean Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::get_IsActive()
+FNDA:0,System.Boolean Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::get_IsActive()
+DA:9,0
+FN:9,Modules.Airports.Domain.RunwayType Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::get_RunwayType()
+FNDA:0,Modules.Airports.Domain.RunwayType Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::get_RunwayType()
+DA:10,0
+FN:5,System.Void Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::.ctor(System.Guid,System.String,System.Boolean,Modules.Airports.Domain.RunwayType)
+FNDA:0,System.Void Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand::.ctor(System.Guid,System.String,System.Boolean,Modules.Airports.Domain.RunwayType)
+DA:6,0
+DA:11,0
+LF:6
+LH:0
+BRF:0
+BRH:0
+FNF:5
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\UpdateRunway\UpdateRunwayHandler.cs
+FN:10,System.Threading.Tasks.Task`1<System.Boolean> Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayHandler::Handle(Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand,System.Threading.CancellationToken)
+FNDA:0,System.Threading.Tasks.Task`1<System.Boolean> Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayHandler::Handle(Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayCommand,System.Threading.CancellationToken)
+DA:11,0
+FN:7,System.Void Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayHandler::.ctor(Modules.Airports.Application.IRunwayStore)
+FNDA:0,System.Void Modules.Airports.Application.UseCases.UpdateRunway.UpdateRunwayHandler::.ctor(Modules.Airports.Application.IRunwayStore)
+DA:8,0
+LF:2
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\GetRunwaysByAirportId\GetRunwaysByAirportIdHandler.cs
+FN:17,System.Threading.Tasks.Task`1<System.Collections.Generic.List`1<Modules.Airports.Application.UseCases.GetRunwaysByAirportId.RunwayDto>> Modules.Airports.Application.UseCases.GetRunwaysByAirportId.GetRunwaysByAirportIdHandler::Handle(Modules.Airports.Application.UseCases.GetRunwaysByAirportId.GetRunwaysByAirportIdQuery,System.Threading.CancellationToken)
+FNDA:0,System.Threading.Tasks.Task`1<System.Collections.Generic.List`1<Modules.Airports.Application.UseCases.GetRunwaysByAirportId.RunwayDto>> Modules.Airports.Application.UseCases.GetRunwaysByAirportId.GetRunwaysByAirportIdHandler::Handle(Modules.Airports.Application.UseCases.GetRunwaysByAirportId.GetRunwaysByAirportIdQuery,System.Threading.CancellationToken)
+DA:18,0
+DA:19,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:25,0
+DA:26,0
+FN:11,System.Void Modules.Airports.Application.UseCases.GetRunwaysByAirportId.GetRunwaysByAirportIdHandler::.ctor(Modules.Airports.Application.IRunwayStore)
+FNDA:0,System.Void Modules.Airports.Application.UseCases.GetRunwaysByAirportId.GetRunwaysByAirportIdHandler::.ctor(Modules.Airports.Application.IRunwayStore)
+DA:12,0
+DA:13,0
+DA:14,0
+DA:15,0
+LF:11
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\GetRunwaysByAirportId\GetRunwaysByAirportIdQuery.cs
+FN:4,System.Guid Modules.Airports.Application.UseCases.GetRunwaysByAirportId.GetRunwaysByAirportIdQuery::get_AirportId()
+FNDA:0,System.Guid Modules.Airports.Application.UseCases.GetRunwaysByAirportId.GetRunwaysByAirportIdQuery::get_AirportId()
+DA:5,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\GetRunwaysByAirportId\RunwayDto.cs
+FN:7,System.Guid Modules.Airports.Application.UseCases.GetRunwaysByAirportId.RunwayDto::get_id()
+FNDA:0,System.Guid Modules.Airports.Application.UseCases.GetRunwaysByAirportId.RunwayDto::get_id()
+DA:8,0
+FN:5,System.Void Modules.Airports.Application.UseCases.GetRunwaysByAirportId.RunwayDto::.ctor(System.Guid,System.Guid,System.String,System.Boolean,Modules.Airports.Domain.RunwayType)
+FNDA:0,System.Void Modules.Airports.Application.UseCases.GetRunwaysByAirportId.RunwayDto::.ctor(System.Guid,System.Guid,System.String,System.Boolean,Modules.Airports.Domain.RunwayType)
+DA:6,0
+DA:7,0
+DA:9,0
+LF:4
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\GetAirports\GetAirportsDto.cs
+FN:5,System.Guid Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_Id()
+FNDA:1,System.Guid Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_Id()
+DA:6,1
+FN:6,System.String Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_Name()
+FNDA:1,System.String Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_Name()
+DA:7,1
+FN:7,System.Int32 Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_StandCapacity()
+FNDA:1,System.Int32 Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_StandCapacity()
+DA:8,1
+FN:8,System.Double Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_Latitude()
+FNDA:0,System.Double Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_Latitude()
+DA:9,0
+FN:9,System.Double Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_Longitude()
+FNDA:0,System.Double Modules.Airports.Application.UseCases.GetAirports.AirportDto::get_Longitude()
+DA:10,0
+FN:4,System.Void Modules.Airports.Application.UseCases.GetAirports.AirportDto::.ctor(System.Guid,System.String,System.Int32,System.Double,System.Double)
+FNDA:4,System.Void Modules.Airports.Application.UseCases.GetAirports.AirportDto::.ctor(System.Guid,System.String,System.Int32,System.Double,System.Double)
+DA:5,4
+DA:11,4
+LF:7
+LH:5
+BRF:0
+BRH:0
+FNF:6
+FNH:4
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\GetAirports\GetAirportsHandler.cs
+FN:15,System.Threading.Tasks.Task`1<System.Collections.Generic.List`1<Modules.Airports.Application.UseCases.GetAirports.AirportDto>> Modules.Airports.Application.UseCases.GetAirports.GetAirportsHandler::Handle(Modules.Airports.Application.UseCases.GetAirports.GetAirportsQuery,System.Threading.CancellationToken)
+FNDA:3,System.Threading.Tasks.Task`1<System.Collections.Generic.List`1<Modules.Airports.Application.UseCases.GetAirports.AirportDto>> Modules.Airports.Application.UseCases.GetAirports.GetAirportsHandler::Handle(Modules.Airports.Application.UseCases.GetAirports.GetAirportsQuery,System.Threading.CancellationToken)
+DA:16,3
+DA:17,3
+DA:19,3
+DA:20,4
+DA:21,3
+DA:23,3
+DA:24,3
+FN:9,System.Void Modules.Airports.Application.UseCases.GetAirports.GetAirportsHandler::.ctor(Modules.Airports.Application.IAirportStore)
+FNDA:3,System.Void Modules.Airports.Application.UseCases.GetAirports.GetAirportsHandler::.ctor(Modules.Airports.Application.IAirportStore)
+DA:10,3
+DA:11,3
+DA:12,3
+DA:13,3
+LF:11
+LH:11
+BRF:0
+BRH:0
+FNF:2
+FNH:2
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\GetAirports\GetAirportsQuery.cs
+FN:4,System.Void Modules.Airports.Application.UseCases.GetAirports.GetAirportsQuery::.ctor()
+FNDA:3,System.Void Modules.Airports.Application.UseCases.GetAirports.GetAirportsQuery::.ctor()
+DA:5,3
+LF:1
+LH:1
+BRF:0
+BRH:0
+FNF:1
+FNH:1
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\DeleteRunway\DeleteRunwayCommand.cs
+FN:4,System.Guid Modules.Airports.Application.UseCases.DeleteRunway.DeleteRunwayCommand::get_RunwayId()
+FNDA:0,System.Guid Modules.Airports.Application.UseCases.DeleteRunway.DeleteRunwayCommand::get_RunwayId()
+DA:5,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\DeleteRunway\DeleteRunwayHandler.cs
+FN:7,System.Void Modules.Airports.Application.UseCases.DeleteRunway.DeleteRunwayHandler::.ctor(Modules.Airports.Application.IRunwayStore)
+FNDA:0,System.Void Modules.Airports.Application.UseCases.DeleteRunway.DeleteRunwayHandler::.ctor(Modules.Airports.Application.IRunwayStore)
+DA:8,0
+FN:10,System.Void Modules.Airports.Application.UseCases.DeleteRunway.DeleteRunwayHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Airports.Application.UseCases.DeleteRunway.DeleteRunwayHandler/<Handle>d__2::MoveNext()
+DA:11,0
+DA:12,0
+DA:13,0
+LF:4
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\DeleteAirport\DeleteAirportCommand.cs
+FN:4,System.Guid Modules.Airports.Application.UseCases.DeleteAirport.DeleteAirportCommand::get_AirportId()
+FNDA:0,System.Guid Modules.Airports.Application.UseCases.DeleteAirport.DeleteAirportCommand::get_AirportId()
+DA:5,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\DeleteAirport\DeleteAirportHandler.cs
+FN:7,System.Void Modules.Airports.Application.UseCases.DeleteAirport.DeleteAirportHandler::.ctor(Modules.Airports.Application.IAirportStore)
+FNDA:0,System.Void Modules.Airports.Application.UseCases.DeleteAirport.DeleteAirportHandler::.ctor(Modules.Airports.Application.IAirportStore)
+DA:8,0
+FN:10,System.Void Modules.Airports.Application.UseCases.DeleteAirport.DeleteAirportHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Airports.Application.UseCases.DeleteAirport.DeleteAirportHandler/<Handle>d__2::MoveNext()
+DA:11,0
+DA:12,0
+DA:13,0
+LF:4
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\CreateRunway\CreateRunwayCommand.cs
+FN:6,System.Guid Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayCommand::get_AirportId()
+FNDA:0,System.Guid Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayCommand::get_AirportId()
+DA:7,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\CreateRunway\CreateRunwayHandler.cs
+FN:17,System.Threading.Tasks.Task`1<Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayResult> Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayHandler::Handle(Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayCommand,System.Threading.CancellationToken)
+FNDA:0,System.Threading.Tasks.Task`1<Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayResult> Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayHandler::Handle(Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayCommand,System.Threading.CancellationToken)
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:27,0
+DA:29,0
+DA:30,0
+DA:31,0
+DA:32,0
+DA:33,0
+DA:34,0
+DA:35,0
+DA:36,0
+FN:11,System.Void Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayHandler::.ctor(Modules.Airports.Application.IRunwayStore)
+FNDA:0,System.Void Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayHandler::.ctor(Modules.Airports.Application.IRunwayStore)
+DA:12,0
+DA:13,0
+DA:14,0
+DA:15,0
+LF:21
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\CreateRunway\CreateRunwayResult.cs
+FN:6,System.Guid Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayResult::get_Id()
+FNDA:0,System.Guid Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayResult::get_Id()
+DA:7,0
+FN:5,System.Void Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayResult::.ctor(System.Guid,System.Guid,System.String,System.Boolean,Modules.Airports.Domain.RunwayType)
+FNDA:0,System.Void Modules.Airports.Application.UseCases.CreateRunway.CreateRunwayResult::.ctor(System.Guid,System.Guid,System.String,System.Boolean,Modules.Airports.Domain.RunwayType)
+DA:6,0
+DA:8,0
+LF:3
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\CreateAirport\CreateAirportCommand.cs
+FN:5,System.String Modules.Airports.Application.UseCases.CreateAirport.CreateAirportCommand::get_Name()
+FNDA:10,System.String Modules.Airports.Application.UseCases.CreateAirport.CreateAirportCommand::get_Name()
+DA:6,10
+LF:1
+LH:1
+BRF:0
+BRH:0
+FNF:1
+FNH:1
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Airports\Application\UseCases\CreateAirport\CreateAirportHandler.cs
+FN:15,System.Threading.Tasks.Task`1<Modules.Airports.Domain.Airport> Modules.Airports.Application.UseCases.CreateAirport.CreateAirportHandler::Handle(Modules.Airports.Application.UseCases.CreateAirport.CreateAirportCommand,System.Threading.CancellationToken)
+FNDA:2,System.Threading.Tasks.Task`1<Modules.Airports.Domain.Airport> Modules.Airports.Application.UseCases.CreateAirport.CreateAirportHandler::Handle(Modules.Airports.Application.UseCases.CreateAirport.CreateAirportCommand,System.Threading.CancellationToken)
+DA:16,2
+DA:17,2
+DA:18,2
+DA:19,2
+DA:20,2
+DA:21,2
+DA:22,2
+DA:23,2
+DA:24,2
+DA:25,2
+DA:26,2
+FN:9,System.Void Modules.Airports.Application.UseCases.CreateAirport.CreateAirportHandler::.ctor(Modules.Airports.Application.IAirportStore)
+FNDA:2,System.Void Modules.Airports.Application.UseCases.CreateAirport.CreateAirportHandler::.ctor(Modules.Airports.Application.IAirportStore)
+DA:10,2
+DA:11,2
+DA:12,2
+DA:13,2
+LF:15
+LH:15
+BRF:0
+BRH:0
+FNF:2
+FNH:2
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Login\Domain\User.cs
+FN:4,System.Guid Modules.Login.Domain.User::get_Id()
+FNDA:2,System.Guid Modules.Login.Domain.User::get_Id()
+DA:5,2
+FN:5,System.String Modules.Login.Domain.User::get_Email()
+FNDA:4,System.String Modules.Login.Domain.User::get_Email()
+DA:6,4
+FN:6,System.String Modules.Login.Domain.User::get_Username()
+FNDA:2,System.String Modules.Login.Domain.User::get_Username()
+DA:7,2
+FN:7,System.String Modules.Login.Domain.User::get_PasswordHash()
+FNDA:6,System.String Modules.Login.Domain.User::get_PasswordHash()
+DA:8,6
+FN:8,System.DateTime Modules.Login.Domain.User::get_CreatedAtUtc()
+FNDA:2,System.DateTime Modules.Login.Domain.User::get_CreatedAtUtc()
+DA:9,2
+LF:5
+LH:5
+BRF:0
+BRH:0
+FNF:5
+FNH:5
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Login\Application\UseCases\Login\LoginCommand.cs
+FN:5,System.String Modules.Login.Application.UseCases.Login.LoginCommand::get_Email()
+FNDA:3,System.String Modules.Login.Application.UseCases.Login.LoginCommand::get_Email()
+DA:6,3
+FN:6,System.String Modules.Login.Application.UseCases.Login.LoginCommand::get_Password()
+FNDA:2,System.String Modules.Login.Application.UseCases.Login.LoginCommand::get_Password()
+DA:7,2
+FN:4,System.Void Modules.Login.Application.UseCases.Login.LoginCommand::.ctor(System.String,System.String)
+FNDA:3,System.Void Modules.Login.Application.UseCases.Login.LoginCommand::.ctor(System.String,System.String)
+DA:5,3
+DA:8,3
+LF:4
+LH:4
+BRF:0
+BRH:0
+FNF:3
+FNH:3
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Login\Application\UseCases\Login\LoginDto.cs
+FN:3,System.String Modules.Login.Application.UseCases.Login.LoginDto::get_AccessToken()
+FNDA:1,System.String Modules.Login.Application.UseCases.Login.LoginDto::get_AccessToken()
+DA:4,1
+FN:2,System.Void Modules.Login.Application.UseCases.Login.LoginDto::.ctor(System.String)
+FNDA:1,System.Void Modules.Login.Application.UseCases.Login.LoginDto::.ctor(System.String)
+DA:3,1
+DA:5,1
+LF:3
+LH:3
+BRF:0
+BRH:0
+FNF:2
+FNH:2
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Login\Application\UseCases\Login\LoginHandler.cs
+FN:9,System.Void Modules.Login.Application.UseCases.Login.LoginHandler::.ctor(Modules.Login.Application.IUserStore,Modules.Login.Application.ITokenService)
+FNDA:3,System.Void Modules.Login.Application.UseCases.Login.LoginHandler::.ctor(Modules.Login.Application.IUserStore,Modules.Login.Application.ITokenService)
+DA:10,3
+DA:11,3
+DA:12,3
+DA:13,3
+DA:14,3
+DA:15,3
+DA:16,3
+FN:18,System.Void Modules.Login.Application.UseCases.Login.LoginHandler/<Handle>d__3::MoveNext()
+FNDA:3,System.Void Modules.Login.Application.UseCases.Login.LoginHandler/<Handle>d__3::MoveNext()
+DA:19,3
+DA:20,3
+DA:22,3
+DA:23,2
+DA:25,1
+DA:27,1
+DA:28,1
+BRDA:22,168,0,2
+BRDA:22,168,1,1
+BRDA:22,218,0,2
+BRDA:22,218,1,1
+LF:14
+LH:14
+BRF:4
+BRH:4
+FNF:2
+FNH:2
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Domain\Flight.cs
+FN:4,System.Guid Modules.Scenarios.Domain.Flight::get_Id()
+FNDA:26,System.Guid Modules.Scenarios.Domain.Flight::get_Id()
+DA:5,26
+FN:5,System.Guid Modules.Scenarios.Domain.Flight::get_ScenarioConfigId()
+FNDA:26,System.Guid Modules.Scenarios.Domain.Flight::get_ScenarioConfigId()
+DA:6,26
+FN:6,System.Guid Modules.Scenarios.Domain.Flight::get_AircraftId()
+FNDA:26,System.Guid Modules.Scenarios.Domain.Flight::get_AircraftId()
+DA:7,26
+FN:10,System.String Modules.Scenarios.Domain.Flight::get_Callsign()
+FNDA:39,System.String Modules.Scenarios.Domain.Flight::get_Callsign()
+DA:11,39
+FN:12,Modules.Scenarios.Domain.FlightType Modules.Scenarios.Domain.Flight::get_Type()
+FNDA:39,Modules.Scenarios.Domain.FlightType Modules.Scenarios.Domain.Flight::get_Type()
+DA:13,39
+FN:14,System.DateTime Modules.Scenarios.Domain.Flight::get_ScheduledTime()
+FNDA:62,System.DateTime Modules.Scenarios.Domain.Flight::get_ScheduledTime()
+DA:15,62
+FN:17,System.Int32 Modules.Scenarios.Domain.Flight::get_MaxDelayMinutes()
+FNDA:51,System.Int32 Modules.Scenarios.Domain.Flight::get_MaxDelayMinutes()
+DA:18,51
+FN:18,System.Int32 Modules.Scenarios.Domain.Flight::get_MaxEarlyMinutes()
+FNDA:26,System.Int32 Modules.Scenarios.Domain.Flight::get_MaxEarlyMinutes()
+DA:19,26
+FN:19,System.Int32 Modules.Scenarios.Domain.Flight::get_Priority()
+FNDA:50,System.Int32 Modules.Scenarios.Domain.Flight::get_Priority()
+DA:20,50
+LF:9
+LH:9
+BRF:0
+BRH:0
+FNF:9
+FNH:9
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Domain\RandomEvent.cs
+FN:4,System.Guid Modules.Scenarios.Domain.RandomEvent::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Domain.RandomEvent::get_Id()
+DA:5,0
+FN:5,System.Guid Modules.Scenarios.Domain.RandomEvent::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Domain.RandomEvent::get_ScenarioConfigId()
+DA:6,0
+FN:6,System.String Modules.Scenarios.Domain.RandomEvent::get_Name()
+FNDA:0,System.String Modules.Scenarios.Domain.RandomEvent::get_Name()
+DA:7,0
+FN:7,System.String Modules.Scenarios.Domain.RandomEvent::get_Description()
+FNDA:0,System.String Modules.Scenarios.Domain.RandomEvent::get_Description()
+DA:8,0
+FN:8,System.DateTime Modules.Scenarios.Domain.RandomEvent::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Domain.RandomEvent::get_StartTime()
+DA:9,0
+FN:9,System.DateTime Modules.Scenarios.Domain.RandomEvent::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Domain.RandomEvent::get_EndTime()
+DA:10,0
+FN:10,System.Int32 Modules.Scenarios.Domain.RandomEvent::get_ImpactPercent()
+FNDA:0,System.Int32 Modules.Scenarios.Domain.RandomEvent::get_ImpactPercent()
+DA:11,0
+LF:7
+LH:0
+BRF:0
+BRH:0
+FNF:7
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Domain\ScenarioConfig.cs
+FN:6,System.Guid Modules.Scenarios.Domain.ScenarioConfig::get_Id()
+FNDA:8,System.Guid Modules.Scenarios.Domain.ScenarioConfig::get_Id()
+DA:7,8
+FN:8,System.Guid Modules.Scenarios.Domain.ScenarioConfig::get_AirportId()
+FNDA:8,System.Guid Modules.Scenarios.Domain.ScenarioConfig::get_AirportId()
+DA:9,8
+FN:10,System.String Modules.Scenarios.Domain.ScenarioConfig::get_Name()
+FNDA:8,System.String Modules.Scenarios.Domain.ScenarioConfig::get_Name()
+DA:11,8
+FN:11,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_Difficulty()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_Difficulty()
+DA:12,8
+FN:13,System.DateTime Modules.Scenarios.Domain.ScenarioConfig::get_StartTime()
+FNDA:37,System.DateTime Modules.Scenarios.Domain.ScenarioConfig::get_StartTime()
+DA:14,37
+FN:14,System.DateTime Modules.Scenarios.Domain.ScenarioConfig::get_EndTime()
+FNDA:36,System.DateTime Modules.Scenarios.Domain.ScenarioConfig::get_EndTime()
+DA:15,36
+FN:17,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_Seed()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_Seed()
+DA:18,8
+FN:20,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_AircraftCount()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_AircraftCount()
+DA:21,8
+FN:21,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_AircraftDifficulty()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_AircraftDifficulty()
+DA:22,8
+FN:28,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_OnGroundAircraftCount()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_OnGroundAircraftCount()
+DA:29,8
+FN:29,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_InboundAircraftCount()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_InboundAircraftCount()
+DA:30,8
+FN:30,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_RemainingOnGroundAircraftCount()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_RemainingOnGroundAircraftCount()
+DA:31,8
+FN:33,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_BaseSeparationSeconds()
+FNDA:24,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_BaseSeparationSeconds()
+DA:34,24
+FN:36,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_WakePercent()
+FNDA:24,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_WakePercent()
+DA:37,24
+FN:37,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_WeatherPercent()
+FNDA:24,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_WeatherPercent()
+DA:38,24
+FN:40,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_WeatherIntervalCount()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_WeatherIntervalCount()
+DA:41,8
+FN:41,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_MinWeatherIntervalMinutes()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_MinWeatherIntervalMinutes()
+DA:42,8
+FN:42,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_WeatherDifficulty()
+FNDA:8,System.Int32 Modules.Scenarios.Domain.ScenarioConfig::get_WeatherDifficulty()
+DA:43,8
+FN:45,System.Collections.Generic.List`1<Modules.Scenarios.Domain.Flight> Modules.Scenarios.Domain.ScenarioConfig::get_Flights()
+FNDA:8,System.Collections.Generic.List`1<Modules.Scenarios.Domain.Flight> Modules.Scenarios.Domain.ScenarioConfig::get_Flights()
+DA:46,8
+FN:46,System.Collections.Generic.List`1<Modules.Scenarios.Domain.WeatherInterval> Modules.Scenarios.Domain.ScenarioConfig::get_WeatherIntervals()
+FNDA:8,System.Collections.Generic.List`1<Modules.Scenarios.Domain.WeatherInterval> Modules.Scenarios.Domain.ScenarioConfig::get_WeatherIntervals()
+DA:47,8
+FN:47,System.Collections.Generic.List`1<Modules.Aircrafts.Domain.Aircraft> Modules.Scenarios.Domain.ScenarioConfig::get_Aircrafts()
+FNDA:8,System.Collections.Generic.List`1<Modules.Aircrafts.Domain.Aircraft> Modules.Scenarios.Domain.ScenarioConfig::get_Aircrafts()
+DA:48,8
+LF:21
+LH:21
+BRF:0
+BRH:0
+FNF:21
+FNH:21
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Domain\WeatherInterval.cs
+FN:4,System.Guid Modules.Scenarios.Domain.WeatherInterval::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Domain.WeatherInterval::get_Id()
+DA:5,0
+FN:5,System.Guid Modules.Scenarios.Domain.WeatherInterval::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Domain.WeatherInterval::get_ScenarioConfigId()
+DA:6,0
+FN:6,System.DateTime Modules.Scenarios.Domain.WeatherInterval::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Domain.WeatherInterval::get_StartTime()
+DA:7,0
+FN:7,System.DateTime Modules.Scenarios.Domain.WeatherInterval::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Domain.WeatherInterval::get_EndTime()
+DA:8,0
+FN:8,Modules.Scenarios.Domain.WeatherCondition Modules.Scenarios.Domain.WeatherInterval::get_WeatherType()
+FNDA:0,Modules.Scenarios.Domain.WeatherCondition Modules.Scenarios.Domain.WeatherInterval::get_WeatherType()
+DA:9,0
+LF:5
+LH:0
+BRF:0
+BRH:0
+FNF:5
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\UpdateRandomEvent\UpdateRandomEventCommand.cs
+FN:6,System.Guid Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_Id()
+DA:7,0
+FN:7,System.Guid Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_ScenarioConfigId()
+DA:8,0
+FN:8,System.String Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_Name()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_Name()
+DA:9,0
+FN:9,System.String Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_Description()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_Description()
+DA:10,0
+FN:10,System.DateTime Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_StartTime()
+DA:11,0
+FN:11,System.DateTime Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_EndTime()
+DA:12,0
+FN:12,System.Int32 Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_ImpactPercent()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::get_ImpactPercent()
+DA:13,0
+FN:5,System.Void Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::.ctor(System.Guid,System.Guid,System.String,System.String,System.DateTime,System.DateTime,System.Int32)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventCommand::.ctor(System.Guid,System.Guid,System.String,System.String,System.DateTime,System.DateTime,System.Int32)
+DA:6,0
+DA:14,0
+LF:9
+LH:0
+BRF:0
+BRH:0
+FNF:8
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\UpdateRandomEvent\UpdateRandomEventHandler.cs
+FN:12,System.Void Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventHandler::.ctor(Modules.Scenarios.Application.IRandomEventStore,Modules.Scenarios.Application.IScenarioConfigStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventHandler::.ctor(Modules.Scenarios.Application.IRandomEventStore,Modules.Scenarios.Application.IScenarioConfigStore)
+DA:13,0
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+FN:21,System.Void Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventHandler/<Handle>d__3::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.UpdateRandomEvent.UpdateRandomEventHandler/<Handle>d__3::MoveNext()
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:27,0
+DA:28,0
+DA:30,0
+DA:31,0
+DA:33,0
+DA:34,0
+DA:36,0
+DA:37,0
+DA:38,0
+DA:39,0
+DA:40,0
+DA:41,0
+DA:42,0
+DA:43,0
+DA:44,0
+DA:45,0
+DA:46,0
+BRDA:24,186,0,0
+BRDA:24,186,1,0
+BRDA:27,219,0,0
+BRDA:27,219,1,0
+BRDA:30,263,0,0
+BRDA:30,263,1,0
+BRDA:33,294,0,0
+BRDA:33,294,1,0
+LF:28
+LH:0
+BRF:8
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetWeatherIntervals\WeatherIntervalsDto.cs
+FN:5,System.Guid Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_Id()
+DA:6,0
+FN:6,System.Guid Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_ScenarioConfigId()
+DA:7,0
+FN:7,System.DateTime Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_StartTime()
+DA:8,0
+FN:8,System.DateTime Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_EndTime()
+DA:9,0
+FN:9,Modules.Scenarios.Domain.WeatherCondition Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_Condition()
+FNDA:0,Modules.Scenarios.Domain.WeatherCondition Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::get_Condition()
+DA:10,0
+FN:4,System.Void Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::.ctor(System.Guid,System.Guid,System.DateTime,System.DateTime,Modules.Scenarios.Domain.WeatherCondition)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto::.ctor(System.Guid,System.Guid,System.DateTime,System.DateTime,Modules.Scenarios.Domain.WeatherCondition)
+DA:5,0
+DA:11,0
+LF:7
+LH:0
+BRF:0
+BRH:0
+FNF:6
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetWeatherIntervals\WeatherIntervalsHandler.cs
+FN:9,System.Void Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsHandler::.ctor(Modules.Scenarios.Application.IWeatherIntervalStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsHandler::.ctor(Modules.Scenarios.Application.IWeatherIntervalStore)
+DA:10,0
+DA:11,0
+FN:19,Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsHandler/<>c::<Handle>b__2_0(Modules.Scenarios.Domain.WeatherInterval)
+FNDA:0,Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsHandler/<>c::<Handle>b__2_0(Modules.Scenarios.Domain.WeatherInterval)
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
+FN:15,System.Void Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsHandler/<Handle>d__2::MoveNext()
+DA:16,0
+DA:17,0
+DA:19,0
+DA:27,0
+DA:28,0
+LF:14
+LH:0
+BRF:0
+BRH:0
+FNF:3
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetWeatherIntervals\WeatherIntervalsQuery.cs
+FN:4,System.Guid Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsQuery::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsQuery::get_ScenarioConfigId()
+DA:5,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetScenarioConfigs\ScenarioConfigDto.cs
+FN:3,System.Guid Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_Id()
+DA:4,0
+FN:4,System.Guid Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_AirportId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_AirportId()
+DA:5,0
+FN:5,System.String Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_Name()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_Name()
+DA:6,0
+FN:6,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_Difficulty()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_Difficulty()
+DA:7,0
+FN:7,System.DateTime Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_StartTime()
+DA:8,0
+FN:8,System.DateTime Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_EndTime()
+DA:9,0
+FN:9,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_Seed()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_Seed()
+DA:10,0
+FN:10,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_AircraftCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_AircraftCount()
+DA:11,0
+FN:11,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_AircraftDifficulty()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_AircraftDifficulty()
+DA:12,0
+FN:12,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_OnGroundAircraftCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_OnGroundAircraftCount()
+DA:13,0
+FN:13,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_InboundAircraftCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_InboundAircraftCount()
+DA:14,0
+FN:14,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_RemainingOnGroundAircraftCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_RemainingOnGroundAircraftCount()
+DA:15,0
+FN:15,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_BaseSeparationSeconds()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_BaseSeparationSeconds()
+DA:16,0
+FN:16,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_WakePercent()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_WakePercent()
+DA:17,0
+FN:17,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_WeatherPercent()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_WeatherPercent()
+DA:18,0
+FN:18,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_WeatherIntervalCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_WeatherIntervalCount()
+DA:19,0
+FN:19,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_MinWeatherIntervalMinutes()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_MinWeatherIntervalMinutes()
+DA:20,0
+FN:20,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_WeatherDifficulty()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::get_WeatherDifficulty()
+DA:21,0
+FN:2,System.Void Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::.ctor(System.Guid,System.Guid,System.String,System.Int32,System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto::.ctor(System.Guid,System.Guid,System.String,System.Int32,System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)
+DA:3,0
+DA:22,0
+LF:20
+LH:0
+BRF:0
+BRH:0
+FNF:19
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetScenarioConfigs\ScenarioConfigHandler.cs
+FN:8,System.Void Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigHandler::.ctor(Modules.Scenarios.Application.IScenarioConfigStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigHandler::.ctor(Modules.Scenarios.Application.IScenarioConfigStore)
+DA:9,0
+FN:14,Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigHandler/<>c::<Handle>b__2_0(Modules.Scenarios.Domain.ScenarioConfig)
+FNDA:0,Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigDto Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigHandler/<>c::<Handle>b__2_0(Modules.Scenarios.Domain.ScenarioConfig)
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
+DA:31,0
+DA:32,0
+DA:33,0
+DA:34,0
+FN:11,System.Void Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigHandler/<Handle>d__2::MoveNext()
+DA:12,0
+DA:13,0
+DA:35,0
+LF:24
+LH:0
+BRF:0
+BRH:0
+FNF:3
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetScenarioConfigs\ScenarioConfigQuery.cs
+FN:5,System.Void Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigQuery::.ctor()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetScenarioConfigs.ScenarioConfigQuery::.ctor()
+DA:6,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetRandomEventsByScenarioConfigId\GetRandomEventsByScenarioConfigIdHandler.cs
+FN:10,System.Void Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.GetRandomEventsByScenarioConfigIdHandler::.ctor(Modules.Scenarios.Application.IRandomEventStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.GetRandomEventsByScenarioConfigIdHandler::.ctor(Modules.Scenarios.Application.IRandomEventStore)
+DA:11,0
+DA:12,0
+DA:13,0
+DA:14,0
+FN:18,System.Void Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.GetRandomEventsByScenarioConfigIdHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.GetRandomEventsByScenarioConfigIdHandler/<Handle>d__2::MoveNext()
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+LF:8
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetRandomEventsByScenarioConfigId\GetRandomEventsByScenarioConfigIdQuery.cs
+FN:4,System.Guid Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.GetRandomEventsByScenarioConfigIdQuery::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.GetRandomEventsByScenarioConfigIdQuery::get_ScenarioConfigId()
+DA:5,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetRandomEventsByScenarioConfigId\RandomEventDto.cs
+FN:3,System.Guid Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_Id()
+DA:4,0
+FN:4,System.Guid Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_ScenarioConfigId()
+DA:5,0
+FN:5,System.String Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_Name()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_Name()
+DA:6,0
+FN:6,System.String Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_Description()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_Description()
+DA:7,0
+FN:7,System.DateTime Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_StartTime()
+DA:8,0
+FN:8,System.DateTime Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_EndTime()
+DA:9,0
+FN:9,System.Int32 Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_ImpactPercent()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::get_ImpactPercent()
+DA:10,0
+FN:2,System.Void Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::.ctor(System.Guid,System.Guid,System.String,System.String,System.DateTime,System.DateTime,System.Int32)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto::.ctor(System.Guid,System.Guid,System.String,System.String,System.DateTime,System.DateTime,System.Int32)
+DA:3,0
+DA:11,0
+LF:9
+LH:0
+BRF:0
+BRH:0
+FNF:8
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetFlights\FlightDto.cs
+FN:5,System.Guid Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_Id()
+DA:6,0
+FN:6,System.Guid Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_ScenarioConfigId()
+DA:7,0
+FN:7,System.Guid Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_AircraftId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_AircraftId()
+DA:8,0
+FN:8,System.String Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_Callsign()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_Callsign()
+DA:9,0
+FN:9,Modules.Scenarios.Domain.FlightType Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_Type()
+FNDA:0,Modules.Scenarios.Domain.FlightType Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_Type()
+DA:10,0
+FN:10,System.DateTime Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_ScheduledTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_ScheduledTime()
+DA:11,0
+FN:11,System.Int32 Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_MaxDelayMinutes()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_MaxDelayMinutes()
+DA:12,0
+FN:12,System.Int32 Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_MaxEarlyMinutes()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_MaxEarlyMinutes()
+DA:13,0
+FN:13,System.Int32 Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_Priority()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::get_Priority()
+DA:14,0
+FN:4,System.Void Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::.ctor(System.Guid,System.Guid,System.Guid,System.String,Modules.Scenarios.Domain.FlightType,System.DateTime,System.Int32,System.Int32,System.Int32)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetFlights.FlightDto::.ctor(System.Guid,System.Guid,System.Guid,System.String,Modules.Scenarios.Domain.FlightType,System.DateTime,System.Int32,System.Int32,System.Int32)
+DA:5,0
+DA:15,0
+DA:16,0
+LF:12
+LH:0
+BRF:0
+BRH:0
+FNF:10
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetFlights\FlightHandeler.cs
+FN:7,System.Void Modules.Scenarios.Application.UseCases.GetFlights.FlightHandler::.ctor(Modules.Scenarios.Application.IFlightStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetFlights.FlightHandler::.ctor(Modules.Scenarios.Application.IFlightStore)
+DA:8,0
+FN:13,Modules.Scenarios.Application.UseCases.GetFlights.FlightDto Modules.Scenarios.Application.UseCases.GetFlights.FlightHandler/<>c::<Handle>b__2_0(Modules.Scenarios.Domain.Flight)
+FNDA:0,Modules.Scenarios.Application.UseCases.GetFlights.FlightDto Modules.Scenarios.Application.UseCases.GetFlights.FlightHandler/<>c::<Handle>b__2_0(Modules.Scenarios.Domain.Flight)
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+FN:10,System.Void Modules.Scenarios.Application.UseCases.GetFlights.FlightHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetFlights.FlightHandler/<Handle>d__2::MoveNext()
+DA:11,0
+DA:12,0
+DA:25,0
+LF:15
+LH:0
+BRF:0
+BRH:0
+FNF:3
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetFlights\FlightQuery.cs
+FN:5,System.Guid Modules.Scenarios.Application.UseCases.GetFlights.FlightQuery::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetFlights.FlightQuery::get_ScenarioConfigId()
+DA:6,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetAllDataScenarioConfig\AllDataScenarioConfigDto.cs
+FN:5,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Id()
+DA:6,0
+FN:6,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_AirportId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_AirportId()
+DA:7,0
+FN:7,System.String Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Name()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Name()
+DA:8,0
+FN:8,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Difficulty()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Difficulty()
+DA:9,0
+FN:9,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_StartTime()
+DA:10,0
+FN:10,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_EndTime()
+DA:11,0
+FN:11,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Seed()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Seed()
+DA:12,0
+FN:12,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_AircraftCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_AircraftCount()
+DA:13,0
+FN:13,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_AircraftDifficulty()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_AircraftDifficulty()
+DA:14,0
+FN:14,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_OnGroundAircraftCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_OnGroundAircraftCount()
+DA:15,0
+FN:15,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_InboundAircraftCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_InboundAircraftCount()
+DA:16,0
+FN:16,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_RemainingOnGroundAircraftCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_RemainingOnGroundAircraftCount()
+DA:17,0
+FN:17,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_BaseSeparationSeconds()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_BaseSeparationSeconds()
+DA:18,0
+FN:18,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WakePercent()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WakePercent()
+DA:19,0
+FN:19,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WeatherPercent()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WeatherPercent()
+DA:20,0
+FN:20,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WeatherIntervalCount()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WeatherIntervalCount()
+DA:21,0
+FN:21,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_MinWeatherIntervalMinutes()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_MinWeatherIntervalMinutes()
+DA:22,0
+FN:22,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WeatherDifficulty()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WeatherDifficulty()
+DA:23,0
+FN:23,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto> Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Flights()
+FNDA:0,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto> Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_Flights()
+DA:24,0
+FN:24,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto> Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WeatherIntervals()
+FNDA:0,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto> Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::get_WeatherIntervals()
+DA:25,0
+FN:4,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::.ctor(System.Guid,System.Guid,System.String,System.Int32,System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto>,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto>)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.ScenarioConfigAllDataDto::.ctor(System.Guid,System.Guid,System.String,System.Int32,System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto>,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto>)
+DA:5,0
+DA:26,0
+FN:28,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_Id()
+DA:29,0
+FN:29,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_ScenarioConfigId()
+DA:30,0
+FN:30,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_AircraftId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_AircraftId()
+DA:31,0
+FN:31,System.String Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_Callsign()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_Callsign()
+DA:32,0
+FN:32,Modules.Scenarios.Domain.FlightType Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_Type()
+FNDA:0,Modules.Scenarios.Domain.FlightType Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_Type()
+DA:33,0
+FN:33,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_ScheduledTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_ScheduledTime()
+DA:34,0
+FN:34,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_MaxDelayMinutes()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_MaxDelayMinutes()
+DA:35,0
+FN:35,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_MaxEarlyMinutes()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_MaxEarlyMinutes()
+DA:36,0
+FN:36,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_Priority()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::get_Priority()
+DA:37,0
+FN:27,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::.ctor(System.Guid,System.Guid,System.Guid,System.String,Modules.Scenarios.Domain.FlightType,System.DateTime,System.Int32,System.Int32,System.Int32)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto::.ctor(System.Guid,System.Guid,System.Guid,System.String,Modules.Scenarios.Domain.FlightType,System.DateTime,System.Int32,System.Int32,System.Int32)
+DA:28,0
+DA:38,0
+DA:39,0
+FN:41,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_Id()
+DA:42,0
+FN:42,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_ScenarioConfigId()
+DA:43,0
+FN:43,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_StartTime()
+DA:44,0
+FN:44,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_EndTime()
+DA:45,0
+FN:45,Modules.Scenarios.Domain.WeatherCondition Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_WeatherType()
+FNDA:0,Modules.Scenarios.Domain.WeatherCondition Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::get_WeatherType()
+DA:46,0
+FN:40,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::.ctor(System.Guid,System.Guid,System.DateTime,System.DateTime,Modules.Scenarios.Domain.WeatherCondition)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto::.ctor(System.Guid,System.Guid,System.DateTime,System.DateTime,Modules.Scenarios.Domain.WeatherCondition)
+DA:41,0
+DA:47,0
+LF:41
+LH:0
+BRF:0
+BRH:0
+FNF:37
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetAllDataScenarioConfig\AllDataScenarioConfigHandler.cs
+FN:12,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigHandler::.ctor(Modules.Scenarios.Application.IScenarioConfigStore,Modules.Scenarios.Application.IFlightStore,Modules.Scenarios.Application.IWeatherIntervalStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigHandler::.ctor(Modules.Scenarios.Application.IScenarioConfigStore,Modules.Scenarios.Application.IFlightStore,Modules.Scenarios.Application.IWeatherIntervalStore)
+DA:13,0
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+FN:31,Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigHandler/<>c::<Handle>b__4_0(Modules.Scenarios.Domain.Flight)
+FNDA:0,Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.FlightDto Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigHandler/<>c::<Handle>b__4_0(Modules.Scenarios.Domain.Flight)
+DA:32,0
+DA:33,0
+DA:34,0
+DA:35,0
+DA:36,0
+DA:37,0
+DA:38,0
+DA:39,0
+DA:40,0
+DA:41,0
+DA:42,0
+FN:43,Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigHandler/<>c::<Handle>b__4_1(Modules.Scenarios.Domain.WeatherInterval)
+FNDA:0,Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.WeatherIntervalsDto Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigHandler/<>c::<Handle>b__4_1(Modules.Scenarios.Domain.WeatherInterval)
+DA:44,0
+DA:45,0
+DA:46,0
+DA:47,0
+DA:48,0
+DA:49,0
+DA:50,0
+FN:23,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigHandler/<Handle>d__4::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigHandler/<Handle>d__4::MoveNext()
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:29,0
+DA:30,0
+DA:52,0
+DA:53,0
+DA:54,0
+DA:55,0
+DA:56,0
+DA:57,0
+DA:58,0
+DA:59,0
+DA:60,0
+DA:61,0
+DA:62,0
+DA:63,0
+DA:64,0
+DA:65,0
+DA:66,0
+DA:67,0
+DA:68,0
+DA:69,0
+DA:70,0
+DA:71,0
+DA:72,0
+DA:73,0
+DA:74,0
+BRDA:26,200,0,0
+BRDA:26,200,1,0
+LF:56
+LH:0
+BRF:2
+BRH:0
+FNF:4
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\GetAllDataScenarioConfig\AllDataScenarioConfigQuery.cs
+FN:4,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigQuery::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig.GetAllDataScenarioConfigQuery::get_ScenarioConfigId()
+DA:5,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\DeleteScenario\DeleteScenarioCommand.cs
+FN:4,System.Guid Modules.Scenarios.Application.UseCases.DeleteScenario.DeleteScenarioCommand::get_ScenarioId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.DeleteScenario.DeleteScenarioCommand::get_ScenarioId()
+DA:5,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\DeleteScenario\DeleteScenarioHandler.cs
+FN:8,System.Void Modules.Scenarios.Application.UseCases.DeleteScenario.DeleteScenarioHandler::.ctor(Modules.Scenarios.Application.IScenarioConfigStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.DeleteScenario.DeleteScenarioHandler::.ctor(Modules.Scenarios.Application.IScenarioConfigStore)
+DA:9,0
+FN:11,System.Void Modules.Scenarios.Application.UseCases.DeleteScenario.DeleteScenarioHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.DeleteScenario.DeleteScenarioHandler/<Handle>d__2::MoveNext()
+DA:12,0
+DA:13,0
+DA:14,0
+LF:4
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\DeleteRandomEvent\DeleteRandomEventCommand.cs
+FN:4,System.Guid Modules.Scenarios.Application.UseCases.DeleteRandomEvent.DeleteRandomEventCommand::get_Id()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.DeleteRandomEvent.DeleteRandomEventCommand::get_Id()
+DA:5,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\DeleteRandomEvent\DeleteRandomEventHandler.cs
+FN:9,System.Void Modules.Scenarios.Application.UseCases.DeleteRandomEvent.DeleteRandomEventHandler::.ctor(Modules.Scenarios.Application.IRandomEventStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.DeleteRandomEvent.DeleteRandomEventHandler::.ctor(Modules.Scenarios.Application.IRandomEventStore)
+DA:10,0
+DA:11,0
+DA:12,0
+DA:13,0
+FN:15,System.Void Modules.Scenarios.Application.UseCases.DeleteRandomEvent.DeleteRandomEventHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.DeleteRandomEvent.DeleteRandomEventHandler/<Handle>d__2::MoveNext()
+DA:16,0
+DA:17,0
+DA:18,0
+LF:7
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\CreateWeatherIntervals\CreateWeatherIntervalsCommand.cs
+FN:5,System.Guid Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsCommand::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsCommand::get_ScenarioConfigId()
+DA:6,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\CreateWeatherIntervals\CreateWeatherIntervalsHandler.cs
+FN:46,System.Collections.Generic.List`1<Modules.Scenarios.Domain.WeatherInterval> Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler::GenerateWeatherIntervals(Modules.Scenarios.Domain.ScenarioConfig)
+FNDA:0,System.Collections.Generic.List`1<Modules.Scenarios.Domain.WeatherInterval> Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler::GenerateWeatherIntervals(Modules.Scenarios.Domain.ScenarioConfig)
+DA:47,0
+DA:48,0
+DA:49,0
+DA:50,0
+DA:51,0
+DA:52,0
+DA:53,0
+DA:54,0
+DA:55,0
+DA:57,0
+DA:58,0
+DA:60,0
+DA:61,0
+DA:63,0
+DA:64,0
+DA:66,0
+DA:67,0
+DA:68,0
+DA:69,0
+DA:71,0
+DA:73,0
+DA:74,0
+DA:75,0
+DA:76,0
+DA:77,0
+DA:78,0
+DA:80,0
+DA:81,0
+DA:82,0
+DA:83,0
+DA:84,0
+DA:85,0
+DA:86,0
+DA:88,0
+DA:89,0
+DA:91,0
+DA:92,0
+BRDA:57,98,0,0
+BRDA:57,98,1,0
+BRDA:60,119,0,0
+BRDA:60,119,1,0
+BRDA:63,144,0,0
+BRDA:63,144,1,0
+BRDA:67,172,0,0
+BRDA:67,172,1,0
+BRDA:74,409,1,0
+BRDA:77,325,0,0
+BRDA:77,325,1,0
+BRDA:74,409,0,0
+FN:94,System.Int32[] Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler::BuildDurations(System.Int32,System.Int32,System.Int32,System.Random)
+FNDA:0,System.Int32[] Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler::BuildDurations(System.Int32,System.Int32,System.Int32,System.Random)
+DA:95,0
+DA:96,0
+DA:97,0
+DA:98,0
+DA:100,0
+DA:101,0
+DA:102,0
+DA:103,0
+DA:104,0
+DA:105,0
+DA:107,0
+DA:108,0
+BRDA:97,26,1,0
+BRDA:97,26,0,0
+BRDA:101,68,1,0
+BRDA:101,68,0,0
+FN:110,Modules.Scenarios.Domain.WeatherCondition Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler::PickWeather(System.Int32,System.Random)
+FNDA:0,Modules.Scenarios.Domain.WeatherCondition Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler::PickWeather(System.Int32,System.Random)
+DA:111,0
+DA:112,0
+DA:113,0
+DA:114,0
+DA:116,0
+DA:117,0
+DA:118,0
+DA:119,0
+DA:120,0
+DA:121,0
+DA:123,0
+DA:124,0
+DA:126,0
+DA:127,0
+DA:128,0
+DA:129,0
+DA:130,0
+DA:131,0
+DA:132,0
+BRDA:113,11,0,0
+BRDA:113,11,1,0
+BRDA:114,23,0,0
+BRDA:114,23,1,0
+BRDA:126,119,0,0
+BRDA:126,119,1,0
+BRDA:127,140,0,0
+BRDA:127,140,1,0
+BRDA:128,161,0,0
+BRDA:128,161,1,0
+BRDA:129,183,0,0
+BRDA:129,183,1,0
+BRDA:130,205,0,0
+BRDA:130,205,1,0
+FN:13,System.Void Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler::.ctor(MediatR.IMediator,Modules.Scenarios.Application.IWeatherIntervalStore,Modules.Scenarios.Application.IScenarioConfigStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler::.ctor(MediatR.IMediator,Modules.Scenarios.Application.IWeatherIntervalStore,Modules.Scenarios.Application.IScenarioConfigStore)
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+FN:26,System.Void Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler/<Handle>d__4::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateWeatherIntervals.CreateWeatherIntervalsHandler/<Handle>d__4::MoveNext()
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
+DA:32,0
+DA:33,0
+DA:34,0
+DA:36,0
+DA:37,0
+DA:39,0
+DA:41,0
+DA:43,0
+DA:44,0
+BRDA:29,200,0,0
+BRDA:29,200,1,0
+BRDA:36,386,0,0
+BRDA:36,386,1,0
+LF:90
+LH:0
+BRF:34
+BRH:0
+FNF:5
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\CreateScenarioConfig\CreateScenarioConfigCommand.cs
+FN:6,System.Guid Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_AirportId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_AirportId()
+DA:7,0
+FN:7,System.String Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_Name()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_Name()
+DA:8,0
+FN:8,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_Difficulty()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_Difficulty()
+DA:9,0
+FN:9,System.Nullable`1<System.DateTime> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_StartTime()
+FNDA:0,System.Nullable`1<System.DateTime> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_StartTime()
+DA:10,0
+FN:10,System.Nullable`1<System.DateTime> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_EndTime()
+FNDA:0,System.Nullable`1<System.DateTime> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_EndTime()
+DA:11,0
+FN:12,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_Seed()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_Seed()
+DA:13,0
+FN:14,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_AircraftCount()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_AircraftCount()
+DA:15,0
+FN:15,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_AircraftDifficulty()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_AircraftDifficulty()
+DA:16,0
+FN:16,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_OnGroundAircraftCount()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_OnGroundAircraftCount()
+DA:17,0
+FN:17,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_InboundAircraftCount()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_InboundAircraftCount()
+DA:18,0
+FN:18,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_RemainingOnGroundAircraftCount()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_RemainingOnGroundAircraftCount()
+DA:19,0
+FN:20,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_BaseSeparationSeconds()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_BaseSeparationSeconds()
+DA:21,0
+FN:21,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_WakePercent()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_WakePercent()
+DA:22,0
+FN:22,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_WeatherPercent()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_WeatherPercent()
+DA:23,0
+FN:24,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_WeatherIntervalCount()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_WeatherIntervalCount()
+DA:25,0
+FN:25,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_MinWeatherIntervalMinutes()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_MinWeatherIntervalMinutes()
+DA:26,0
+FN:26,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_WeatherDifficulty()
+FNDA:0,System.Nullable`1<System.Int32> Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::get_WeatherDifficulty()
+DA:27,0
+FN:5,System.Void Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::.ctor(System.Guid,System.String,System.Nullable`1<System.Int32>,System.Nullable`1<System.DateTime>,System.Nullable`1<System.DateTime>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigCommand::.ctor(System.Guid,System.String,System.Nullable`1<System.Int32>,System.Nullable`1<System.DateTime>,System.Nullable`1<System.DateTime>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>,System.Nullable`1<System.Int32>)
+DA:6,0
+DA:12,0
+DA:14,0
+DA:20,0
+DA:24,0
+DA:28,0
+LF:23
+LH:0
+BRF:0
+BRH:0
+FNF:18
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\CreateScenarioConfig\CreateScenarioConfigHandler.cs
+FN:11,System.Void Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigHandler::.ctor(Modules.Scenarios.Application.IScenarioConfigStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigHandler::.ctor(Modules.Scenarios.Application.IScenarioConfigStore)
+DA:12,0
+FN:14,System.Void Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigHandler/<Handle>d__2::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateScenarioConfig.CreateScenarioConfigHandler/<Handle>d__2::MoveNext()
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:22,0
+DA:23,0
+DA:25,0
+DA:27,0
+DA:28,0
+DA:30,0
+DA:31,0
+DA:32,0
+DA:34,0
+DA:36,0
+DA:37,0
+DA:39,0
+DA:40,0
+DA:41,0
+DA:43,0
+DA:44,0
+BRDA:22,84,0,0
+BRDA:22,84,1,0
+BRDA:22,105,0,0
+BRDA:22,105,1,0
+BRDA:23,144,0,0
+BRDA:23,144,1,0
+BRDA:23,167,0,0
+BRDA:23,167,1,0
+BRDA:25,207,0,0
+BRDA:25,207,1,0
+BRDA:25,238,0,0
+BRDA:25,238,1,0
+BRDA:27,278,0,0
+BRDA:27,278,1,0
+BRDA:27,309,0,0
+BRDA:27,309,1,0
+BRDA:28,349,0,0
+BRDA:28,349,1,0
+BRDA:28,380,0,0
+BRDA:28,380,1,0
+BRDA:30,420,0,0
+BRDA:30,420,1,0
+BRDA:30,451,0,0
+BRDA:30,451,1,0
+BRDA:31,491,0,0
+BRDA:31,491,1,0
+BRDA:31,522,0,0
+BRDA:31,522,1,0
+BRDA:32,562,0,0
+BRDA:32,562,1,0
+BRDA:32,593,0,0
+BRDA:32,593,1,0
+BRDA:34,633,0,0
+BRDA:34,633,1,0
+BRDA:34,664,0,0
+BRDA:34,664,1,0
+BRDA:36,704,0,0
+BRDA:36,704,1,0
+BRDA:36,735,0,0
+BRDA:36,735,1,0
+BRDA:37,775,0,0
+BRDA:37,775,1,0
+BRDA:37,806,0,0
+BRDA:37,806,1,0
+BRDA:39,846,0,0
+BRDA:39,846,1,0
+BRDA:39,877,0,0
+BRDA:39,877,1,0
+BRDA:40,917,0,0
+BRDA:40,917,1,0
+BRDA:40,948,0,0
+BRDA:40,948,1,0
+BRDA:41,988,0,0
+BRDA:41,988,1,0
+BRDA:41,1019,0,0
+BRDA:41,1019,1,0
+LF:23
+LH:0
+BRF:56
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\CreateRandomEvent\CreateRandomEventCommand.cs
+FN:6,System.Guid Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_ScenarioConfigId()
+DA:7,0
+FN:7,System.String Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_Name()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_Name()
+DA:8,0
+FN:8,System.String Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_Description()
+FNDA:0,System.String Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_Description()
+DA:9,0
+FN:9,System.DateTime Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_StartTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_StartTime()
+DA:10,0
+FN:10,System.DateTime Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_EndTime()
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_EndTime()
+DA:11,0
+FN:11,System.Int32 Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_ImpactPercent()
+FNDA:0,System.Int32 Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::get_ImpactPercent()
+DA:12,0
+FN:5,System.Void Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::.ctor(System.Guid,System.String,System.String,System.DateTime,System.DateTime,System.Int32)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventCommand::.ctor(System.Guid,System.String,System.String,System.DateTime,System.DateTime,System.Int32)
+DA:6,0
+DA:13,0
+LF:8
+LH:0
+BRF:0
+BRH:0
+FNF:7
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\CreateRandomEvent\CreateRandomEventHandler.cs
+FN:12,System.Void Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventHandler::.ctor(Modules.Scenarios.Application.IRandomEventStore,Modules.Scenarios.Application.IScenarioConfigStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventHandler::.ctor(Modules.Scenarios.Application.IRandomEventStore,Modules.Scenarios.Application.IScenarioConfigStore)
+DA:13,0
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+FN:21,System.Void Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventHandler/<Handle>d__3::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateRandomEvent.CreateRandomEventHandler/<Handle>d__3::MoveNext()
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:27,0
+DA:28,0
+DA:30,0
+DA:31,0
+DA:33,0
+DA:34,0
+DA:36,0
+DA:37,0
+DA:38,0
+DA:39,0
+DA:40,0
+DA:41,0
+DA:42,0
+DA:43,0
+DA:44,0
+DA:46,0
+DA:47,0
+BRDA:24,186,0,0
+BRDA:24,186,1,0
+BRDA:27,219,0,0
+BRDA:27,219,1,0
+BRDA:30,263,0,0
+BRDA:30,263,1,0
+BRDA:33,294,0,0
+BRDA:33,294,1,0
+LF:28
+LH:0
+BRF:8
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\CreateFlights\CreateFlightsCommand.cs
+FN:5,System.Guid Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsCommand::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsCommand::get_ScenarioConfigId()
+DA:6,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Scenarios\Application\UseCases\CreateFlights\CreateFlightsHandler .cs
+FN:48,System.Void Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::ValidateConfig(Modules.Scenarios.Domain.ScenarioConfig)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::ValidateConfig(Modules.Scenarios.Domain.ScenarioConfig)
+DA:49,0
+DA:50,0
+DA:51,0
+DA:53,0
+DA:54,0
+DA:56,0
+DA:57,0
+DA:58,0
+DA:59,0
+BRDA:50,27,0,0
+BRDA:50,27,1,0
+BRDA:53,47,0,0
+BRDA:53,47,1,0
+BRDA:53,68,0,0
+BRDA:53,68,1,0
+BRDA:57,119,0,0
+BRDA:57,119,1,0
+FN:61,System.Collections.Generic.List`1<Modules.Scenarios.Domain.Flight> Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::GenerateFlightsFromAircrafts(System.Collections.Generic.List`1<Modules.Aircrafts.Domain.Aircraft>,Modules.Scenarios.Domain.ScenarioConfig)
+FNDA:0,System.Collections.Generic.List`1<Modules.Scenarios.Domain.Flight> Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::GenerateFlightsFromAircrafts(System.Collections.Generic.List`1<Modules.Aircrafts.Domain.Aircraft>,Modules.Scenarios.Domain.ScenarioConfig)
+DA:62,0
+DA:63,0
+DA:65,0
+DA:66,0
+DA:68,0
+DA:69,0
+DA:72,0
+DA:73,0
+DA:77,0
+DA:80,0
+DA:81,0
+DA:84,0
+DA:85,0
+DA:88,0
+DA:89,0
+DA:91,0
+DA:92,0
+DA:94,0
+DA:95,0
+DA:96,0
+DA:97,0
+DA:99,0
+DA:100,0
+DA:102,0
+DA:103,0
+DA:104,0
+DA:105,0
+DA:106,0
+DA:107,0
+DA:108,0
+DA:109,0
+DA:110,0
+DA:111,0
+DA:112,0
+DA:113,0
+DA:119,0
+DA:120,0
+DA:122,0
+DA:123,0
+DA:125,0
+DA:126,0
+DA:127,0
+DA:129,0
+DA:130,0
+DA:134,0
+DA:135,0
+DA:136,0
+DA:138,0
+DA:139,0
+DA:141,0
+DA:143,0
+DA:144,0
+DA:145,0
+DA:147,0
+DA:148,0
+DA:150,0
+DA:151,0
+DA:152,0
+DA:154,0
+DA:155,0
+DA:156,0
+DA:157,0
+DA:158,0
+DA:159,0
+DA:160,0
+DA:161,0
+DA:162,0
+DA:163,0
+DA:164,0
+DA:165,0
+DA:166,0
+DA:167,0
+DA:168,0
+BRDA:94,511,1,0
+BRDA:94,511,0,0
+BRDA:125,954,1,0
+BRDA:134,664,0,0
+BRDA:138,698,1,0
+BRDA:134,664,1,0
+BRDA:138,698,0,0
+BRDA:125,954,0,0
+FN:170,System.ValueTuple`2<System.DateTime,System.DateTime> Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::GetSafeWindow(System.DateTime,System.DateTime,System.Int32)
+FNDA:0,System.ValueTuple`2<System.DateTime,System.DateTime> Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::GetSafeWindow(System.DateTime,System.DateTime,System.Int32)
+DA:171,0
+DA:172,0
+DA:173,0
+DA:175,0
+DA:176,0
+DA:177,0
+DA:180,0
+DA:181,0
+DA:183,0
+DA:184,0
+DA:187,0
+DA:188,0
+DA:190,0
+DA:191,0
+BRDA:172,12,0,0
+BRDA:172,12,1,0
+BRDA:176,53,0,0
+BRDA:176,53,1,0
+BRDA:187,126,0,0
+BRDA:187,126,1,0
+FN:193,System.DateTime Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::Clamp(System.DateTime,System.DateTime,System.DateTime)
+FNDA:0,System.DateTime Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::Clamp(System.DateTime,System.DateTime,System.DateTime)
+DA:194,0
+DA:195,0
+DA:196,0
+DA:197,0
+DA:198,0
+BRDA:195,10,0,0
+BRDA:195,10,1,0
+BRDA:196,25,0,0
+BRDA:196,25,1,0
+FN:200,System.Void Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::ShuffleInPlace(System.Collections.Generic.IList`1<T>,System.Random)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::ShuffleInPlace(System.Collections.Generic.IList`1<T>,System.Random)
+DA:201,0
+DA:202,0
+DA:203,0
+DA:204,0
+DA:205,0
+DA:206,0
+DA:207,0
+BRDA:202,82,1,0
+BRDA:202,82,0,0
+FN:210,System.Collections.Generic.List`1<System.DateTime> Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::GenerateScheduleTimes(System.DateTime,System.DateTime,System.Int32,System.Random,System.Int32)
+FNDA:0,System.Collections.Generic.List`1<System.DateTime> Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::GenerateScheduleTimes(System.DateTime,System.DateTime,System.Int32,System.Random,System.Int32)
+DA:211,0
+DA:212,0
+DA:214,0
+DA:215,0
+DA:217,0
+DA:218,0
+DA:220,0
+DA:221,0
+DA:222,0
+DA:223,0
+DA:224,0
+DA:226,0
+DA:230,0
+DA:231,0
+DA:232,0
+DA:233,0
+DA:234,0
+DA:237,0
+DA:240,0
+DA:241,0
+DA:242,0
+DA:243,0
+DA:244,0
+DA:245,0
+DA:246,0
+DA:247,0
+DA:250,0
+DA:251,0
+DA:252,0
+DA:253,0
+DA:254,0
+DA:255,0
+DA:258,0
+DA:259,0
+DA:260,0
+DA:261,0
+DA:264,0
+DA:265,0
+DA:266,0
+DA:267,0
+DA:268,0
+DA:269,0
+DA:270,0
+DA:272,0
+DA:273,0
+BRDA:214,17,0,0
+BRDA:214,17,1,0
+BRDA:217,38,0,0
+BRDA:217,38,1,0
+BRDA:221,79,0,0
+BRDA:223,110,1,0
+BRDA:223,110,0,0
+BRDA:221,79,1,0
+BRDA:231,164,1,0
+BRDA:231,164,0,0
+BRDA:240,176,0,0
+BRDA:240,176,1,0
+BRDA:240,189,0,0
+BRDA:242,267,1,0
+BRDA:245,233,0,0
+BRDA:245,233,1,0
+BRDA:242,267,0,0
+BRDA:251,294,0,0
+BRDA:254,360,1,0
+BRDA:254,360,0,0
+BRDA:258,430,1,0
+BRDA:259,390,0,0
+BRDA:259,390,1,0
+BRDA:258,430,0,0
+BRDA:251,294,1,0
+BRDA:240,189,1,0
+BRDA:264,521,1,0
+BRDA:267,469,0,0
+BRDA:267,469,1,0
+BRDA:268,486,0,0
+BRDA:268,486,1,0
+BRDA:264,521,0,0
+FN:276,System.ValueTuple`2<System.Int32,System.Int32> Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::GetTimingLimits(System.Int32,Modules.Aircrafts.Domain.WakeTurbulenceCategory,System.Random)
+FNDA:0,System.ValueTuple`2<System.Int32,System.Int32> Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::GetTimingLimits(System.Int32,Modules.Aircrafts.Domain.WakeTurbulenceCategory,System.Random)
+DA:277,0
+DA:278,0
+DA:279,0
+DA:281,0
+DA:282,0
+DA:283,0
+DA:285,0
+DA:286,0
+DA:287,0
+DA:288,0
+DA:289,0
+DA:290,0
+DA:291,0
+DA:292,0
+DA:294,0
+DA:295,0
+DA:297,0
+DA:298,0
+DA:300,0
+DA:301,0
+DA:303,0
+DA:304,0
+DA:306,0
+DA:307,0
+BRDA:278,9,0,0
+BRDA:278,9,1,0
+BRDA:279,22,0,0
+BRDA:279,22,1,0
+BRDA:285,103,1,0
+BRDA:285,103,2,0
+BRDA:285,103,3,0
+BRDA:285,103,4,0
+BRDA:285,103,0,0
+BRDA:300,252,0,0
+BRDA:300,252,1,0
+BRDA:301,267,0,0
+BRDA:301,267,1,0
+BRDA:303,282,0,0
+BRDA:303,282,1,0
+BRDA:304,297,0,0
+BRDA:304,297,1,0
+FN:14,System.Void Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::.ctor(MediatR.IMediator,Modules.Scenarios.Application.IScenarioConfigStore,Modules.Scenarios.Application.IFlightStore)
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler::.ctor(MediatR.IMediator,Modules.Scenarios.Application.IScenarioConfigStore,Modules.Scenarios.Application.IFlightStore)
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+FN:25,System.Void Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler/<Handle>d__4::MoveNext()
+FNDA:0,System.Void Modules.Scenarios.Application.UseCases.CreateFlights.CreateFlightsHandler/<Handle>d__4::MoveNext()
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:31,0
+DA:33,0
+DA:34,0
+DA:35,0
+DA:37,0
+DA:38,0
+DA:40,0
+DA:42,0
+DA:43,0
+DA:45,0
+DA:46,0
+BRDA:28,209,0,0
+BRDA:28,209,1,0
+BRDA:37,439,0,0
+BRDA:37,439,1,0
+LF:201
+LH:0
+BRF:81
+BRH:0
+FNF:9
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Solver\Domain\ScenarioSnapshot.cs
+FN:8,Modules.Scenarios.Domain.ScenarioConfig Modules.Solver.Domain.ScenarioSnapshot::get_ScenarioConfig()
+FNDA:65,Modules.Scenarios.Domain.ScenarioConfig Modules.Solver.Domain.ScenarioSnapshot::get_ScenarioConfig()
+DA:9,65
+FN:9,Modules.Airports.Domain.Airport Modules.Solver.Domain.ScenarioSnapshot::get_Airport()
+FNDA:16,Modules.Airports.Domain.Airport Modules.Solver.Domain.ScenarioSnapshot::get_Airport()
+DA:10,16
+FN:10,System.Collections.Generic.IReadOnlyList`1<Modules.Airports.Domain.Runway> Modules.Solver.Domain.ScenarioSnapshot::get_Runways()
+FNDA:8,System.Collections.Generic.IReadOnlyList`1<Modules.Airports.Domain.Runway> Modules.Solver.Domain.ScenarioSnapshot::get_Runways()
+DA:11,8
+FN:11,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Domain.Flight> Modules.Solver.Domain.ScenarioSnapshot::get_Flights()
+FNDA:24,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Domain.Flight> Modules.Solver.Domain.ScenarioSnapshot::get_Flights()
+DA:12,24
+FN:12,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Domain.RandomEvent> Modules.Solver.Domain.ScenarioSnapshot::get_RandomEvents()
+FNDA:8,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Domain.RandomEvent> Modules.Solver.Domain.ScenarioSnapshot::get_RandomEvents()
+DA:13,8
+FN:13,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Domain.WeatherInterval> Modules.Solver.Domain.ScenarioSnapshot::get_WeatherIntervals()
+FNDA:8,System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Domain.WeatherInterval> Modules.Solver.Domain.ScenarioSnapshot::get_WeatherIntervals()
+DA:14,8
+LF:6
+LH:6
+BRF:0
+BRH:0
+FNF:6
+FNH:6
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Solver\Domain\SolvedFlight.cs
+FN:6,System.Guid Modules.Solver.Domain.SolvedFlight::get_FlightId()
+FNDA:13,System.Guid Modules.Solver.Domain.SolvedFlight::get_FlightId()
+DA:7,13
+FN:7,System.Guid Modules.Solver.Domain.SolvedFlight::get_ScenarioConfigId()
+FNDA:13,System.Guid Modules.Solver.Domain.SolvedFlight::get_ScenarioConfigId()
+DA:8,13
+FN:8,System.Guid Modules.Solver.Domain.SolvedFlight::get_AircraftId()
+FNDA:13,System.Guid Modules.Solver.Domain.SolvedFlight::get_AircraftId()
+DA:9,13
+FN:10,System.String Modules.Solver.Domain.SolvedFlight::get_Callsign()
+FNDA:26,System.String Modules.Solver.Domain.SolvedFlight::get_Callsign()
+DA:11,26
+FN:11,Modules.Scenarios.Domain.FlightType Modules.Solver.Domain.SolvedFlight::get_Type()
+FNDA:13,Modules.Scenarios.Domain.FlightType Modules.Solver.Domain.SolvedFlight::get_Type()
+DA:12,13
+FN:12,System.DateTime Modules.Solver.Domain.SolvedFlight::get_ScheduledTime()
+FNDA:13,System.DateTime Modules.Solver.Domain.SolvedFlight::get_ScheduledTime()
+DA:13,13
+FN:13,System.Int32 Modules.Solver.Domain.SolvedFlight::get_MaxDelayMinutes()
+FNDA:13,System.Int32 Modules.Solver.Domain.SolvedFlight::get_MaxDelayMinutes()
+DA:14,13
+FN:14,System.Int32 Modules.Solver.Domain.SolvedFlight::get_MaxEarlyMinutes()
+FNDA:13,System.Int32 Modules.Solver.Domain.SolvedFlight::get_MaxEarlyMinutes()
+DA:15,13
+FN:15,System.Int32 Modules.Solver.Domain.SolvedFlight::get_Priority()
+FNDA:14,System.Int32 Modules.Solver.Domain.SolvedFlight::get_Priority()
+DA:16,14
+FN:18,System.String Modules.Solver.Domain.SolvedFlight::get_AssignedRunway()
+FNDA:13,System.String Modules.Solver.Domain.SolvedFlight::get_AssignedRunway()
+DA:19,13
+FN:19,System.Nullable`1<System.DateTime> Modules.Solver.Domain.SolvedFlight::get_AssignedTime()
+FNDA:51,System.Nullable`1<System.DateTime> Modules.Solver.Domain.SolvedFlight::get_AssignedTime()
+DA:20,51
+FN:20,System.Int32 Modules.Solver.Domain.SolvedFlight::get_DelayMinutes()
+FNDA:51,System.Int32 Modules.Solver.Domain.SolvedFlight::get_DelayMinutes()
+DA:21,51
+FN:21,System.Int32 Modules.Solver.Domain.SolvedFlight::get_EarlyMinutes()
+FNDA:26,System.Int32 Modules.Solver.Domain.SolvedFlight::get_EarlyMinutes()
+DA:22,26
+LF:13
+LH:13
+BRF:0
+BRH:0
+FNF:13
+FNH:13
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Solver\Domain\SolverResult.cs
+FN:4,System.Collections.Generic.IReadOnlyList`1<Modules.Solver.Domain.SolvedFlight> Modules.Solver.Domain.SolverResult::get_Flights()
+FNDA:25,System.Collections.Generic.IReadOnlyList`1<Modules.Solver.Domain.SolvedFlight> Modules.Solver.Domain.SolverResult::get_Flights()
+DA:5,25
+FN:5,System.Int32 Modules.Solver.Domain.SolverResult::get_TotalFlights()
+FNDA:10,System.Int32 Modules.Solver.Domain.SolverResult::get_TotalFlights()
+DA:6,10
+FN:6,System.Int32 Modules.Solver.Domain.SolverResult::get_TotalDelayMinutes()
+FNDA:18,System.Int32 Modules.Solver.Domain.SolverResult::get_TotalDelayMinutes()
+DA:7,18
+FN:7,System.Int32 Modules.Solver.Domain.SolverResult::get_TotalCanceledFlights()
+FNDA:19,System.Int32 Modules.Solver.Domain.SolverResult::get_TotalCanceledFlights()
+DA:8,19
+FN:8,System.Int32 Modules.Solver.Domain.SolverResult::get_TotalDelayedFlights()
+FNDA:16,System.Int32 Modules.Solver.Domain.SolverResult::get_TotalDelayedFlights()
+DA:9,16
+LF:5
+LH:5
+BRF:0
+BRH:0
+FNF:5
+FNH:5
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Solver\Application\ScenarioSnapshotLoader.cs
+FN:18,System.Void Modules.Solver.Application.ScenarioSnapshotLoader::.ctor(MediatR.ISender,Modules.Scenarios.Application.IScenarioConfigStore,Modules.Airports.Application.IAirportStore)
+FNDA:0,System.Void Modules.Solver.Application.ScenarioSnapshotLoader::.ctor(MediatR.ISender,Modules.Scenarios.Application.IScenarioConfigStore,Modules.Airports.Application.IAirportStore)
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+FN:53,Modules.Scenarios.Domain.RandomEvent Modules.Solver.Application.ScenarioSnapshotLoader/<>c::<Load>b__4_1(Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto)
+FNDA:0,Modules.Scenarios.Domain.RandomEvent Modules.Solver.Application.ScenarioSnapshotLoader/<>c::<Load>b__4_1(Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId.RandomEventDto)
+DA:54,0
+DA:55,0
+DA:56,0
+DA:57,0
+DA:58,0
+DA:59,0
+DA:60,0
+DA:61,0
+DA:62,0
+FN:65,Modules.Scenarios.Domain.Flight Modules.Solver.Application.ScenarioSnapshotLoader/<>c::<Load>b__4_2(Modules.Scenarios.Application.UseCases.GetFlights.FlightDto)
+FNDA:0,Modules.Scenarios.Domain.Flight Modules.Solver.Application.ScenarioSnapshotLoader/<>c::<Load>b__4_2(Modules.Scenarios.Application.UseCases.GetFlights.FlightDto)
+DA:66,0
+DA:67,0
+DA:68,0
+DA:69,0
+DA:70,0
+DA:71,0
+DA:72,0
+DA:73,0
+DA:74,0
+DA:75,0
+DA:76,0
+FN:79,Modules.Scenarios.Domain.WeatherInterval Modules.Solver.Application.ScenarioSnapshotLoader/<>c::<Load>b__4_3(Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto)
+FNDA:0,Modules.Scenarios.Domain.WeatherInterval Modules.Solver.Application.ScenarioSnapshotLoader/<>c::<Load>b__4_3(Modules.Scenarios.Application.UseCases.GetWeatherIntervals.WeatherIntervalsDto)
+DA:80,0
+DA:81,0
+DA:82,0
+DA:83,0
+DA:84,0
+DA:85,0
+DA:86,0
+FN:35,System.Boolean Modules.Solver.Application.ScenarioSnapshotLoader/<>c__DisplayClass4_0::<Load>b__0(Modules.Airports.Domain.Airport)
+FNDA:0,System.Boolean Modules.Solver.Application.ScenarioSnapshotLoader/<>c__DisplayClass4_0::<Load>b__0(Modules.Airports.Domain.Airport)
+DA:36,0
+FN:29,System.Void Modules.Solver.Application.ScenarioSnapshotLoader/<Load>d__4::MoveNext()
+FNDA:0,System.Void Modules.Solver.Application.ScenarioSnapshotLoader/<Load>d__4::MoveNext()
+DA:30,0
+DA:31,0
+DA:32,0
+DA:33,0
+DA:35,0
+DA:38,0
+DA:39,0
+DA:41,0
+DA:42,0
+DA:43,0
+DA:45,0
+DA:46,0
+DA:47,0
+DA:49,0
+DA:50,0
+DA:51,0
+DA:53,0
+DA:63,0
+DA:65,0
+DA:77,0
+DA:79,0
+DA:87,0
+DA:89,0
+DA:90,0
+DA:91,0
+DA:92,0
+DA:93,0
+DA:94,0
+DA:95,0
+DA:96,0
+DA:97,0
+BRDA:32,225,0,0
+BRDA:32,225,1,0
+BRDA:38,295,0,0
+BRDA:38,295,1,0
+LF:68
+LH:0
+BRF:4
+BRH:0
+FNF:6
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Solver\Application\UseCases\GreedySolver\GreedyScenarioSolver.cs
+FN:8,Modules.Solver.Domain.SolverResult Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::Solve(Modules.Solver.Domain.ScenarioSnapshot)
+FNDA:8,Modules.Solver.Domain.SolverResult Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::Solve(Modules.Solver.Domain.ScenarioSnapshot)
+DA:9,8
+DA:10,8
+DA:11,8
+DA:12,8
+DA:14,8
+DA:15,8
+DA:17,50
+DA:18,13
+DA:19,13
+DA:21,13
+DA:22,1
+DA:23,1
+DA:24,1
+DA:27,12
+DA:29,12
+DA:30,2
+DA:31,2
+DA:32,2
+DA:35,10
+DA:37,10
+DA:38,10
+DA:40,10
+DA:41,10
+DA:43,8
+DA:44,8
+BRDA:17,219,1,13
+BRDA:21,98,0,1
+BRDA:21,98,1,12
+BRDA:29,141,0,2
+BRDA:29,141,1,10
+BRDA:17,219,0,8
+FN:46,System.DateTime Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::ComputeAssignedTime(Modules.Scenarios.Domain.Flight,System.Nullable`1<System.DateTime>)
+FNDA:13,System.DateTime Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::ComputeAssignedTime(Modules.Scenarios.Domain.Flight,System.Nullable`1<System.DateTime>)
+DA:47,13
+DA:48,13
+DA:49,7
+DA:51,6
+DA:52,6
+DA:53,6
+DA:54,13
+BRDA:48,13,0,7
+BRDA:48,13,1,6
+BRDA:51,40,0,0
+BRDA:51,40,1,6
+BRDA:51,58,0,0
+BRDA:51,58,1,6
+FN:56,System.Int32 Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::ComputeDelay(Modules.Scenarios.Domain.Flight,System.DateTime)
+FNDA:12,System.Int32 Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::ComputeDelay(Modules.Scenarios.Domain.Flight,System.DateTime)
+DA:57,12
+DA:58,12
+DA:59,12
+FN:61,System.DateTime Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::UpdateRunway(System.DateTime,System.TimeSpan)
+FNDA:10,System.DateTime Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::UpdateRunway(System.DateTime,System.TimeSpan)
+DA:62,10
+DA:63,10
+DA:64,10
+FN:66,System.String Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::ChooseRunway(Modules.Solver.Domain.ScenarioSnapshot,Modules.Scenarios.Domain.Flight,System.DateTime)
+FNDA:10,System.String Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::ChooseRunway(Modules.Solver.Domain.ScenarioSnapshot,Modules.Scenarios.Domain.Flight,System.DateTime)
+DA:67,10
+DA:68,10
+DA:69,10
+FN:75,Modules.Solver.Domain.SolvedFlight Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::CreateSolvedFlight(Modules.Scenarios.Domain.Flight,System.DateTime,System.Int32,System.String)
+FNDA:10,Modules.Solver.Domain.SolvedFlight Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::CreateSolvedFlight(Modules.Scenarios.Domain.Flight,System.DateTime,System.Int32,System.String)
+DA:76,10
+DA:77,10
+DA:78,10
+DA:79,10
+DA:80,10
+DA:81,10
+DA:82,10
+DA:83,10
+DA:84,10
+DA:85,10
+DA:86,10
+DA:87,10
+DA:88,10
+DA:89,10
+DA:90,10
+DA:91,10
+DA:92,10
+DA:93,10
+DA:94,10
+DA:95,10
+DA:96,10
+FN:98,System.Collections.Generic.List`1<Modules.Scenarios.Domain.Flight> Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::OrderFlights(System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Domain.Flight>)
+FNDA:8,System.Collections.Generic.List`1<Modules.Scenarios.Domain.Flight> Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::OrderFlights(System.Collections.Generic.IReadOnlyList`1<Modules.Scenarios.Domain.Flight>)
+DA:99,8
+DA:100,8
+DA:101,11
+DA:102,11
+DA:103,8
+DA:104,8
+FN:106,System.TimeSpan Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::CalculateSeparation(Modules.Solver.Domain.ScenarioSnapshot)
+FNDA:8,System.TimeSpan Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::CalculateSeparation(Modules.Solver.Domain.ScenarioSnapshot)
+DA:107,8
+DA:108,8
+DA:110,8
+DA:111,8
+DA:112,8
+DA:113,8
+DA:115,8
+DA:116,8
+FN:118,System.Boolean Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::CanFitAllFlights(Modules.Solver.Domain.ScenarioSnapshot,System.Int32,System.TimeSpan)
+FNDA:8,System.Boolean Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::CanFitAllFlights(Modules.Solver.Domain.ScenarioSnapshot,System.Int32,System.TimeSpan)
+DA:119,8
+DA:120,8
+DA:122,8
+DA:123,8
+DA:125,8
+DA:126,8
+FN:128,System.Boolean Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::IsWithinScenario(Modules.Solver.Domain.ScenarioSnapshot,System.DateTime)
+FNDA:13,System.Boolean Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::IsWithinScenario(Modules.Solver.Domain.ScenarioSnapshot,System.DateTime)
+DA:129,13
+DA:130,13
+DA:131,13
+DA:132,13
+BRDA:130,18,0,12
+BRDA:130,18,1,1
+FN:134,System.Boolean Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::IsDelayTooLarge(Modules.Scenarios.Domain.Flight,System.Int32)
+FNDA:12,System.Boolean Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::IsDelayTooLarge(Modules.Scenarios.Domain.Flight,System.Int32)
+DA:135,12
+DA:136,12
+DA:137,12
+FN:139,Modules.Solver.Domain.SolvedFlight Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::CreateCanceledFlight(Modules.Scenarios.Domain.Flight)
+FNDA:3,Modules.Solver.Domain.SolvedFlight Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::CreateCanceledFlight(Modules.Scenarios.Domain.Flight)
+DA:140,3
+DA:141,3
+DA:142,3
+DA:143,3
+DA:144,3
+DA:145,3
+DA:146,3
+DA:147,3
+DA:148,3
+DA:149,3
+DA:150,3
+DA:151,3
+DA:152,3
+DA:153,3
+DA:154,3
+DA:155,3
+DA:156,3
+DA:157,3
+DA:158,3
+DA:159,3
+DA:160,3
+FN:162,Modules.Solver.Domain.SolverResult Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::BuildResult(System.Collections.Generic.List`1<Modules.Solver.Domain.SolvedFlight>,System.Int32)
+FNDA:8,Modules.Solver.Domain.SolverResult Modules.Solver.Application.GreedySolver.GreedyScenarioSolver::BuildResult(System.Collections.Generic.List`1<Modules.Solver.Domain.SolvedFlight>,System.Int32)
+DA:163,8
+DA:164,21
+DA:165,21
+DA:166,21
+DA:168,8
+DA:169,8
+DA:170,8
+DA:171,8
+DA:172,8
+DA:173,8
+DA:174,8
+DA:175,8
+DA:176,8
+BRDA:164,14,0,10
+BRDA:164,14,1,3
+LF:123
+LH:123
+BRF:16
+BRH:14
+FNF:13
+FNH:13
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Solver\Application\UseCases\GreedySolver\GreedySolverHandler.cs
+FN:10,System.Void Modules.Solver.Application.GreedySolver.GreedySolverHandler::.ctor(Modules.Solver.Application.IScenarioSnapshotLoader,Modules.Solver.Application.GreedySolver.GreedyScenarioSolver)
+FNDA:0,System.Void Modules.Solver.Application.GreedySolver.GreedySolverHandler::.ctor(Modules.Solver.Application.IScenarioSnapshotLoader,Modules.Solver.Application.GreedySolver.GreedyScenarioSolver)
+DA:11,0
+DA:12,0
+DA:13,0
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+FN:19,System.Void Modules.Solver.Application.GreedySolver.GreedySolverHandler/<Handle>d__3::MoveNext()
+FNDA:0,System.Void Modules.Solver.Application.GreedySolver.GreedySolverHandler/<Handle>d__3::MoveNext()
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+LF:11
+LH:0
+BRF:0
+BRH:0
+FNF:2
+FNH:0
+end_of_record
+SF:C:\Users\radug\OneDrive\Desktop\Licenta\src\Modules.Solver\Application\UseCases\GreedySolver\GreedySolverQuery.cs
+FN:5,System.Guid Modules.Solver.Application.GreedySolver.GreedySolverQuery::get_ScenarioConfigId()
+FNDA:0,System.Guid Modules.Solver.Application.GreedySolver.GreedySolverQuery::get_ScenarioConfigId()
+DA:6,0
+LF:1
+LH:0
+BRF:0
+BRH:0
+FNF:1
+FNH:0
+end_of_record
