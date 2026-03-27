@@ -6,6 +6,7 @@ import { C } from "../styles/tokens";
 const NAV_ITEMS = [
   { label: "Airports", path: "/airports" },
   { label: "Scenarios", path: "/scenario-config" },
+  { label: "Solver", path: "/solver" },
 ];
 
 function Logo() {

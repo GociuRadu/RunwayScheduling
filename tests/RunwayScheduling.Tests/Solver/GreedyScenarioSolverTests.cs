@@ -9,15 +9,132 @@ public sealed class GreedyScenarioSolverTests
 {
     private readonly GreedyScenarioSolver _sut = new();
 
+    [Fact]
+    public void Solve_WhenNoCompatibleRunway_CancelsFlight()
+    {
+        var scheduledTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var snapshot = BuildSnapshot(
+            [CreateFlight(scheduledTime, FlightType.Arrival)],
+            [CreateRunway("RWY-1", RunwayType.Takeoff)]);
+
+        var result = _sut.Solve(snapshot);
+
+        Assert.Equal(1, result.TotalCanceledFlights);
+        Assert.Single(result.Flights);
+        Assert.Equal(CancellationReason.NoCompatibleRunway, result.Flights[0].CancellationReason);
+    }
+
+    [Fact]
+    public void Solve_WhenFlightsShareRunway_DelaysSecondFlightBySeparation()
+    {
+        var scheduledTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var snapshot = BuildSnapshot(
+            [
+                CreateFlight(scheduledTime, maxDelayMinutes: 120),
+                CreateFlight(scheduledTime, maxDelayMinutes: 120)
+            ],
+            [CreateRunway("RWY-1", RunwayType.Both)],
+            baseSeparationSeconds: 60);
+
+        var result = _sut.Solve(snapshot);
+
+        Assert.Equal(0, result.TotalCanceledFlights);
+        Assert.Equal(1, result.TotalDelayedFlights);
+        Assert.All(result.Flights, flight => Assert.NotNull(flight.AssignedTime));
+        Assert.Equal(1, result.Flights.Max(flight => flight.DelayMinutes));
+        Assert.Equal("RWY-1", result.Flights.Single(flight => flight.DelayMinutes == 1).AssignedRunway);
+    }
+
+    [Fact]
+    public void Solve_WhenWeatherAndRandomEventAreActive_UsesScaledSeparation()
+    {
+        var scheduledTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var scenarioStart = scheduledTime.AddHours(-1);
+        var scenarioEnd = scheduledTime.AddHours(1);
+        var snapshot = BuildSnapshot(
+            [
+                CreateFlight(scheduledTime, maxDelayMinutes: 120),
+                CreateFlight(scheduledTime, maxDelayMinutes: 120)
+            ],
+            [CreateRunway("RWY-1", RunwayType.Both)],
+            baseSeparationSeconds: 100,
+            weatherIntervals:
+            [
+                new WeatherInterval
+                {
+                    ScenarioConfigId = Guid.NewGuid(),
+                    StartTime = scenarioStart,
+                    EndTime = scenarioEnd,
+                    WeatherType = WeatherCondition.Cloud
+                }
+            ],
+            randomEvents:
+            [
+                new RandomEvent
+                {
+                    ScenarioConfigId = Guid.NewGuid(),
+                    Name = "Inspection",
+                    Description = "Runway inspection",
+                    StartTime = scenarioStart,
+                    EndTime = scenarioEnd,
+                    ImpactPercent = 50
+                }
+            ],
+            start: scenarioStart,
+            end: scenarioEnd);
+
+        var result = _sut.Solve(snapshot);
+
+        Assert.Equal(165, result.Flights.Single(flight => flight.DelayMinutes > 0).SeparationAppliedSeconds);
+    }
+
+    [Fact]
+    public void Solve_WhenFlightsShareSchedule_OrdersByPriority()
+    {
+        var scheduledTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var highPriorityFlight = CreateFlight(scheduledTime, maxDelayMinutes: 120, priority: 5);
+        var lowPriorityFlight = CreateFlight(scheduledTime, maxDelayMinutes: 120, priority: 1);
+        var snapshot = BuildSnapshot(
+            [lowPriorityFlight, highPriorityFlight],
+            [CreateRunway("RWY-1", RunwayType.Both)],
+            baseSeparationSeconds: 60);
+
+        var result = _sut.Solve(snapshot);
+
+        Assert.Equal(0, result.Flights.Single(flight => flight.Priority == 5).DelayMinutes);
+        Assert.Equal(1, result.Flights.Single(flight => flight.Priority == 1).DelayMinutes);
+    }
+
+    [Fact]
+    public void Solve_WhenAssignmentExceedsScenarioWindow_CancelsFlight()
+    {
+        var scheduledTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var snapshot = BuildSnapshot(
+            [CreateFlight(scheduledTime, maxDelayMinutes: 120)],
+            [CreateRunway("RWY-1", RunwayType.Both)],
+            start: scheduledTime.AddHours(-2),
+            end: scheduledTime.AddHours(-1));
+
+        var result = _sut.Solve(snapshot);
+
+        Assert.Equal(1, result.TotalCanceledFlights);
+        Assert.Equal(CancellationReason.OutsideScenarioWindow, result.Flights[0].CancellationReason);
+    }
+
     private static ScenarioSnapshot BuildSnapshot(
-        List<Flight> flights,
+        IReadOnlyList<Flight> flights,
+        IReadOnlyList<Runway> runways,
         int baseSeparationSeconds = 60,
         int wakePercent = 100,
         int weatherPercent = 100,
+        IReadOnlyList<WeatherInterval>? weatherIntervals = null,
+        IReadOnlyList<RandomEvent>? randomEvents = null,
         DateTime? start = null,
         DateTime? end = null)
     {
-        var baseTime = start ?? new DateTime(2025, 1, 1, 8, 0, 0, DateTimeKind.Utc);
+        var scenarioStart = start ?? new DateTime(2025, 1, 1, 8, 0, 0, DateTimeKind.Utc);
+        var scenarioEnd = end ?? scenarioStart.AddHours(8);
+
         return new ScenarioSnapshot
         {
             ScenarioConfig = new ScenarioConfig
@@ -25,156 +142,40 @@ public sealed class GreedyScenarioSolverTests
                 BaseSeparationSeconds = baseSeparationSeconds,
                 WakePercent = wakePercent,
                 WeatherPercent = weatherPercent,
-                StartTime = baseTime,
-                EndTime = end ?? baseTime.AddHours(8)
+                StartTime = scenarioStart,
+                EndTime = scenarioEnd
             },
             Airport = new Airport { Name = "OTP" },
-            Flights = flights
+            Runways = runways,
+            Flights = flights,
+            WeatherIntervals = weatherIntervals ?? [],
+            RandomEvents = randomEvents ?? []
         };
     }
 
-    private static Flight MakeFlight(DateTime scheduledTime, int maxDelay = 60, int priority = 1) =>
+    private static Flight CreateFlight(
+        DateTime scheduledTime,
+        FlightType type = FlightType.Arrival,
+        int maxDelayMinutes = 60,
+        int priority = 1) =>
         new()
         {
-            Callsign = $"FLT{scheduledTime:HHmm}",
+            ScenarioConfigId = Guid.NewGuid(),
+            AircraftId = Guid.NewGuid(),
+            Callsign = $"FLT{priority}{scheduledTime:HHmm}",
+            Type = type,
             ScheduledTime = scheduledTime,
-            MaxDelayMinutes = maxDelay,
-            Priority = priority,
-            Type = FlightType.Arrival
+            MaxDelayMinutes = maxDelayMinutes,
+            MaxEarlyMinutes = 0,
+            Priority = priority
         };
 
-    [Fact]
-    public void Solve_WithNoFlights_ReturnsEmptyResult()
-    {
-        var snapshot = BuildSnapshot([]);
-
-        var result = _sut.Solve(snapshot);
-
-        Assert.Empty(result.Flights);
-        Assert.Equal(0, result.TotalFlights);
-        Assert.Equal(0, result.TotalDelayMinutes);
-    }
-
-    [Fact]
-    public void Solve_SingleFlight_IsScheduledWithNoDelay()
-    {
-        var time = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-        var snapshot = BuildSnapshot([MakeFlight(time)], start: time.AddHours(-1));
-
-        var result = _sut.Solve(snapshot);
-
-        Assert.Single(result.Flights);
-        Assert.Equal(0, result.Flights[0].DelayMinutes);
-        Assert.Equal(time, result.Flights[0].AssignedTime);
-    }
-
-    [Fact]
-    public void Solve_SecondFlight_IsDelayedBySeparation()
-    {
-        var baseTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-        var flights = new List<Flight>
+    private static Runway CreateRunway(string name, RunwayType runwayType) =>
+        new()
         {
-            MakeFlight(baseTime, maxDelay: 120),
-            MakeFlight(baseTime, maxDelay: 120)  // same time — second must wait
+            AirportId = Guid.NewGuid(),
+            Name = name,
+            IsActive = true,
+            RunwayType = runwayType
         };
-        var snapshot = BuildSnapshot(flights, baseSeparationSeconds: 60, start: baseTime.AddHours(-1));
-
-        var result = _sut.Solve(snapshot);
-
-        var scheduled = result.Flights.Where(f => f.AssignedTime != null).ToList();
-        Assert.Equal(2, scheduled.Count);
-        // second flight assigned 60s after first
-        var times = scheduled.Select(f => f.AssignedTime!.Value).OrderBy(t => t).ToList();
-        Assert.Equal(TimeSpan.FromSeconds(60), times[1] - times[0]);
-    }
-
-    [Fact]
-    public void Solve_FlightExceedingMaxDelay_IsCanceled()
-    {
-        var baseTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-        var flights = new List<Flight>
-        {
-            MakeFlight(baseTime, maxDelay: 120),
-            MakeFlight(baseTime, maxDelay: 0)  // zero tolerance — will exceed separation delay
-        };
-        var snapshot = BuildSnapshot(flights, baseSeparationSeconds: 60, start: baseTime.AddHours(-1));
-
-        var result = _sut.Solve(snapshot);
-
-        Assert.Contains(result.Flights, f => f.AssignedTime == null);
-        Assert.Equal(1, result.TotalCanceledFlights);
-    }
-
-    [Fact]
-    public void Solve_FlightOutsideScenarioWindow_IsCanceled()
-    {
-        var baseTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-        // Flight scheduled before window
-        var flight = MakeFlight(baseTime.AddHours(-2), maxDelay: 0);
-        var snapshot = BuildSnapshot([flight], start: baseTime, end: baseTime.AddHours(4));
-
-        var result = _sut.Solve(snapshot);
-
-        Assert.Equal(1, result.TotalCanceledFlights);
-        Assert.Null(result.Flights[0].AssignedTime);
-    }
-
-    [Fact]
-    public void Solve_FlightsOrderedByScheduledTimeThenPriority()
-    {
-        var baseTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-        var low = MakeFlight(baseTime, maxDelay: 120, priority: 1);
-        var high = MakeFlight(baseTime, maxDelay: 120, priority: 5);
-        var snapshot = BuildSnapshot([low, high], start: baseTime.AddHours(-1));
-
-        var result = _sut.Solve(snapshot);
-
-        // high priority should be scheduled first (assigned time = baseTime, no delay)
-        var highResult = result.Flights.First(f => f.Priority == 5);
-        Assert.Equal(0, highResult.DelayMinutes);
-    }
-
-    [Fact]
-    public void Solve_SeparationScaledByWakeAndWeatherPercent()
-    {
-        var baseTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-        var flights = new List<Flight>
-        {
-            MakeFlight(baseTime, maxDelay: 120),
-            MakeFlight(baseTime, maxDelay: 120)
-        };
-        // base=100s, wake=50%, weather=100% => effective = 50s
-        var snapshot = BuildSnapshot(flights, baseSeparationSeconds: 100, wakePercent: 50, weatherPercent: 100,
-            start: baseTime.AddHours(-1));
-
-        var result = _sut.Solve(snapshot);
-
-        var times = result.Flights
-            .Where(f => f.AssignedTime != null)
-            .Select(f => f.AssignedTime!.Value)
-            .OrderBy(t => t)
-            .ToList();
-
-        Assert.Equal(2, times.Count);
-        Assert.Equal(TimeSpan.FromSeconds(50), times[1] - times[0]);
-    }
-
-    [Fact]
-    public void Solve_ResultCountersMatchFlights()
-    {
-        var baseTime = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc);
-        var flights = new List<Flight>
-        {
-            MakeFlight(baseTime, maxDelay: 120),
-            MakeFlight(baseTime, maxDelay: 120),
-            MakeFlight(baseTime, maxDelay: 0)  // will be canceled
-        };
-        var snapshot = BuildSnapshot(flights, baseSeparationSeconds: 60, start: baseTime.AddHours(-1));
-
-        var result = _sut.Solve(snapshot);
-
-        Assert.Equal(3, result.TotalFlights);
-        Assert.Equal(1, result.TotalCanceledFlights);
-        Assert.True(result.TotalDelayMinutes >= 0);
-    }
 }

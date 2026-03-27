@@ -1,4 +1,3 @@
-using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
 using Modules.Login.Application;
 using Modules.Login.Domain;

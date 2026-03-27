@@ -1,5 +1,4 @@
 using MediatR;
-using Modules.Scenarios.Domain;
 
 namespace Modules.Scenarios.Application.UseCases.GetFlights;
 

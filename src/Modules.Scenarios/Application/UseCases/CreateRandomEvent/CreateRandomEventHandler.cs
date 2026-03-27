@@ -20,6 +20,7 @@ public sealed class CreateRandomEventHandler
 
     public async Task<RandomEvent> Handle(CreateRandomEventCommand request, CancellationToken ct)
     {
+        // TODO: SECURITY: Validation only checks null/ordering/basic range. Enforce scenario-window bounds, max lengths, and a central validator so invalid payloads cannot reach persistence as 500-level exceptions.
         var cfg = await _configStore.GetById(request.ScenarioConfigId, ct);
         if (cfg is null)
             throw new Exception("Scenario config not found.");

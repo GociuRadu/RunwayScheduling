@@ -5,6 +5,8 @@ import { C, S } from "../styles/tokens";
 import { Modal } from "../components/Modal";
 import { SkeletonCard } from "../components/Skeleton";
 import { useToast } from "../hooks/useToast";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { NumberInput } from "../components/NumberInput";
 
 type ScenarioConfigDto = {
   id: string;
@@ -70,6 +72,19 @@ function flightTypeLabel(type: number | string) {
   return String(type);
 }
 
+function weatherConditionLabel(val: number | string | undefined): string {
+  const num = Number(val);
+  switch (num) {
+    case 0: return "Clear";
+    case 1: return "Cloud";
+    case 2: return "Rain";
+    case 3: return "Snow";
+    case 4: return "Fog";
+    case 5: return "Storm";
+    default: return String(val ?? "-");
+  }
+}
+
 function toUtcString(localValue: string) {
   if (!localValue) return null;
   return new Date(localValue).toISOString();
@@ -131,6 +146,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function ScenarioConfigPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
+
+  const [confirmDeleteScenario, setConfirmDeleteScenario] = useState<{ id: string; name: string } | null>(null);
 
   const [airportId, setAirportId] = useState(
     searchParams.get("airportId") || localStorage.getItem(STORAGE_AIRPORT_ID) || "",
@@ -451,7 +468,7 @@ export default function ScenarioConfigPage() {
                     <button onClick={() => selectScenario(s)} className={isSelected ? "glass-btn-primary" : "glass-btn-ghost"} disabled={loadingScenarioData}>
                       {isSelected ? "✓ Selected" : "Select"}
                     </button>
-                    <button onClick={() => deleteScenario(s.id)} className="glass-btn-danger">Delete</button>
+                    <button onClick={() => setConfirmDeleteScenario({ id: s.id, name: s.name })} className="glass-btn-danger">Delete</button>
                   </div>
                 </div>
 
@@ -572,7 +589,7 @@ export default function ScenarioConfigPage() {
                     <tr key={w.id}>
                       <td style={tdStyle}>{formatDate(w.startTime)}</td>
                       <td style={tdStyle}>{formatDate(w.endTime)}</td>
-                      <td style={tdStyle}>{String(w.condition ?? w.weatherType ?? "-")}</td>
+                      <td style={tdStyle}>{weatherConditionLabel(w.condition ?? w.weatherType)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -582,26 +599,35 @@ export default function ScenarioConfigPage() {
         </LargeModal>
       )}
 
+      {/* Delete confirmation */}
+      {confirmDeleteScenario && (
+        <ConfirmDialog
+          message={`Delete scenario "${confirmDeleteScenario.name}"?`}
+          onConfirm={async () => { const id = confirmDeleteScenario.id; setConfirmDeleteScenario(null); await deleteScenario(id); }}
+          onCancel={() => setConfirmDeleteScenario(null)}
+        />
+      )}
+
       {/* Create scenario modal */}
       {showCreateScenario && (
         <Modal onClose={() => setShowCreateScenario(false)} title="Create Scenario">
           <div style={{ display: "grid", gap: "10px", maxHeight: "70vh", overflowY: "auto", paddingRight: "4px" }}>
             <Field label="Scenario name"><input value={name} onChange={(e) => setName(e.target.value)} className="glass-input" /></Field>
-            <Field label="Difficulty"><input type="number" value={difficulty} onChange={(e) => setDifficulty(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Difficulty"><NumberInput value={difficulty} onChange={setDifficulty} className="glass-input" min={1} max={5} /></Field>
             <Field label="Start time"><input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="glass-input" /></Field>
             <Field label="End time"><input type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="glass-input" /></Field>
-            <Field label="Seed"><input type="number" value={seed} onChange={(e) => setSeed(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Aircraft count"><input type="number" value={aircraftCount} onChange={(e) => setAircraftCount(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Aircraft difficulty"><input type="number" value={aircraftDifficulty} onChange={(e) => setAircraftDifficulty(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="On ground aircraft"><input type="number" value={onGroundAircraftCount} onChange={(e) => setOnGroundAircraftCount(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Inbound aircraft"><input type="number" value={inboundAircraftCount} onChange={(e) => setInboundAircraftCount(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Remaining on ground"><input type="number" value={remainingOnGroundAircraftCount} onChange={(e) => setRemainingOnGroundAircraftCount(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Base separation (s)"><input type="number" value={baseSeparationSeconds} onChange={(e) => setBaseSeparationSeconds(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Wake %"><input type="number" value={wakePercent} onChange={(e) => setWakePercent(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Weather %"><input type="number" value={weatherPercent} onChange={(e) => setWeatherPercent(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Weather interval count"><input type="number" value={weatherIntervalCount} onChange={(e) => setWeatherIntervalCount(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Min interval (min)"><input type="number" value={minWeatherIntervalMinutes} onChange={(e) => setMinWeatherIntervalMinutes(Number(e.target.value))} className="glass-input" /></Field>
-            <Field label="Weather difficulty"><input type="number" value={weatherDifficulty} onChange={(e) => setWeatherDifficulty(Number(e.target.value))} className="glass-input" /></Field>
+            <Field label="Seed"><NumberInput value={seed} onChange={setSeed} className="glass-input" min={0} /></Field>
+            <Field label="Aircraft count"><NumberInput value={aircraftCount} onChange={setAircraftCount} className="glass-input" min={1} /></Field>
+            <Field label="Aircraft difficulty"><NumberInput value={aircraftDifficulty} onChange={setAircraftDifficulty} className="glass-input" min={1} max={5} /></Field>
+            <Field label="On ground aircraft"><NumberInput value={onGroundAircraftCount} onChange={setOnGroundAircraftCount} className="glass-input" min={0} /></Field>
+            <Field label="Inbound aircraft"><NumberInput value={inboundAircraftCount} onChange={setInboundAircraftCount} className="glass-input" min={0} /></Field>
+            <Field label="Remaining on ground"><NumberInput value={remainingOnGroundAircraftCount} onChange={setRemainingOnGroundAircraftCount} className="glass-input" min={0} /></Field>
+            <Field label="Base separation (s)"><NumberInput value={baseSeparationSeconds} onChange={setBaseSeparationSeconds} className="glass-input" min={0} /></Field>
+            <Field label="Wake %"><NumberInput value={wakePercent} onChange={setWakePercent} className="glass-input" min={0} max={200} /></Field>
+            <Field label="Weather %"><NumberInput value={weatherPercent} onChange={setWeatherPercent} className="glass-input" min={0} max={200} /></Field>
+            <Field label="Weather interval count"><NumberInput value={weatherIntervalCount} onChange={setWeatherIntervalCount} className="glass-input" min={0} /></Field>
+            <Field label="Min interval (min)"><NumberInput value={minWeatherIntervalMinutes} onChange={setMinWeatherIntervalMinutes} className="glass-input" min={1} /></Field>
+            <Field label="Weather difficulty"><NumberInput value={weatherDifficulty} onChange={setWeatherDifficulty} className="glass-input" min={1} max={5} /></Field>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
               <button onClick={() => setShowCreateScenario(false)} className="glass-btn-ghost">Cancel</button>
               <button onClick={createScenario} className="glass-btn-primary" style={{ opacity: creatingScenario || !airportId || name.trim().length === 0 ? 0.5 : 1 }} disabled={creatingScenario || !airportId || name.trim().length === 0}>

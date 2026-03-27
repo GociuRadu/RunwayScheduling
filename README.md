@@ -1,266 +1,170 @@
 # RunwayScheduling
 
-RunwayScheduling is a **modular monolith backend system** for simulating **airport runway operations, aircraft generation, and flight scheduling**.
+**RunwayScheduling** is a modular monolith system for simulating airport runway operations and optimizing flight scheduling using configurable algorithms.
 
-The project is designed for **simulation, research, and academic use**, with realistic constraints inspired by real-world **Air Traffic Control (ATC)** concepts.
-
----
-
-# Tech Stack
-
-## Backend
-- .NET 10
-- ASP.NET Core Minimal API
-- Clean Architecture
-- CQRS + MediatR
-- Entity Framework Core
-- PostgreSQL
-- Docker
-
-## Frontend
-- React
-- Vite
-
-## Tooling
-- Docker Compose
-- DBeaver / pgAdmin
-- dotnet format
-- EditorConfig
-- GitHub Actions (CI)
+Designed for **simulation, research, and academic use**, with realistic constraints inspired by real-world Air Traffic Control (ATC) concepts.
 
 ---
 
-# Architecture
+## Tech Stack
 
-The project follows a **Modular Monolith architecture**.
-
-Characteristics:
-
-- Single deployable unit
-- Strict module boundaries
-- Domain isolation between modules
-- Infrastructure shared only when necessary
-
-This allows the system to stay **simple to deploy** while still keeping **clean domain separation**.
+| Layer | Technology |
+|-------|-----------|
+| Backend | .NET 10 · ASP.NET Core Minimal API |
+| Architecture | Modular Monolith · Clean Architecture · CQRS + MediatR |
+| Database | PostgreSQL 17 · Entity Framework Core |
+| Frontend | React 19 · Vite · TypeScript |
+| Auth | JWT Bearer tokens · BCrypt |
+| Infra | Docker · Docker Compose |
+| CI/CD | GitHub Actions → GHCR |
+| Testing | xUnit · NSubstitute · Coverlet (~59% coverage) |
 
 ---
 
-# Project Structure
+## Repository Structure
 
 ```
-src/
-├── Api
-│   ├── Minimal API
-│   ├── Composition Root
-│   ├── EF Core DbContext
-│   ├── Infrastructure Stores
-│   └── Endpoints
+RunwayScheduling/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml          # Build, test, lint on push/PR
+│       └── cd.yml          # Build & push Docker images to GHCR on main
 │
-├── Modules.Airports
-│   ├── Domain
-│   │   ├── Airport
-│   │   └── Runway
-│   └── Application
-│       ├── CreateAirport
-│       ├── CreateRunway
-│       ├── UpdateRunway
-│       ├── DeleteRunway
-│       └── Queries
+├── docs/
+│   └── IMPROVEMENTS.md     # Architecture notes & roadmap
 │
-├── Modules.Aircrafts
-│   ├── Domain
-│   │   ├── Aircraft
-│   │   └── WakeTurbulenceCategory
-│   └── Application
-│       ├── Generators
-│       └── Queries
+├── scripts/
+│   ├── coverage.bat        # Run tests + generate HTML coverage report
+│   └── start-dev.bat       # Start local dev environment
 │
-├── Modules.Scenarios
-│   ├── Domain
-│   │   ├── ScenarioConfig
-│   │   ├── Flight
-│   │   └── WeatherInterval
-│   └── Application
-│       ├── CreateScenarioConfig
-│       ├── CreateFlights
-│       ├── DeleteScenario
-│       └── Queries
+├── src/
+│   ├── Api/                # Composition root, endpoints, EF DbContext, auth
+│   ├── Modules.Airports/   # Airport & runway domain
+│   ├── Modules.Aircrafts/  # Aircraft domain + random generation
+│   ├── Modules.Scenarios/  # Scenario config, flights, weather, random events
+│   ├── Modules.Solver/     # Solver engine (Greedy; GA planned)
+│   └── frontend/           # React SPA
 │
-└── frontend
-    └── Vite + React
+├── tests/
+│   └── RunwayScheduling.Tests/   # xUnit integration & unit tests
+│
+├── global.json             # Pins .NET SDK version
+└── RunwayScheduling.slnx   # Solution file
 ```
-
-The **frontend is completely decoupled** from backend domain logic.
 
 ---
 
-# High-Level Flow
+## Module Overview
 
-Typical usage flow:
+### `Modules.Airports`
+Manages airports and their runways. Runways have a type (`Landing`, `Takeoff`, `Both`) and an active flag used by the solver.
 
-1. Create an **Airport**
-2. Create **Runways** for that airport
-3. Create a **ScenarioConfig**
-   - difficulty
-   - time window
-   - aircraft count
-   - simulation seed
-4. Generate **Aircraft**
-5. Generate **Flights**
-   - callsign
-   - priority
-   - early / delay tolerance
-   - wake turbulence realism
-6. Persist data to **PostgreSQL**
-7. Query scenario data
+### `Modules.Aircrafts`
+Aircraft domain with wake turbulence categories. Supports random generation seeded for reproducibility.
+
+### `Modules.Scenarios`
+- **ScenarioConfig** — time window, difficulty, weather %, separation seconds, wake %, seed
+- **Flights** — callsign, priority, type (Arrival / Departure / OnGround), delay tolerance
+- **WeatherIntervals** — time-bounded weather conditions affecting separation
+- **RandomEvents** — time-bounded disruptions with an impact multiplier
+
+### `Modules.Solver`
+Pluggable solver engine via `IScenarioSolver`. Current implementation: **Greedy** (priority + earliest-available-runway). Planned: **Genetic Algorithm**.
+
+Separation formula:
+```
+separation = BaseSeparationSeconds × (WakePercent / 100)
+           × weatherMultiplier
+           × (1 + eventImpactPercent / 100)
+```
 
 ---
 
-# Database (Docker)
-
-PostgreSQL runs inside a Docker container.
-
-Example container:
+## Usage Flow
 
 ```
-runway_db
-0.0.0.0:5433 -> 5432
+1. Create Airport + Runways
+2. Create ScenarioConfig (time window, difficulty, seed)
+3. Generate Aircraft (seeded, random)
+4. Generate Flights (callsign, priority, type, tolerance)
+5. (Optional) Add Weather Intervals
+6. (Optional) Add Random Events
+7. Run Solver → get SolverResult with stats & per-flight detail
 ```
 
-Host connection:
+---
+
+## Database
+
+PostgreSQL runs in Docker on `localhost:5433`.
 
 ```
-Host: localhost
-Port: 5433
+Host:     localhost
+Port:     5433
 Database: RunwayScheduling
-Schema: public
 ```
 
-Core tables:
+**Tables:**
 
-- airports
-- runways
-- scenario_configs
-- aircrafts
-- flights
-- weather_intervals
+| Table | Description |
+|-------|-------------|
+| `airports` | Airport records |
+| `runways` | Runways per airport (CASCADE on delete) |
+| `scenario_configs` | Scenario parameters |
+| `aircrafts` | Generated aircraft per scenario |
+| `flights` | Generated flights per scenario |
+| `weather_intervals` | Time-bounded weather per scenario |
+| `random_events` | Time-bounded disruptions per scenario |
+| `users` | Auth accounts (hashed passwords) |
 
-Relationships:
-
-- Airport → Runways (CASCADE)
-- ScenarioConfig → Aircrafts (CASCADE)
-- ScenarioConfig → Flights (CASCADE)
-- ScenarioConfig → WeatherIntervals (CASCADE)
+**Cascade rules:** deleting a ScenarioConfig removes all aircrafts, flights, weather intervals, and random events.
 
 ---
 
-# Authentication (Planned)
+## Authentication
 
-Authentication will be implemented using **JWT + Refresh Tokens**.
+JWT Bearer authentication is fully implemented.
 
-Planned features:
+| Endpoint | Description |
+|----------|-------------|
+| `POST /auth/register` | Create account |
+| `POST /auth/login` | Returns JWT token |
 
-- User registration
-- User login
-- JWT access token generation
-- Refresh token rotation
-- Secure logout
-- Protected endpoints
-- Future role support
-
-## Planned Auth Flow
-
-1. User sends credentials to:
-
-```
-POST /auth/login
-```
-
-2. Backend validates credentials.
-
-3. Backend returns:
-
-```
-access_token
-refresh_token
-```
-
-4. Frontend uses the access token for authenticated requests.
-
-5. When the access token expires:
-
-```
-POST /auth/refresh
-```
-
-is used to obtain a new one.
-
-## Planned Auth Endpoints
-
-```
-POST /auth/register
-POST /auth/login
-POST /auth/refresh
-POST /auth/logout
-```
-
-Authentication data will be stored in a **Users table**, with **hashed passwords and refresh token management**.
+Protected endpoints require `Authorization: Bearer <token>`.
 
 ---
 
-# CI / CD
+## CI / CD
 
-The project currently includes **Continuous Integration (CI)**.
+| Pipeline | Trigger | Jobs |
+|----------|---------|------|
+| CI | push / PR on `main`, `develop` | Backend build + test · Frontend lint + build · Docker compose build |
+| CD | push to `main` | Build & push `runway-api` and `runway-frontend` images to GHCR |
 
-CI pipeline checks:
+Docker images are tagged with `latest` and `sha-<commit>`.
 
-- backend build
-- frontend build
-- frontend lint
-- Docker build validation
-
-Future **Continuous Deployment (CD)** will:
-
-- deploy containers to cloud / VPS
-- rebuild Docker services automatically
-- manage environment variables
-- restart services safely
+To generate a local coverage report:
+```
+scripts\coverage.bat
+```
 
 ---
 
-# Design Goals
+## Algorithms
 
-- Realistic ATC-inspired constraints
-- Clear domain boundaries
-- Deterministic and reproducible simulations
-- Modular and extensible architecture
-- Clean academic-grade codebase
-- Future support for optimization algorithms
+| Algorithm | Status | Description |
+|-----------|--------|-------------|
+| Greedy | ✅ Implemented | Assigns flights in priority order to the earliest available compatible runway |
+| Genetic Algorithm | 🔜 Planned | Population-based optimization for minimizing total delay and cancellations |
 
----
-
-# Current Status
-
-Current progress:
-
-- Core domain modules implemented
-- Scenario configuration system implemented
-- Dockerized PostgreSQL environment
-- Frontend connected to backend
-- CI pipeline integrated
-- Authentication system planned
-- Flight generation logic in progress
-- Weather and conflict resolution planned
+The solver is abstracted behind `IScenarioSolver` — new algorithms are plug-in additions with no changes to existing code.
 
 ---
 
-# Notes
+## Design Goals
 
-This is primarily a **backend-focused system**.
-
-The frontend is intentionally **decoupled** so that:
-
-- multiple frontends could exist
-- simulation logic remains backend-driven
-
-The project is intended for **academic use, research experiments, and simulation environments**.
+- Realistic ATC-inspired scheduling constraints
+- Deterministic and reproducible simulations via seeded RNG
+- Pluggable solver architecture for algorithm comparison
+- Clean domain boundaries, no cross-module DB joins
+- Academic-grade codebase suitable for algorithm research

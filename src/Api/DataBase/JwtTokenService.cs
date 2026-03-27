@@ -19,6 +19,7 @@ public sealed class JwtTokenService : ITokenService
     public string GenerateToken(User user)
     {
         var key = _configuration["JWT:KEY"];
+        // TODO: SECURITY: JWT signing material is loaded from configuration that is currently checked into the repo in development settings. Move secrets to user secrets or environment variables and rotate any exposed keys.
         if (string.IsNullOrEmpty(key))
             throw new InvalidOperationException("JWT__KEY missing.");
 

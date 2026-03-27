@@ -5,6 +5,8 @@ import { C, S } from "../styles/tokens";
 import { Modal } from "../components/Modal";
 import { SkeletonCard } from "../components/Skeleton";
 import { useToast } from "../hooks/useToast";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { NumberInput } from "../components/NumberInput";
 
 type AirportDto = {
   id: string;
@@ -68,6 +70,8 @@ export default function AirportsPage() {
   const [editName, setEditName] = useState("");
   const [editIsActive, setEditIsActive] = useState(true);
   const [editRunwayType, setEditRunwayType] = useState<number>(2);
+
+  const [confirmDelete, setConfirmDelete] = useState<{ kind: "airport" | "runway"; id: string; name: string } | null>(null);
 
   const selectedAirport = useMemo(
     () => airports.find((a) => a.id === selectedAirportId) ?? null,
@@ -154,6 +158,10 @@ export default function AirportsPage() {
   }
 
   function selectAirport(airport: AirportDto) {
+    if (selectedAirportId === airport.id) {
+      clearSelectedAirport();
+      return;
+    }
     setSelectedAirportId(airport.id);
     setSelectedAirportName(airport.name);
     localStorage.setItem(STORAGE_AIRPORT_ID, airport.id);
@@ -240,6 +248,13 @@ export default function AirportsPage() {
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to delete runway", "error");
     }
+  }
+
+  async function handleConfirmDelete() {
+    if (!confirmDelete) return;
+    setConfirmDelete(null);
+    if (confirmDelete.kind === "airport") await deleteAirport(confirmDelete.id);
+    else await deleteRunway(confirmDelete.id);
   }
 
   function startEditRunway(r: RunwayDto) {
@@ -364,7 +379,7 @@ export default function AirportsPage() {
                         <button onClick={() => selectAirport(airport)} className={isSelected ? "glass-btn-primary" : "glass-btn-ghost"}>
                           {isSelected ? "✓ Selected" : "Select"}
                         </button>
-                        <button onClick={() => deleteAirport(airport.id)} className="glass-btn-danger">
+                        <button onClick={() => setConfirmDelete({ kind: "airport", id: airport.id, name: airport.name })} className="glass-btn-danger">
                           Delete
                         </button>
                       </div>
@@ -411,7 +426,7 @@ export default function AirportsPage() {
                         </div>
                         <div style={{ display: "flex", gap: "6px", alignItems: "flex-start" }}>
                           <button onClick={() => startEditRunway(runway)} className="glass-btn-ghost">Edit</button>
-                          <button onClick={() => deleteRunway(runway.id)} className="glass-btn-danger">Delete</button>
+                          <button onClick={() => setConfirmDelete({ kind: "runway", id: runway.id, name: runway.name })} className="glass-btn-danger">Delete</button>
                         </div>
                       </div>
                     ) : (
@@ -444,11 +459,23 @@ export default function AirportsPage() {
       {showNewAirport && (
         <Modal onClose={() => setShowNewAirport(false)} title="Create airport">
           <div style={{ display: "grid", gap: "10px" }}>
-            <input value={newAirportName} onChange={(e) => setNewAirportName(e.target.value)} placeholder="Airport name" className="glass-input" />
-            <input type="number" value={newAirportStandCapacity} onChange={(e) => setNewAirportStandCapacity(Number(e.target.value))} placeholder="Stand capacity" className="glass-input" />
+            <div>
+              <div style={{ ...S.label, marginBottom: "6px" }}>Airport name</div>
+              <input value={newAirportName} onChange={(e) => setNewAirportName(e.target.value)} placeholder="e.g. LROP" className="glass-input" />
+            </div>
+            <div>
+              <div style={{ ...S.label, marginBottom: "6px" }}>Stand capacity</div>
+              <NumberInput value={newAirportStandCapacity} onChange={setNewAirportStandCapacity} className="glass-input" min={0} />
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-              <input type="number" value={newAirportLatitude} onChange={(e) => setNewAirportLatitude(Number(e.target.value))} placeholder="Latitude" className="glass-input" />
-              <input type="number" value={newAirportLongitude} onChange={(e) => setNewAirportLongitude(Number(e.target.value))} placeholder="Longitude" className="glass-input" />
+              <div>
+                <div style={{ ...S.label, marginBottom: "6px" }}>Latitude</div>
+                <NumberInput value={newAirportLatitude} onChange={setNewAirportLatitude} className="glass-input" step={0.0001} />
+              </div>
+              <div>
+                <div style={{ ...S.label, marginBottom: "6px" }}>Longitude</div>
+                <NumberInput value={newAirportLongitude} onChange={setNewAirportLongitude} className="glass-input" step={0.0001} />
+              </div>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
               <button onClick={() => setShowNewAirport(false)} className="glass-btn-ghost">Cancel</button>
@@ -458,6 +485,15 @@ export default function AirportsPage() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Delete confirmation */}
+      {confirmDelete && (
+        <ConfirmDialog
+          message={`Delete ${confirmDelete.kind} "${confirmDelete.name}"?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDelete(null)}
+        />
       )}
 
       {/* Create runway modal */}

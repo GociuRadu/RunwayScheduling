@@ -1,5 +1,6 @@
 using MediatR;
 using Modules.Airports.Application;
+using Modules.Airports.Application.UseCases.GetRunwaysByAirportId;
 using Modules.Airports.Domain;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Application.UseCases.GetFlights;
@@ -85,11 +86,26 @@ public sealed class ScenarioSnapshotLoader : IScenarioSnapshotLoader
                 WeatherType = x.Condition
             })
             .ToList();
-            
+
+        var runwayDtos = await _sender.Send(
+            new GetRunwaysByAirportIdQuery(scenarioConfig.AirportId),
+            ct);
+
+        var runways = runwayDtos
+            .Select(x => new Runway
+            {
+                AirportId = x.AirportId,
+                Name = x.Name,
+                IsActive = x.IsActive,
+                RunwayType = x.RunwayType
+            })
+            .ToList();
+
         return new ScenarioSnapshot
         {
             ScenarioConfig = scenarioConfig,
             Airport = airport,
+            Runways = runways,
             Flights = flights,
             RandomEvents = randomEvents,
             WeatherIntervals = weatherIntervals

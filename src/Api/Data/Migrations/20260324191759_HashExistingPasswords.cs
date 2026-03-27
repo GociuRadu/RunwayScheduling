@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -7,7 +7,6 @@ namespace Api.Data.Migrations
     /// <inheritdoc />
     public partial class HashExistingPasswords : Migration
     {
-        // BCrypt hash of "Admin1234" with work factor 11
         private const string HashedPassword = "$2a$11$KJssqXzsJ3E56tOAHOYesuZpFY/l6S09WWHLyvkmJvqn61dVvpYZe";
 
         /// <inheritdoc />

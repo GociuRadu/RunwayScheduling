@@ -1,0 +1,650 @@
+import { useEffect, useState } from "react";
+import { apiFetch } from "../lib/api";
+import { C, S } from "../styles/tokens";
+import { Modal } from "../components/Modal";
+import { useToast } from "../hooks/useToast";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { NumberInput } from "../components/NumberInput";
+
+type RandomEventDto = {
+  id: string;
+  scenarioConfigId: string;
+  name: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  impactPercent: number;
+};
+
+type ScenarioConfigDto = {
+  id: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+};
+
+type SolvedFlightDto = {
+  flightId: string;
+  callsign: string;
+  type: number;
+  priority: number;
+  processingOrder: number;
+  scheduledTime: string;
+  maxDelayMinutes: number;
+  maxEarlyMinutes: number;
+  status: number;
+  cancellationReason: number;
+  assignedRunway: string | null;
+  assignedTime: string | null;
+  delayMinutes: number;
+  earlyMinutes: number;
+  separationAppliedSeconds: number;
+  weatherAtAssignment: number | null;
+  affectedByRandomEvent: boolean;
+};
+
+type SolverResultDto = {
+  algorithmName: string;
+  flights: SolvedFlightDto[];
+  totalFlights: number;
+  totalScheduledFlights: number;
+  totalOnTimeFlights: number;
+  totalDelayedFlights: number;
+  totalCanceledFlights: number;
+  totalDelayMinutes: number;
+  averageDelayMinutes: number;
+  maxDelayMinutes: number;
+  solveTimeMs: number;
+  throughputFlightsPerHour: number;
+};
+
+function formatDate(value: string) {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+}
+
+function toLocalDatetime(utcStr: string) {
+  if (!utcStr) return "";
+  const d = new Date(utcStr);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toUtcString(local: string) {
+  if (!local) return null;
+  return new Date(local).toISOString();
+}
+
+function flightTypeLabel(t: number) {
+  if (t === 0) return "Arrival";
+  if (t === 1) return "Departure";
+  if (t === 2) return "On Ground";
+  return String(t);
+}
+
+function statusLabel(s: number) {
+  switch (s) {
+    case 0: return "Pending";
+    case 1: return "Scheduled";
+    case 2: return "Delayed";
+    case 3: return "Canceled";
+    default: return String(s);
+  }
+}
+
+function statusColor(s: number) {
+  switch (s) {
+    case 1: return C.activeGreen;
+    case 2: return C.primary;
+    case 3: return C.danger;
+    default: return C.textSub;
+  }
+}
+
+function cancellationLabel(r: number) {
+  switch (r) {
+    case 0: return "—";
+    case 1: return "Outside Window";
+    case 2: return "Exceeds Max Delay";
+    case 3: return "No Compatible Runway";
+    default: return String(r);
+  }
+}
+
+function weatherLabel(v: number | null | undefined) {
+  switch (v) {
+    case 0: return "Clear";
+    case 1: return "Cloud";
+    case 2: return "Rain";
+    case 3: return "Snow";
+    case 4: return "Fog";
+    case 5: return "Storm";
+    default: return "—";
+  }
+}
+
+const thStyle: React.CSSProperties = {
+  textAlign: "left",
+  padding: "10px 14px",
+  borderBottom: `1px solid ${C.border}`,
+  position: "sticky",
+  top: 0,
+  background: "#0a0a0a",
+  fontSize: "11px",
+  color: C.textSub,
+  textTransform: "uppercase",
+  letterSpacing: "1px",
+  fontWeight: 700,
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  borderBottom: `1px solid ${C.border}`,
+  fontSize: "13px",
+  verticalAlign: "top",
+  color: C.text,
+};
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div style={{ ...S.label, marginBottom: "6px" }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function LargeModal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="glass-modal-backdrop" style={{ padding: "20px" }} onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="glass-modal-panel"
+        style={{ width: "1300px", maxWidth: "95vw", maxHeight: "88vh", overflow: "hidden", padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontWeight: 800, fontSize: "16px" }}>{title}</div>
+          <button onClick={onClose} className="glass-btn-ghost">Close</button>
+        </div>
+        <div style={{ minHeight: 0, flex: 1, overflowY: "auto" }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+const STORAGE_SCENARIO_ID = "selectedScenarioId";
+const STORAGE_SCENARIO_NAME = "selectedScenarioName";
+const STORAGE_AIRPORT_NAME = "selectedAirportName";
+
+export default function SolverPage() {
+  const { showToast } = useToast();
+
+  const scenarioId = localStorage.getItem(STORAGE_SCENARIO_ID) ?? "";
+  const scenarioName = localStorage.getItem(STORAGE_SCENARIO_NAME) ?? "";
+  const airportName = localStorage.getItem(STORAGE_AIRPORT_NAME) ?? "";
+
+  const hasScenario = !!scenarioId;
+
+  const [scenarioConfig, setScenarioConfig] = useState<ScenarioConfigDto | null>(null);
+
+  const [events, setEvents] = useState<RandomEventDto[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<RandomEventDto | null>(null);
+  const [evName, setEvName] = useState("");
+  const [evDescription, setEvDescription] = useState("");
+  const [evStartTime, setEvStartTime] = useState("");
+  const [evEndTime, setEvEndTime] = useState("");
+  const [evImpact, setEvImpact] = useState(100);
+  const [savingEvent, setSavingEvent] = useState(false);
+
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const [solving, setSolving] = useState(false);
+  const [solverResult, setSolverResult] = useState<SolverResultDto | null>(null);
+  const [showFlightsModal, setShowFlightsModal] = useState(false);
+
+  useEffect(() => {
+    if (hasScenario) {
+      loadScenarioConfig();
+      loadEvents();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function loadScenarioConfig() {
+    try {
+      const res = await apiFetch(`/api/scenarios/configs/${scenarioId}`);
+      if (!res.ok) throw new Error(`Failed to load scenario (${res.status})`);
+      const data = (await res.json()) as ScenarioConfigDto;
+      setScenarioConfig(data);
+    } catch {
+      // non-critical
+    }
+  }
+
+  async function loadEvents() {
+    try {
+      setLoadingEvents(true);
+      const res = await apiFetch(`/api/random-events/${scenarioId}`);
+      if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
+      setEvents((await res.json()) as RandomEventDto[]);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to load events", "error");
+    } finally {
+      setLoadingEvents(false);
+    }
+  }
+
+  function openCreateEvent() {
+    setEditingEvent(null);
+    setEvName(""); setEvDescription(""); setEvStartTime(""); setEvEndTime(""); setEvImpact(100);
+    setShowEventModal(true);
+  }
+
+  function openEditEvent(ev: RandomEventDto) {
+    setEditingEvent(ev);
+    setEvName(ev.name);
+    setEvDescription(ev.description);
+    setEvStartTime(toLocalDatetime(ev.startTime));
+    setEvEndTime(toLocalDatetime(ev.endTime));
+    setEvImpact(ev.impactPercent);
+    setShowEventModal(true);
+  }
+
+  async function saveEvent() {
+    try {
+      setSavingEvent(true);
+
+      if (scenarioConfig) {
+        const scenStart = new Date(scenarioConfig.startTime).getTime();
+        const scenEnd = new Date(scenarioConfig.endTime).getTime();
+        const evStart = new Date(evStartTime).getTime();
+        const evEnd = new Date(evEndTime).getTime();
+
+        if (evStart < scenStart || evEnd > scenEnd) {
+          throw new Error(
+            `Event must be within the scenario window: ${formatDate(scenarioConfig.startTime)} → ${formatDate(scenarioConfig.endTime)}`
+          );
+        }
+        if (evEnd <= evStart) {
+          throw new Error("End time must be after start time.");
+        }
+      }
+
+      const body = {
+        scenarioConfigId: scenarioId,
+        name: evName.trim(),
+        description: evDescription.trim(),
+        startTime: toUtcString(evStartTime),
+        endTime: toUtcString(evEndTime),
+        impactPercent: evImpact,
+      };
+      if (editingEvent) {
+        const res = await apiFetch(`/api/random-events/${editingEvent.id}`, { method: "PUT", body: JSON.stringify(body) });
+        if (!res.ok) throw new Error(`Failed to update event (${res.status})`);
+        const updated = (await res.json()) as RandomEventDto;
+        setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+        showToast("Event updated", "success");
+      } else {
+        const res = await apiFetch(`/api/scenarios/${scenarioId}/random-events`, { method: "POST", body: JSON.stringify(body) });
+        if (!res.ok) throw new Error(`Failed to create event (${res.status})`);
+        const created = (await res.json()) as RandomEventDto;
+        setEvents((prev) => [...prev, created]);
+        showToast("Event created", "success");
+      }
+      setShowEventModal(false);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to save event", "error");
+    } finally {
+      setSavingEvent(false);
+    }
+  }
+
+  async function deleteEvent(id: string) {
+    try {
+      const res = await apiFetch(`/api/random-events/${id}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 204) throw new Error(`Failed to delete event (${res.status})`);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      showToast("Event deleted", "success");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to delete event", "error");
+    }
+  }
+
+  async function runSolver(algorithm: "greedy" | "genetic") {
+    try {
+      if (!hasScenario) throw new Error("No scenario selected");
+      setSolving(true);
+      setSolverResult(null);
+      setShowFlightsModal(false);
+      const res = await apiFetch(`/api/${algorithm}/${scenarioId}`);
+      if (!res.ok) throw new Error(`Solver failed (${res.status})`);
+      const data = (await res.json()) as SolverResultDto;
+      setSolverResult(data);
+      showToast(`Solved with ${data.algorithmName}`, "success");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Solver failed", "error");
+    } finally {
+      setSolving(false);
+    }
+  }
+
+  const cancellationBreakdown: Record<string, number> = {};
+  if (solverResult) {
+    for (const f of solverResult.flights) {
+      if (f.status === 3) {
+        const lbl = cancellationLabel(f.cancellationReason);
+        cancellationBreakdown[lbl] = (cancellationBreakdown[lbl] ?? 0) + 1;
+      }
+    }
+  }
+
+  const canSave = !savingEvent && evName.trim().length > 0 && !!evStartTime && !!evEndTime;
+
+  return (
+    <div style={{ maxWidth: "1500px", margin: "0 auto" }}>
+
+      <div style={{ marginBottom: "24px" }}>
+        <div style={S.label}>SOLVER</div>
+        <h1 style={{ margin: "6px 0 0", fontSize: "22px", fontWeight: 800 }}>Scenario Solver</h1>
+      </div>
+
+      <div className="glass-card--selected" style={{ marginBottom: "24px" }}>
+        <div style={{ display: "flex", gap: "32px", alignItems: "center", flexWrap: "wrap" }}>
+          <div>
+            <div style={S.label}>Airport</div>
+            <div style={{ fontSize: "16px", fontWeight: 700, marginTop: "4px", color: airportName ? C.text : C.textMuted }}>
+              {airportName || "None"}
+            </div>
+          </div>
+          <div>
+            <div style={S.label}>Scenario</div>
+            <div style={{ fontSize: "16px", fontWeight: 700, marginTop: "4px", color: scenarioName ? C.text : C.textMuted }}>
+              {scenarioName || "None selected"}
+            </div>
+          </div>
+          {scenarioConfig && (
+            <div>
+              <div style={S.label}>Timeline</div>
+              <div style={{ fontSize: "13px", color: C.textSub, marginTop: "4px" }}>
+                {formatDate(scenarioConfig.startTime)} <span style={{ color: C.textMuted }}>→</span> {formatDate(scenarioConfig.endTime)}
+              </div>
+            </div>
+          )}
+          {!hasScenario && (
+            <div style={{ color: C.textSub, fontSize: "13px" }}>
+              Go to <a href="/scenario-config" style={{ color: C.primary }}>Scenarios</a> and select one first.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignItems: "start" }}>
+
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div style={S.sectionTitle}>Random Events</div>
+            <button
+              onClick={openCreateEvent}
+              className="glass-btn-primary"
+              disabled={!hasScenario}
+              style={{ opacity: hasScenario ? 1 : 0.5 }}
+            >
+              + Add event
+            </button>
+          </div>
+
+          {!hasScenario ? (
+            <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>No scenario selected.</div>
+          ) : loadingEvents ? (
+            <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>Loading events…</div>
+          ) : events.length === 0 ? (
+            <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>
+              No random events yet. Add one to affect the simulation.
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: "10px" }}>
+              {events.map((ev, i) => (
+                <div
+                  key={ev.id}
+                  className="glass-card"
+                  style={{ animation: `fadeInUp 0.3s ease ${i * 50}ms both` }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "14px", fontWeight: 700 }}>{ev.name}</div>
+                      {ev.description && (
+                        <div style={{ color: C.textSub, fontSize: "12px", marginTop: "3px" }}>{ev.description}</div>
+                      )}
+                      <div style={{ display: "flex", gap: "16px", marginTop: "8px", flexWrap: "wrap" }}>
+                        <div>
+                          <div style={S.label}>Start</div>
+                          <div style={{ fontSize: "12px", marginTop: "2px" }}>{formatDate(ev.startTime)}</div>
+                        </div>
+                        <div>
+                          <div style={S.label}>End</div>
+                          <div style={{ fontSize: "12px", marginTop: "2px" }}>{formatDate(ev.endTime)}</div>
+                        </div>
+                        <div>
+                          <div style={S.label}>Impact</div>
+                          <div style={{ fontSize: "15px", color: C.primary, fontWeight: 800, marginTop: "2px" }}>
+                            {ev.impactPercent}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                      <button onClick={() => openEditEvent(ev)} className="glass-btn-ghost">Edit</button>
+                      <button onClick={() => setConfirmDelete({ id: ev.id, name: ev.name })} className="glass-btn-danger">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <div style={{ ...S.sectionTitle, marginBottom: "12px" }}>Run Solver</div>
+
+          <div className="glass-card" style={{ marginBottom: "16px" }}>
+            <div style={{ ...S.label, marginBottom: "12px" }}>Select Algorithm</div>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <button
+                onClick={() => runSolver("greedy")}
+                className="glass-btn-primary"
+                disabled={!hasScenario || solving}
+                style={{ opacity: !hasScenario || solving ? 0.5 : 1, minWidth: "130px" }}
+              >
+                {solving ? "Solving…" : "Run Greedy"}
+              </button>
+              <button className="glass-btn-ghost" disabled style={{ opacity: 0.3, cursor: "not-allowed" }}>
+                Run Genetic (soon)
+              </button>
+              <button className="glass-btn-ghost" disabled style={{ opacity: 0.3, cursor: "not-allowed" }}>
+                Run A* (soon)
+              </button>
+            </div>
+          </div>
+
+          {solverResult && (
+            <div style={{ animation: "fadeInUp 0.3s ease both" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <div style={{ fontSize: "15px", fontWeight: 700 }}>
+                  Results — <span style={{ color: C.primary }}>{solverResult.algorithmName}</span>
+                </div>
+                <button onClick={() => setShowFlightsModal(true)} className="glass-btn-ghost">
+                  View all flights
+                </button>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginBottom: "12px" }}>
+                {([
+                  { label: "Total Flights", value: solverResult.totalFlights, color: C.text },
+                  { label: "Scheduled", value: solverResult.totalScheduledFlights, color: C.activeGreen },
+                  { label: "On Time", value: solverResult.totalOnTimeFlights, color: C.activeGreen },
+                  { label: "Delayed", value: solverResult.totalDelayedFlights, color: C.primary },
+                  { label: "Cancelled", value: solverResult.totalCanceledFlights, color: C.danger },
+                  { label: "Avg Delay", value: `${solverResult.averageDelayMinutes.toFixed(1)} min`, color: C.primary },
+                  { label: "Max Delay", value: `${solverResult.maxDelayMinutes} min`, color: C.primary },
+                  { label: "Throughput", value: `${solverResult.throughputFlightsPerHour.toFixed(1)}/h`, color: C.text },
+                  { label: "Solve Time", value: `${solverResult.solveTimeMs.toFixed(1)} ms`, color: C.textSub },
+                ] as const).map((stat) => (
+                  <div key={stat.label} className="glass-card" style={{ padding: "10px 12px", textAlign: "center" }}>
+                    <div style={S.label}>{stat.label}</div>
+                    <div style={{ fontSize: "17px", fontWeight: 800, color: stat.color, marginTop: "4px" }}>
+                      {stat.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {solverResult.totalCanceledFlights > 0 && (
+                <div className="glass-card" style={{ border: `1px solid ${C.borderAccentRed}` }}>
+                  <div style={{ ...S.label, marginBottom: "8px", color: C.danger }}>Cancellation Breakdown</div>
+                  {Object.entries(cancellationBreakdown).map(([reason, count]) => (
+                    <div
+                      key={reason}
+                      style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "4px 0", borderBottom: `1px solid ${C.border}` }}
+                    >
+                      <span style={{ color: C.textSub }}>{reason}</span>
+                      <span style={{ color: C.danger, fontWeight: 700 }}>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showFlightsModal && solverResult && (
+        <LargeModal
+          title={`Solved Flights — ${solverResult.algorithmName}`}
+          onClose={() => setShowFlightsModal(false)}
+        >
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: "6px", overflow: "auto", maxHeight: "68vh", background: C.bgCard }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1200px" }}>
+              <thead>
+                <tr>
+                  {["#", "Callsign", "Type", "Pri", "Status", "Runway", "Scheduled", "Assigned", "Delay", "Cancel Reason", "Weather", "Event"].map((h) => (
+                    <th key={h} style={thStyle}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {solverResult.flights.map((f) => (
+                  <tr key={f.flightId}>
+                    <td style={{ ...tdStyle, color: C.textSub }}>{f.processingOrder}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700 }}>{f.callsign}</td>
+                    <td style={tdStyle}>{flightTypeLabel(f.type)}</td>
+                    <td style={{ ...tdStyle, color: C.textSub }}>{f.priority}</td>
+                    <td style={{ ...tdStyle, color: statusColor(f.status), fontWeight: 700 }}>
+                      {statusLabel(f.status)}
+                    </td>
+                    <td style={tdStyle}>{f.assignedRunway ?? "—"}</td>
+                    <td style={tdStyle}>{formatDate(f.scheduledTime)}</td>
+                    <td style={tdStyle}>{f.assignedTime ? formatDate(f.assignedTime) : "—"}</td>
+                    <td style={{ ...tdStyle, color: f.delayMinutes > 0 ? C.primary : f.earlyMinutes > 0 ? C.activeGreen : C.textSub }}>
+                      {f.delayMinutes > 0
+                        ? `+${f.delayMinutes}m`
+                        : f.earlyMinutes > 0
+                        ? `-${f.earlyMinutes}m`
+                        : "0"}
+                    </td>
+                    <td style={{ ...tdStyle, color: f.cancellationReason !== 0 ? C.danger : C.textSub }}>
+                      {cancellationLabel(f.cancellationReason)}
+                    </td>
+                    <td style={tdStyle}>{weatherLabel(f.weatherAtAssignment)}</td>
+                    <td style={{ ...tdStyle, color: f.affectedByRandomEvent ? C.primary : C.textSub }}>
+                      {f.affectedByRandomEvent ? "Yes" : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </LargeModal>
+      )}
+
+      {showEventModal && (
+        <Modal
+          onClose={() => setShowEventModal(false)}
+          title={editingEvent ? "Edit Random Event" : "Add Random Event"}
+        >
+          <div style={{ display: "grid", gap: "10px" }}>
+            <Field label="Name">
+              <input
+                value={evName}
+                onChange={(e) => setEvName(e.target.value)}
+                className="glass-input"
+                placeholder="e.g. VIP Arrival"
+              />
+            </Field>
+            <Field label="Description">
+              <input
+                value={evDescription}
+                onChange={(e) => setEvDescription(e.target.value)}
+                className="glass-input"
+                placeholder="Optional"
+              />
+            </Field>
+            <Field label="Start time">
+              <input
+                type="datetime-local"
+                value={evStartTime}
+                onChange={(e) => setEvStartTime(e.target.value)}
+                className="glass-input"
+                min={scenarioConfig ? toLocalDatetime(scenarioConfig.startTime) : undefined}
+                max={scenarioConfig ? toLocalDatetime(scenarioConfig.endTime) : undefined}
+              />
+            </Field>
+            <Field label="End time">
+              <input
+                type="datetime-local"
+                value={evEndTime}
+                onChange={(e) => setEvEndTime(e.target.value)}
+                className="glass-input"
+                min={scenarioConfig ? toLocalDatetime(scenarioConfig.startTime) : undefined}
+                max={scenarioConfig ? toLocalDatetime(scenarioConfig.endTime) : undefined}
+              />
+            </Field>
+            {scenarioConfig && (
+              <div style={{ fontSize: "11px", color: C.textSub, marginTop: "-4px" }}>
+                Scenario window: {formatDate(scenarioConfig.startTime)} → {formatDate(scenarioConfig.endTime)}
+              </div>
+            )}
+            <Field label="Impact %">
+              <NumberInput value={evImpact} onChange={setEvImpact} className="glass-input" min={0} max={200} />
+            </Field>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
+              <button onClick={() => setShowEventModal(false)} className="glass-btn-ghost">Cancel</button>
+              <button
+                onClick={saveEvent}
+                className="glass-btn-primary"
+                disabled={!canSave}
+                style={{ opacity: canSave ? 1 : 0.5 }}
+              >
+                {savingEvent ? "Saving…" : editingEvent ? "Update" : "Create"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          message={`Delete event "${confirmDelete.name}"?`}
+          onConfirm={async () => {
+            const id = confirmDelete.id;
+            setConfirmDelete(null);
+            await deleteEvent(id);
+          }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+    </div>
+  );
+}

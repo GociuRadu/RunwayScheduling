@@ -84,25 +84,21 @@ public sealed class AppDbContext : DbContext
             e.Property(x => x.MinWeatherIntervalMinutes).IsRequired();
             e.Property(x => x.WeatherDifficulty).IsRequired();
 
-            // ScenarioConfig -> Airport
             e.HasOne<Airport>()
                 .WithMany()
                 .HasForeignKey(x => x.AirportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ScenarioConfig -> Aircrafts (CASCADE)
             e.HasMany(x => x.Aircrafts)
                 .WithOne()
                 .HasForeignKey(a => a.ScenarioConfigId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ScenarioConfig -> Flights (CASCADE)
             e.HasMany(x => x.Flights)
                 .WithOne()
                 .HasForeignKey(f => f.ScenarioConfigId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ScenarioConfig -> WeatherIntervals (CASCADE)
             e.HasMany(x => x.WeatherIntervals)
                 .WithOne()
                 .HasForeignKey(w => w.ScenarioConfigId)
@@ -139,7 +135,6 @@ public sealed class AppDbContext : DbContext
             e.Property(x => x.MaxEarlyMinutes).IsRequired();
             e.Property(x => x.Priority).IsRequired();
 
-            // Flight -> Aircraft (no cascade )
             e.HasOne<Aircraft>()
                 .WithMany()
                 .HasForeignKey(x => x.AircraftId)
@@ -218,34 +213,32 @@ public sealed class AppDbContext : DbContext
 
             e.HasIndex(x => x.Email).IsUnique();
 
+            // TODO: SECURITY: This seeds deterministic admin accounts with plaintext passwords in source control. Replace with environment-provisioned bootstrap users or pre-hashed secrets stored outside the repository.
             modelBuilder.Entity<User>().HasData(
-    new User
-    {
-        Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-        Email = "admin1@gmail.com",
-        Username = "admin1",
-        PasswordHash = "Admin1234",
-        CreatedAtUtc = new DateTime(2026, 3, 9, 2, 0, 0, DateTimeKind.Utc)
-    },
-    new User
-    {
-        Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-        Email = "admin2@gmail.com",
-        Username = "admin2",
-        PasswordHash = "Admin1234",
-        CreatedAtUtc = new DateTime(2026, 3, 9, 3, 0, 0, DateTimeKind.Utc)
-    },
-    new User
-    {
-        Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
-        Email = "admin3@gmail.com",
-        Username = "admin3",
-        PasswordHash = "Admin1234",
-        CreatedAtUtc = new DateTime(2026, 3, 9, 4, 0, 0, DateTimeKind.Utc)
-    }
-);
+                new User
+                {
+                    Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                    Email = "admin1@gmail.com",
+                    Username = "admin1",
+                    PasswordHash = "Admin1234",
+                    CreatedAtUtc = new DateTime(2026, 3, 9, 2, 0, 0, DateTimeKind.Utc)
+                },
+                new User
+                {
+                    Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                    Email = "admin2@gmail.com",
+                    Username = "admin2",
+                    PasswordHash = "Admin1234",
+                    CreatedAtUtc = new DateTime(2026, 3, 9, 3, 0, 0, DateTimeKind.Utc)
+                },
+                new User
+                {
+                    Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                    Email = "admin3@gmail.com",
+                    Username = "admin3",
+                    PasswordHash = "Admin1234",
+                    CreatedAtUtc = new DateTime(2026, 3, 9, 4, 0, 0, DateTimeKind.Utc)
+                });
         });
-
-
     }
 }

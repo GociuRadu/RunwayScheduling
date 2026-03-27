@@ -8,6 +8,8 @@ namespace Modules.Scenarios.Application.UseCases.CreateFlights;
 
 public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand, List<Flight>>
 {
+    private const int TurnaroundMinutes = 20;
+
     private readonly IMediator _mediator;
     private readonly IScenarioConfigStore _configStore;
     private readonly IFlightStore _flightStore;
@@ -61,35 +63,23 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
     private static List<Flight> GenerateFlightsFromAircrafts(List<Aircraft> aircrafts, ScenarioConfig cfg)
     {
         var rng = new Random(cfg.Seed);
-
-        var onGroundCount = cfg.OnGroundAircraftCount;
-        var inboundCount = cfg.InboundAircraftCount;
-
-        var groundPool = aircrafts.Take(onGroundCount).ToList();
-        var inboundPool = aircrafts.Skip(onGroundCount).Take(inboundCount).ToList();
-
-        // RemainingOnGroundAircraftCount = how many aircraft (from TOTAL) remain on ground at end.
+        var inboundPool = aircrafts
+            .Skip(cfg.OnGroundAircraftCount)
+            .Take(cfg.InboundAircraftCount)
+            .ToList();
         var stayCount = cfg.RemainingOnGroundAircraftCount;
         var departCount = cfg.AircraftCount - stayCount;
-
-        // Safety time window: keep flights away from edges
-        // Try margin 5 minutes; if the scenario is too short, margin is reduced automatically.
         var (safeStart, safeEnd) = GetSafeWindow(cfg.StartTime, cfg.EndTime, preferredMarginMinutes: 10);
-
-        // --- Choose which aircraft STAY / DEPART (deterministic shuffle) ---
         var allAircraftIds = aircrafts.Select(a => a.Id).ToList();
         ShuffleInPlace(allAircraftIds, rng);
-
-        // First N = stayCount stay, rest depart.
-        var staySet = new HashSet<Guid>(allAircraftIds.Take(stayCount));
-        var departSet = new HashSet<Guid>(allAircraftIds.Skip(stayCount)); // exact size = departCount
-
-        // --- ARRIVALS: all inbound aircraft arrive ---
+        var departingAircraftIds = allAircraftIds
+            .Skip(stayCount)
+            .Take(departCount)
+            .ToList();
         var arrivalTimes = GenerateScheduleTimes(safeStart, safeEnd, inboundPool.Count, rng);
         var inboundArrivalByAircraft = new Dictionary<Guid, DateTime>(inboundPool.Count);
-
         var flights = new List<Flight>(inboundPool.Count + departCount);
-        int callIndex = 1;
+        var callIndex = 1;
 
         for (int i = 0; i < inboundPool.Count; i++)
         {
@@ -112,14 +102,8 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
             });
         }
 
-        // --- DEPARTURES ---
-        // Fixed turnaround so a plane that arrived can depart later
-        const int turnaroundMinMinutes = 20;
-
         var departureTimes = GenerateScheduleTimes(safeStart, safeEnd, departCount, rng);
         departureTimes.Sort();
-
-        var departingAircraftIds = departSet.ToList();
         ShuffleInPlace(departingAircraftIds, rng);
 
         for (int i = 0; i < departingAircraftIds.Count; i++)
@@ -133,7 +117,7 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
 
             if (inboundArrivalByAircraft.TryGetValue(aircraftId, out var arrTime))
             {
-                var earliestDeparture = arrTime.AddMinutes(turnaroundMinMinutes);
+                var earliestDeparture = arrTime.AddMinutes(TurnaroundMinutes);
 
                 if (earliestDeparture >= safeEnd)
                     continue;
@@ -176,14 +160,12 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
         if (totalMinutes <= 0)
             return (start, start);
 
-        // margin must be <= half of interval
         var maxMargin = Math.Floor(totalMinutes / 2.0);
         var margin = Math.Min(preferredMarginMinutes, (int)maxMargin);
 
         var safeStart = start.AddMinutes(margin);
         var safeEnd = end.AddMinutes(-margin);
 
-        // If margin collapsed interval (edge cases), fall back to original
         if (safeEnd < safeStart)
             return (start, end);
 
@@ -226,17 +208,14 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
             return times;
         }
 
-        //  pick random minutes in [0..windowMinutes]
         var minutes = new List<double>(count);
         for (int i = 0; i < count; i++)
         {
             minutes.Add(rng.NextDouble() * windowMinutes);
         }
 
-        //sort => chronological order
         minutes.Sort();
 
-        // 3) enforce optional minimum gap (in minutes)
         if (minGapMinutes > 0 && count > 1)
         {
             for (int i = 1; i < minutes.Count; i++)
@@ -246,7 +225,6 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
                     minutes[i] = minAllowed;
             }
 
-            // If we pushed beyond the window, clamp by shifting backwards
             var last = minutes[^1];
             if (last > windowMinutes)
             {
@@ -254,13 +232,11 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
                 for (int i = 0; i < minutes.Count; i++)
                     minutes[i] -= shiftBack;
 
-                // Safety clamp if shift caused negatives
                 for (int i = 0; i < minutes.Count; i++)
                     if (minutes[i] < 0) minutes[i] = 0;
             }
         }
 
-        // 4) convert to DateTimes
         for (int i = 0; i < minutes.Count; i++)
         {
             var t = start.AddMinutes(minutes[i]);
@@ -272,15 +248,14 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
         return times;
     }
 
-    // Difficulty affects ONLY tolerance (max delay/early), as you requested.
     private static (int maxDelay, int maxEarly) GetTimingLimits(int difficulty, WakeTurbulenceCategory wake, Random rng)
     {
         if (difficulty < 1) difficulty = 1;
         if (difficulty > 5) difficulty = 5;
 
-        var t = (difficulty - 1) / 4.0; // 0..1
-        var baseDelay = (int)Math.Round(22 - 12 * t); // 22..10
-        var baseEarly = (int)Math.Round(11 - 6 * t);  // 11..5
+        var difficultyRatio = (difficulty - 1) / 4.0;
+        var baseDelay = (int)Math.Round(22 - 12 * difficultyRatio);
+        var baseEarly = (int)Math.Round(11 - 6 * difficultyRatio);
 
         var (wakeDelay, wakeEarly) = wake switch
         {
@@ -291,8 +266,8 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
             _ => (0, 0)
         };
 
-        var delayJitter = rng.Next(-1, 2);
-        var earlyJitter = rng.Next(-1, 2);
+        var delayJitter = rng.Next(-5, 8);
+        var earlyJitter = rng.Next(-3, 5);
 
         var maxDelay = baseDelay + wakeDelay + delayJitter;
         var maxEarly = baseEarly + wakeEarly + earlyJitter;

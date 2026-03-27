@@ -5,5 +5,4 @@ namespace Modules.Solver.Application;
 public interface IScenarioSolver
 {
     SolverResult Solve(ScenarioSnapshot snapshot);
-    
 }

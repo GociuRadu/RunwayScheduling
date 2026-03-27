@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import ContactPage from "./pages/ContactPage";
 import ScenarioConfigPage from "./pages/ScenarioConfigPage";
 import AirportsPage from "./pages/AirportsPage";
+import SolverPage from "./pages/SolverPage";
 import { ToastProvider } from "./components/Toast";
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/scenario-config" element={<ScenarioConfigPage />} />
             <Route path="/airports" element={<AirportsPage />} />
+            <Route path="/solver" element={<SolverPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

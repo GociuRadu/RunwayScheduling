@@ -31,6 +31,8 @@ public static class Endpoints
         var secured = app.MapGroup("");
         secured.RequireAuthorization();
 
+        // TODO: SECURITY: Most write endpoints forward DTOs directly to handlers without endpoint-level validation or a unified validation pipeline. Add FluentValidation or equivalent request validation so malformed input fails with 400 instead of surfacing as generic exceptions.
+
         secured.MapPost("/aircrafts/generate/{ScenarioId:guid}",
             async (Guid scenarioId, GenerateRandomAircraftCommand cmd, IMediator mediator, CancellationToken ct) =>
             {
