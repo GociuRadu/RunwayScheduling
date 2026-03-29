@@ -15,6 +15,7 @@ public sealed class SolverResult
     /// <summary>Flights assigned with zero delay.</summary>
     public int TotalOnTimeFlights { get; init; }
 
+    public int TotalEarlyFlights { get; init; }
     public int TotalDelayedFlights { get; init; }
     public int TotalCanceledFlights { get; init; }
 

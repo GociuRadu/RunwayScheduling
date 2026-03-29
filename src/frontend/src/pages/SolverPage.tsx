@@ -49,6 +49,7 @@ type SolverResultDto = {
   totalFlights: number;
   totalScheduledFlights: number;
   totalOnTimeFlights: number;
+  totalEarlyFlights: number;
   totalDelayedFlights: number;
   totalCanceledFlights: number;
   totalDelayMinutes: number;
@@ -75,6 +76,10 @@ function toUtcString(local: string) {
   return new Date(local).toISOString();
 }
 
+function clampImpactPercent(value: number) {
+  return Math.min(100, Math.max(0, value));
+}
+
 function flightTypeLabel(t: number) {
   if (t === 0) return "Arrival";
   if (t === 1) return "Departure";
@@ -88,6 +93,7 @@ function statusLabel(s: number) {
     case 1: return "Scheduled";
     case 2: return "Delayed";
     case 3: return "Canceled";
+    case 4: return "Early";
     default: return String(s);
   }
 }
@@ -97,6 +103,7 @@ function statusColor(s: number) {
     case 1: return C.activeGreen;
     case 2: return C.primary;
     case 3: return C.danger;
+    case 4: return "#38bdf8";
     default: return C.textSub;
   }
 }
@@ -229,7 +236,8 @@ export default function SolverPage() {
       setLoadingEvents(true);
       const res = await apiFetch(`/api/random-events/${scenarioId}`);
       if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
-      setEvents((await res.json()) as RandomEventDto[]);
+      const data = (await res.json()) as RandomEventDto[];
+      setEvents(data.map((event) => ({ ...event, impactPercent: clampImpactPercent(event.impactPercent) })));
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to load events", "error");
     } finally {
@@ -249,7 +257,7 @@ export default function SolverPage() {
     setEvDescription(ev.description);
     setEvStartTime(toLocalDatetime(ev.startTime));
     setEvEndTime(toLocalDatetime(ev.endTime));
-    setEvImpact(ev.impactPercent);
+    setEvImpact(clampImpactPercent(ev.impactPercent));
     setShowEventModal(true);
   }
 
@@ -279,19 +287,19 @@ export default function SolverPage() {
         description: evDescription.trim(),
         startTime: toUtcString(evStartTime),
         endTime: toUtcString(evEndTime),
-        impactPercent: evImpact,
+        impactPercent: clampImpactPercent(evImpact),
       };
       if (editingEvent) {
         const res = await apiFetch(`/api/random-events/${editingEvent.id}`, { method: "PUT", body: JSON.stringify(body) });
         if (!res.ok) throw new Error(`Failed to update event (${res.status})`);
         const updated = (await res.json()) as RandomEventDto;
-        setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+        setEvents((prev) => prev.map((e) => (e.id === updated.id ? { ...updated, impactPercent: clampImpactPercent(updated.impactPercent) } : e)));
         showToast("Event updated", "success");
       } else {
         const res = await apiFetch(`/api/scenarios/${scenarioId}/random-events`, { method: "POST", body: JSON.stringify(body) });
         if (!res.ok) throw new Error(`Failed to create event (${res.status})`);
         const created = (await res.json()) as RandomEventDto;
-        setEvents((prev) => [...prev, created]);
+        setEvents((prev) => [...prev, { ...created, impactPercent: clampImpactPercent(created.impactPercent) }]);
         showToast("Event created", "success");
       }
       setShowEventModal(false);
@@ -430,7 +438,7 @@ export default function SolverPage() {
                         <div>
                           <div style={S.label}>Impact</div>
                           <div style={{ fontSize: "15px", color: C.primary, fontWeight: 800, marginTop: "2px" }}>
-                            {ev.impactPercent}%
+                            {clampImpactPercent(ev.impactPercent)}%
                           </div>
                         </div>
                       </div>
@@ -460,12 +468,6 @@ export default function SolverPage() {
               >
                 {solving ? "Solving…" : "Run Greedy"}
               </button>
-              <button className="glass-btn-ghost" disabled style={{ opacity: 0.3, cursor: "not-allowed" }}>
-                Run Genetic (soon)
-              </button>
-              <button className="glass-btn-ghost" disabled style={{ opacity: 0.3, cursor: "not-allowed" }}>
-                Run A* (soon)
-              </button>
             </div>
           </div>
 
@@ -485,6 +487,7 @@ export default function SolverPage() {
                   { label: "Total Flights", value: solverResult.totalFlights, color: C.text },
                   { label: "Scheduled", value: solverResult.totalScheduledFlights, color: C.activeGreen },
                   { label: "On Time", value: solverResult.totalOnTimeFlights, color: C.activeGreen },
+                  { label: "Early", value: solverResult.totalEarlyFlights, color: "#38bdf8" },
                   { label: "Delayed", value: solverResult.totalDelayedFlights, color: C.primary },
                   { label: "Cancelled", value: solverResult.totalCanceledFlights, color: C.danger },
                   { label: "Avg Delay", value: `${solverResult.averageDelayMinutes.toFixed(1)} min`, color: C.primary },
@@ -617,7 +620,13 @@ export default function SolverPage() {
               </div>
             )}
             <Field label="Impact %">
-              <NumberInput value={evImpact} onChange={setEvImpact} className="glass-input" min={0} max={200} />
+              <NumberInput
+                value={clampImpactPercent(evImpact)}
+                onChange={(value) => setEvImpact(clampImpactPercent(value))}
+                className="glass-input"
+                min={0}
+                max={100}
+              />
             </Field>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
               <button onClick={() => setShowEventModal(false)} className="glass-btn-ghost">Cancel</button>

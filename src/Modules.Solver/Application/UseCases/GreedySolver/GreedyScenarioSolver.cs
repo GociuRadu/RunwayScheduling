@@ -51,8 +51,16 @@ public sealed class GreedyScenarioSolver : IScenarioSolver
                 continue;
             }
 
+            var earlyMinutes = (int)Math.Max(0, (flight.ScheduledTime - assignedTime).TotalMinutes);
+
             var activeWeather = GetActiveWeather(snapshot, assignedTime);
             var activeEvent = GetActiveRandomEvent(snapshot, assignedTime);
+            if (activeEvent is not null && activeEvent.ImpactPercent >= 100)
+            {
+                solvedFlights.Add(CreateCanceledFlight(flight, processingOrder, CancellationReason.NoCompatibleRunway));
+                continue;
+            }
+
             var separation = CalculateSeparation(snapshot, activeWeather, activeEvent);
 
             solvedFlights.Add(new SolvedFlight
@@ -67,12 +75,12 @@ public sealed class GreedyScenarioSolver : IScenarioSolver
                 ScheduledTime = flight.ScheduledTime,
                 MaxDelayMinutes = flight.MaxDelayMinutes,
                 MaxEarlyMinutes = flight.MaxEarlyMinutes,
-                Status = delayMinutes > 0 ? FlightStatus.Delayed : FlightStatus.Scheduled,
+                Status = delayMinutes > 0 ? FlightStatus.Delayed : earlyMinutes > 0 ? FlightStatus.Early : FlightStatus.Scheduled,
                 CancellationReason = CancellationReason.None,
                 AssignedRunway = chosenRunway.Name,
                 AssignedTime = assignedTime,
                 DelayMinutes = delayMinutes,
-                EarlyMinutes = 0,
+                EarlyMinutes = earlyMinutes,
                 SeparationAppliedSeconds = (int)separation.TotalSeconds,
                 WeatherAtAssignment = activeWeather?.WeatherType,
                 AffectedByRandomEvent = activeEvent is not null
@@ -123,8 +131,9 @@ public sealed class GreedyScenarioSolver : IScenarioSolver
         var weatherMultiplier = activeWeather is not null
             ? GetWeatherMultiplier(activeWeather.WeatherType)
             : config.WeatherPercent / 100.0;
+        // ImpactPercent=90 → 10% capacity → 10x separation; ImpactPercent=100 already canceled above
         var eventMultiplier = activeEvent is not null
-            ? 1.0 + (activeEvent.ImpactPercent / 100.0)
+            ? 1.0 / (1.0 - activeEvent.ImpactPercent / 100.0)
             : 1.0;
 
         return TimeSpan.FromSeconds(baseSeconds * weatherMultiplier * eventMultiplier);
@@ -173,6 +182,7 @@ public sealed class GreedyScenarioSolver : IScenarioSolver
     {
         var scheduledFlights = flights.Count(flight => flight.Status != FlightStatus.Canceled);
         var onTimeFlights = flights.Count(flight => flight.Status == FlightStatus.Scheduled);
+        var earlyFlights = flights.Count(flight => flight.Status == FlightStatus.Early);
         var delayedFlights = flights.Count(flight => flight.Status == FlightStatus.Delayed);
         var canceledFlights = flights.Count(flight => flight.Status == FlightStatus.Canceled);
 
@@ -190,6 +200,7 @@ public sealed class GreedyScenarioSolver : IScenarioSolver
             TotalFlights = totalFlights,
             TotalScheduledFlights = scheduledFlights,
             TotalOnTimeFlights = onTimeFlights,
+            TotalEarlyFlights = earlyFlights,
             TotalDelayedFlights = delayedFlights,
             TotalCanceledFlights = canceledFlights,
             TotalDelayMinutes = totalDelay,
