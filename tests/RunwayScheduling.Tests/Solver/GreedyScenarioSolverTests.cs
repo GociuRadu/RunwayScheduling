@@ -85,7 +85,10 @@ public sealed class GreedyScenarioSolverTests
 
         var result = _sut.Solve(snapshot);
 
-        Assert.Equal(165, result.Flights.Single(flight => flight.DelayMinutes > 0).SeparationAppliedSeconds);
+        // base=100, wakePercent=100 → base=100s
+        // Cloud multiplier=1.10, ImpactPercent=50 → capacity=50% → event multiplier=1/(1-0.5)=2.0
+        // total = 100 × 1.10 × 2.0 = 220s
+        Assert.Equal(220, result.Flights.Single(flight => flight.DelayMinutes > 0).SeparationAppliedSeconds);
     }
 
     [Fact]
