@@ -20,5 +20,6 @@ public sealed class GeneticAlgorithmSolverHandler : IRequestHandler<GeneticAlgor
     {
         var snapshot = await _snapshotLoader.Load(request.ScenarioConfigId, ct);
         return _geneticAlgorithmScenarioSolver.Solve(snapshot);
+        
     }
 }

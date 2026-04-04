@@ -651,7 +651,7 @@ export default function SolverPage() {
                   unit: "/h",
                   decimals: 2,
                 },
-              ] as const).map(({ label, delta, higherIsBetter, unit = "", decimals = 0 }) => {
+              ]).map(({ label, delta, higherIsBetter, unit = "", decimals = 0 }: { label: string; delta: number; higherIsBetter: boolean; unit?: string; decimals?: number }) => {
                 const better = higherIsBetter ? delta > 0 : delta < 0;
                 const worse  = higherIsBetter ? delta < 0 : delta > 0;
                 const color  = better ? C.activeGreen : worse ? C.danger : C.textSub;

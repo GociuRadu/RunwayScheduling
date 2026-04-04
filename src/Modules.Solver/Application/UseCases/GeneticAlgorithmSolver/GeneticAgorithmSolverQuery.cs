@@ -147,9 +147,6 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
         return result;
     }
 
-    // ── Fitness ────────────────────────────────────────────────────────────────
-    // Lower is better.
-    // Priority: minimize cancellations >> minimize priority-weighted delay >> maximize on-time count.
 
     private static double EvaluateFitness(List<SolvedFlight> flights)
     {
@@ -160,7 +157,6 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
         return canceled * 100_000.0 + priorityWeightedDelay - onTimeBonus * 10.0;
     }
 
-    // ── Selection (tournament) ─────────────────────────────────────────────────
 
     private static Individual TournamentSelect(List<Individual> population, Random rng)
     {
@@ -174,7 +170,6 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
         return best;
     }
 
-    // ── Crossover (Order Crossover – OX) ───────────────────────────────────────
 
     private static int[] OrderCrossover(int[] parent1, int[] parent2, Random rng)
     {
@@ -203,7 +198,6 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
         return child;
     }
 
-    // ── Mutation (swap or insertion) ───────────────────────────────────────────
 
     private static void Mutate(int[] chromosome, Random rng)
     {
@@ -237,7 +231,6 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
         chromosome[j] = gene;
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
 
     private static List<Flight> ToFlightList(int[] chromosome, List<Flight> flights) =>
         [..chromosome.Select(i => flights[i])];
