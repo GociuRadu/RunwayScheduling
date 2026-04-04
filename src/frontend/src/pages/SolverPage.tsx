@@ -59,6 +59,11 @@ type SolverResultDto = {
   throughputFlightsPerHour: number;
 };
 
+type ComparisonResultDto = {
+  greedy: SolverResultDto;
+  genetic: SolverResultDto;
+};
+
 function formatDate(value: string) {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
@@ -212,6 +217,10 @@ export default function SolverPage() {
   const [solverResult, setSolverResult] = useState<SolverResultDto | null>(null);
   const [showFlightsModal, setShowFlightsModal] = useState(false);
 
+  const [comparing, setComparing] = useState(false);
+  const [comparisonResult, setComparisonResult] = useState<ComparisonResultDto | null>(null);
+  const [showComparePanel, setShowComparePanel] = useState(false);
+
   useEffect(() => {
     if (hasScenario) {
       loadScenarioConfig();
@@ -318,6 +327,24 @@ export default function SolverPage() {
       showToast("Event deleted", "success");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to delete event", "error");
+    }
+  }
+
+  async function runCompare() {
+    try {
+      if (!hasScenario) throw new Error("No scenario selected");
+      setComparing(true);
+      setComparisonResult(null);
+      const res = await apiFetch(`/api/compare/${scenarioId}`);
+      if (!res.ok) throw new Error(`Compare failed (${res.status})`);
+      const data = (await res.json()) as ComparisonResultDto;
+      setComparisonResult(data);
+      setShowComparePanel(true);
+      showToast("Comparison complete", "success");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Comparison failed", "error");
+    } finally {
+      setComparing(false);
     }
   }
 
@@ -463,11 +490,44 @@ export default function SolverPage() {
               <button
                 onClick={() => runSolver("greedy")}
                 className="glass-btn-primary"
-                disabled={!hasScenario || solving}
-                style={{ opacity: !hasScenario || solving ? 0.5 : 1, minWidth: "130px" }}
+                disabled={!hasScenario || solving || comparing}
+                style={{ opacity: !hasScenario || solving || comparing ? 0.5 : 1, minWidth: "130px" }}
               >
                 {solving ? "Solving…" : "Run Greedy"}
               </button>
+              <button
+                onClick={() => runSolver("genetic")}
+                className="glass-btn-primary"
+                disabled={!hasScenario || solving || comparing}
+                style={{ opacity: !hasScenario || solving || comparing ? 0.5 : 1, minWidth: "130px" }}
+              >
+                {solving ? "Solving…" : "Run Genetic"}
+              </button>
+            </div>
+          </div>
+
+          <div className="glass-card" style={{ marginBottom: "16px", border: `1px solid ${C.border}` }}>
+            <div style={{ ...S.label, marginBottom: "8px" }}>Compare Algorithms</div>
+            <div style={{ fontSize: "12px", color: C.textSub, marginBottom: "12px" }}>
+              Runs both Greedy and Genetic on the same scenario and shows a side-by-side comparison.
+            </div>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                onClick={runCompare}
+                className="glass-btn-primary"
+                disabled={!hasScenario || comparing || solving}
+                style={{ opacity: !hasScenario || comparing || solving ? 0.5 : 1, minWidth: "160px" }}
+              >
+                {comparing ? "Comparing…" : "Compare Greedy vs Genetic"}
+              </button>
+              {comparisonResult && (
+                <button
+                  onClick={() => setShowComparePanel((v) => !v)}
+                  className="glass-btn-ghost"
+                >
+                  {showComparePanel ? "Hide comparison" : "Show comparison"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -522,6 +582,96 @@ export default function SolverPage() {
           )}
         </div>
       </div>
+
+      {showComparePanel && comparisonResult && (
+        <div style={{ marginTop: "32px", animation: "fadeInUp 0.3s ease both" }}>
+          <div style={{ ...S.sectionTitle, marginBottom: "16px" }}>
+            Comparison — <span style={{ color: C.primary }}>Greedy</span> vs <span style={{ color: "#a78bfa" }}>Genetic</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            {([comparisonResult.greedy, comparisonResult.genetic] as SolverResultDto[]).map((r) => {
+              const isGenetic = r.algorithmName === "Genetic";
+              const accentColor = isGenetic ? "#a78bfa" : C.primary;
+              return (
+                <div key={r.algorithmName} className="glass-card" style={{ border: `1px solid ${accentColor}33` }}>
+                  <div style={{ fontSize: "15px", fontWeight: 800, color: accentColor, marginBottom: "14px" }}>
+                    {r.algorithmName}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
+                    {([
+                      { label: "Total", value: r.totalFlights, color: C.text },
+                      { label: "Scheduled", value: r.totalScheduledFlights, color: C.activeGreen },
+                      { label: "On Time", value: r.totalOnTimeFlights, color: C.activeGreen },
+                      { label: "Early", value: r.totalEarlyFlights, color: "#38bdf8" },
+                      { label: "Delayed", value: r.totalDelayedFlights, color: accentColor },
+                      { label: "Cancelled", value: r.totalCanceledFlights, color: C.danger },
+                      { label: "Avg Delay", value: `${r.averageDelayMinutes.toFixed(1)} min`, color: accentColor },
+                      { label: "Max Delay", value: `${r.maxDelayMinutes} min`, color: accentColor },
+                      { label: "Throughput", value: `${r.throughputFlightsPerHour.toFixed(1)}/h`, color: C.text },
+                      { label: "Solve Time", value: `${r.solveTimeMs.toFixed(1)} ms`, color: C.textSub },
+                    ] as const).map((stat) => (
+                      <div key={stat.label} className="glass-card" style={{ padding: "8px 10px", textAlign: "center" }}>
+                        <div style={S.label}>{stat.label}</div>
+                        <div style={{ fontSize: "15px", fontWeight: 800, color: stat.color, marginTop: "3px" }}>
+                          {stat.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="glass-card" style={{ marginTop: "16px" }}>
+            <div style={{ ...S.label, marginBottom: "12px" }}>Delta (Genetic − Greedy)</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
+              {([
+                {
+                  label: "Scheduled",
+                  delta: comparisonResult.genetic.totalScheduledFlights - comparisonResult.greedy.totalScheduledFlights,
+                  higherIsBetter: true,
+                },
+                {
+                  label: "Cancelled",
+                  delta: comparisonResult.genetic.totalCanceledFlights - comparisonResult.greedy.totalCanceledFlights,
+                  higherIsBetter: false,
+                },
+                {
+                  label: "Avg Delay",
+                  delta: comparisonResult.genetic.averageDelayMinutes - comparisonResult.greedy.averageDelayMinutes,
+                  higherIsBetter: false,
+                  unit: " min",
+                  decimals: 1,
+                },
+                {
+                  label: "Throughput",
+                  delta: comparisonResult.genetic.throughputFlightsPerHour - comparisonResult.greedy.throughputFlightsPerHour,
+                  higherIsBetter: true,
+                  unit: "/h",
+                  decimals: 2,
+                },
+              ] as const).map(({ label, delta, higherIsBetter, unit = "", decimals = 0 }) => {
+                const better = higherIsBetter ? delta > 0 : delta < 0;
+                const worse  = higherIsBetter ? delta < 0 : delta > 0;
+                const color  = better ? C.activeGreen : worse ? C.danger : C.textSub;
+                const prefix = delta > 0 ? "+" : "";
+                const formatted = typeof decimals === "number" && decimals > 0
+                  ? delta.toFixed(decimals)
+                  : String(delta);
+                return (
+                  <div key={label} className="glass-card" style={{ padding: "10px 12px", textAlign: "center" }}>
+                    <div style={S.label}>{label}</div>
+                    <div style={{ fontSize: "17px", fontWeight: 800, color, marginTop: "4px" }}>
+                      {prefix}{formatted}{unit}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showFlightsModal && solverResult && (
         <LargeModal

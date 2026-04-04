@@ -37,7 +37,8 @@ using Modules.Login.Application.UseCases.Login;
 using Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId;
 using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
 using Modules.Solver.Application.GreedySolver;
-using  Modules.Solver.Application;
+using Modules.Solver.Application.GeneticAlgorithmSolver;
+using Modules.Solver.Application;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -126,6 +127,7 @@ builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IRandomEventStore, EFRandomEvent>();
 builder.Services.AddScoped<IScenarioSnapshotLoader, ScenarioSnapshotLoader>();
 builder.Services.AddScoped<GreedyScenarioSolver>();
+builder.Services.AddScoped<GeneticAlgorithmScenarioSolver>();
 
 // MediatR
 builder.Services.AddMediatR(cfg =>

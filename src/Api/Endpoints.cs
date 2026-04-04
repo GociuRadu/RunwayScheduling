@@ -18,6 +18,8 @@ using Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig;
 using Modules.Airports.Application.UseCases.DeleteAirport;
 using Modules.Login.Application.UseCases.Login;
 using Modules.Scenarios.Application.UseCases.CreateRandomEvent;
+using Modules.Solver.Application.GeneticAlgorithmSolver;
+using Modules.Solver.Application.GreedySolver;
 using Modules.Scenarios.Application.UseCases.DeleteRandomEvent;
 using Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId;
 using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
@@ -252,13 +254,28 @@ public static class Endpoints
     .WithName("UpdateRandomEvent");
 
         secured.MapGet("/greedy/{scenarioConfigId:guid}",
-         async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
-         {
-             var res = await mediator.Send(new GreedySolverQuery(scenarioConfigId), ct);
+            async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new GreedySolverQuery(scenarioConfigId), ct);
+                return Results.Ok(res);
+            })
+            .WithName("SolveScenarioGreedy");
 
-             return Results.Ok(res);
-         })
-         .WithName("SolveScenarioGreedy");
+        secured.MapGet("/genetic/{scenarioConfigId:guid}",
+            async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new GeneticAlgorithmScenarioSolverQuery(scenarioConfigId), ct);
+                return Results.Ok(res);
+            })
+            .WithName("SolveScenarioGenetic");
 
+        secured.MapGet("/compare/{scenarioConfigId:guid}",
+            async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+            {
+                var greedy  = await mediator.Send(new GreedySolverQuery(scenarioConfigId), ct);
+                var genetic = await mediator.Send(new GeneticAlgorithmScenarioSolverQuery(scenarioConfigId), ct);
+                return Results.Ok(new { greedy, genetic });
+            })
+            .WithName("CompareScenarioSolvers");
     }
 }
