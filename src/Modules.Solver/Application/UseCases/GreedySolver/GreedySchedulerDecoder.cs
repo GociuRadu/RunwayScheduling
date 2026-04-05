@@ -2,9 +2,9 @@ using Modules.Airports.Domain;
 using Modules.Scenarios.Domain;
 using Modules.Solver.Domain;
 
-namespace Modules.Solver.Application;
+namespace Modules.Solver.Application.GreedySolver;
 
-internal static class SchedulerDecoder
+internal static class GreedySchedulerDecoder
 {
     internal static List<SolvedFlight> Decode(
         IReadOnlyList<Flight> orderedFlights,
@@ -32,12 +32,9 @@ internal static class SchedulerDecoder
                 .Select(r => (Runway: r, FreeAt: runwayAvailability[r.Name]))
                 .MinBy(c => c.FreeAt);
 
-            var earliestAllowed = flight.ScheduledTime.AddMinutes(-flight.MaxEarlyMinutes);
-            var assignedTime    = runwayFreeAt > flight.ScheduledTime
+            var assignedTime = runwayFreeAt >= flight.ScheduledTime
                 ? runwayFreeAt
-                : runwayFreeAt >= earliestAllowed
-                    ? runwayFreeAt
-                    : flight.ScheduledTime;
+                : flight.ScheduledTime;
 
             if (!IsWithinScenario(snapshot, assignedTime))
             {
@@ -52,8 +49,6 @@ internal static class SchedulerDecoder
                 continue;
             }
 
-            var earlyMinutes = (int)Math.Max(0, (flight.ScheduledTime - assignedTime).TotalMinutes);
-
             var activeWeather = GetActiveWeather(snapshot, assignedTime);
             var activeEvent   = GetActiveRandomEvent(snapshot, assignedTime);
 
@@ -64,7 +59,7 @@ internal static class SchedulerDecoder
             }
 
             var separation = CalculateSeparation(snapshot, activeWeather, activeEvent);
-            var status     = DetermineFlightStatus(delayMinutes, earlyMinutes);
+            var status     = delayMinutes > 0 ? FlightStatus.Delayed : FlightStatus.Scheduled;
 
             solvedFlights.Add(new SolvedFlight
             {
@@ -83,7 +78,7 @@ internal static class SchedulerDecoder
                 AssignedRunway          = chosenRunway.Name,
                 AssignedTime            = assignedTime,
                 DelayMinutes            = delayMinutes,
-                EarlyMinutes            = earlyMinutes,
+                EarlyMinutes            = 0,
                 SeparationAppliedSeconds = (int)separation.TotalSeconds,
                 WeatherAtAssignment     = activeWeather?.WeatherType,
                 AffectedByRandomEvent   = activeEvent is not null
@@ -180,13 +175,6 @@ internal static class SchedulerDecoder
         WeatherCondition.Storm  => 2.00,
         _                       => 1.00
     };
-
-    internal static FlightStatus DetermineFlightStatus(int delayMinutes, int earlyMinutes)
-    {
-        if (delayMinutes > 0) return FlightStatus.Delayed;
-        if (earlyMinutes > 0) return FlightStatus.Early;
-        return FlightStatus.Scheduled;
-    }
 
     internal static SolvedFlight CreateCanceledFlight(Flight flight, int processingOrder, CancellationReason reason) =>
         new()

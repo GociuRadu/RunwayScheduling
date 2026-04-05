@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Modules.Scenarios.Domain;
-using Modules.Solver.Application.PostProcessing;
 using Modules.Solver.Domain;
 
 namespace Modules.Solver.Application.GeneticAlgorithmSolver;
@@ -15,10 +14,7 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
     private const int    TournamentSize     = 3;
     private const double MutationRate       = 0.15;
 
-    // Budget split: 50 s GA + 5 s CP-SAT neighborhood + 5 s CP-SAT rescheduling = 60 s
-    private static readonly TimeSpan GaBudget           = TimeSpan.FromSeconds(50);
-    private static readonly TimeSpan NeighborhoodBudget = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan RescheduleBudget   = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan GaBudget = TimeSpan.FromSeconds(50);
 
     public SolverResult Solve(ScenarioSnapshot snapshot)
     {
@@ -29,7 +25,7 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
         if (n == 0)
         {
             totalSw.Stop();
-            return SchedulerDecoder.BuildResult([], 0, totalSw.Elapsed.TotalMilliseconds, AlgorithmName, snapshot);
+            return GaSchedulerDecoder.BuildResult([], 0, totalSw.Elapsed.TotalMilliseconds, AlgorithmName, snapshot);
         }
 
         var rng        = new Random();
@@ -70,67 +66,17 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
                 if (rng.NextDouble() < MutationRate)
                     Mutate(child, rng);
 
-                var fitness = EvaluateFitness(SchedulerDecoder.Decode(ToFlightList(child, flights), snapshot));
+                var fitness = EvaluateFitness(GaSchedulerDecoder.Decode(ToFlightList(child, flights), snapshot));
                 nextGeneration.Add(new Individual(child, fitness));
             }
 
             population = nextGeneration;
         }
 
-        // ── Step 2: CP-SAT neighborhood improvement on best incumbent ──────────
-        var decoded = SchedulerDecoder.Decode(ToFlightList(bestChromosome, flights), snapshot);
-
-        if (totalSw.Elapsed + NeighborhoodBudget < TimeSpan.FromSeconds(58))
-            decoded = NeighborhoodImproveFlights(decoded, snapshot, NeighborhoodBudget);
-
-        // ── Step 3: CP-SAT rescheduling for remaining canceled flights ─────────
-        var remaining = TimeSpan.FromSeconds(60) - totalSw.Elapsed;
-        if (remaining > TimeSpan.FromSeconds(1))
-        {
-            var reschedBudget = TimeSpan.FromSeconds(
-                Math.Min(remaining.TotalSeconds - 0.5, RescheduleBudget.TotalSeconds));
-            decoded = ReschedulingPostProcessor.Apply(decoded, snapshot, reschedBudget);
-        }
+        var decoded = GaSchedulerDecoder.Decode(ToFlightList(bestChromosome, flights), snapshot);
 
         totalSw.Stop();
-        return SchedulerDecoder.BuildResult(decoded, n, totalSw.Elapsed.TotalMilliseconds, AlgorithmName, snapshot);
-    }
-
-    // ── CP-SAT neighborhood improvement ───────────────────────────────────────
-    // Selects canceled + top delayed flights, frees their runway slots,
-    // and lets CP-SAT find a globally better assignment for them.
-
-    private static List<SolvedFlight> NeighborhoodImproveFlights(
-        List<SolvedFlight> decoded,
-        ScenarioSnapshot   snapshot,
-        TimeSpan           budget)
-    {
-        var canceled = decoded.Where(f => f.Status == FlightStatus.Canceled).ToList();
-        var topDelayed = decoded
-            .Where(f => f.Status == FlightStatus.Delayed)
-            .OrderByDescending(f => f.DelayMinutes * (f.Priority + 1))
-            .Take(Math.Max(0, 25 - canceled.Count))
-            .ToList();
-
-        var movable = canceled.Concat(topDelayed).ToList();
-        if (movable.Count == 0) return decoded;
-
-        var movableIds     = movable.Select(f => f.FlightId).ToHashSet();
-        var frozenAssigned = decoded
-            .Where(f => !movableIds.Contains(f.FlightId) && f.AssignedTime.HasValue)
-            .ToList();
-
-        var candidates = ReschedulingPostProcessor.GenerateCandidatesForFlights(movable, frozenAssigned, snapshot);
-        if (candidates.Count == 0) return decoded;
-
-        var improved    = ReschedulingPostProcessor.SolveWithCpSat(candidates, movable, snapshot, budget);
-        if (improved.Count == 0) return decoded;
-
-        var improvedIds = improved.Select(f => f.FlightId).ToHashSet();
-        return decoded
-            .Where(f => !improvedIds.Contains(f.FlightId))
-            .Concat(improved)
-            .ToList();
+        return GaSchedulerDecoder.BuildResult(decoded, n, totalSw.Elapsed.TotalMilliseconds, AlgorithmName, snapshot);
     }
 
     // ── Initialization ─────────────────────────────────────────────────────────
@@ -167,7 +113,7 @@ public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
 
     private static Individual Evaluate(int[] chromosome, List<Flight> flights, ScenarioSnapshot snapshot)
     {
-        var fitness = EvaluateFitness(SchedulerDecoder.Decode(ToFlightList(chromosome, flights), snapshot));
+        var fitness = EvaluateFitness(GaSchedulerDecoder.Decode(ToFlightList(chromosome, flights), snapshot));
         return new Individual(chromosome, fitness);
     }
 

@@ -13,10 +13,14 @@ if %errorlevel% neq 0 (
   dotnet tool install -g dotnet-reportgenerator-globaltool
 )
 
-reportgenerator ^
+set REPORTGEN=reportgenerator
+where reportgenerator >nul 2>&1
+if %errorlevel% neq 0 set REPORTGEN=%USERPROFILE%\.dotnet\tools\reportgenerator
+
+%REPORTGEN% ^
   -reports:"tests/RunwayScheduling.Tests/coverage.lcov" ^
-  -targetdir:"coverage-report" ^
-  -reporttypes:Html
+  -targetdir:"coverage-html" ^
+  -reporttypes:HtmlInline
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-start coverage-report/index.html
+start coverage-html/index.html

@@ -23,7 +23,6 @@ using Modules.Solver.Application.GreedySolver;
 using Modules.Scenarios.Application.UseCases.DeleteRandomEvent;
 using Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId;
 using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
-using Modules.Solver.Application.GreedySolver;
 namespace Api;
 
 public static class Endpoints
@@ -231,27 +230,16 @@ public static class Endpoints
         .WithName("GetRandomEventByScenarioId");
 
         secured.MapPut("/random-events/{randomEventId:guid}",
-    async (Guid randomEventId, UpdateRandomEventCommand request, IMediator mediator, CancellationToken ct) =>
-    {
-        var res = await mediator.Send(
-            new UpdateRandomEventCommand(
-                randomEventId,
-                request.ScenarioConfigId,
-                request.Name,
-                request.Description,
-                request.StartTime,
-                request.EndTime,
-                request.ImpactPercent
-            ),
-            ct
-        );
+            async (Guid randomEventId, UpdateRandomEventCommand request, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(request with { Id = randomEventId }, ct);
 
-        if (res is null)
-            return Results.NotFound();
+                if (res is null)
+                    return Results.NotFound();
 
-        return Results.Ok(res);
-    })
-    .WithName("UpdateRandomEvent");
+                return Results.Ok(res);
+            })
+            .WithName("UpdateRandomEvent");
 
         secured.MapGet("/greedy/{scenarioConfigId:guid}",
             async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>

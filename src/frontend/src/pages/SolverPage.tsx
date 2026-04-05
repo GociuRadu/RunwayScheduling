@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../lib/api";
+import { formatDate, toLocalDatetime, toUtcString } from "../lib/utils";
 import { C, S } from "../styles/tokens";
 import { Modal } from "../components/Modal";
 import { useToast } from "../hooks/useToast";
@@ -64,23 +65,6 @@ type ComparisonResultDto = {
   greedy: SolverResultDto;
   genetic: SolverResultDto;
 };
-
-function formatDate(value: string) {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
-}
-
-function toLocalDatetime(utcStr: string) {
-  if (!utcStr) return "";
-  const d = new Date(utcStr);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function toUtcString(local: string) {
-  if (!local) return null;
-  return new Date(local).toISOString();
-}
 
 function clampImpactPercent(value: number) {
   return Math.min(100, Math.max(0, value));
@@ -668,26 +652,32 @@ export default function SolverPage() {
                 <div style={{ fontSize: "13px", fontWeight: 800, color: C.textSub, marginBottom: "10px" }}>Delta (G − Gr)</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                   {(() => {
-                    const g = comparisonResult.genetic.flights;
-                    const gr = comparisonResult.greedy.flights;
+                    const g  = comparisonResult.genetic;
+                    const gr = comparisonResult.greedy;
+                    const gf  = g.flights as SolvedFlightDto[];
+                    const grf = gr.flights as SolvedFlightDto[];
                     const pureScheduled = (f: SolvedFlightDto[]) => f.filter(x => x.status !== 3 && x.status !== 5).length;
                     const pureCancelled = (f: SolvedFlightDto[]) => f.filter(x => x.status === 3 || x.status === 5).length;
                     const pureDelayed   = (f: SolvedFlightDto[]) => f.filter(x => x.status === 2).length;
                     const pureEarly     = (f: SolvedFlightDto[]) => f.filter(x => x.status === 4).length;
                     return ([
-                      { label: "Assigned",  delta: pureScheduled(g) - pureScheduled(gr), higherIsBetter: true },
-                      { label: "Cancelled", delta: pureCancelled(g) - pureCancelled(gr), higherIsBetter: false },
-                      { label: "Delayed",   delta: pureDelayed(g)   - pureDelayed(gr),   higherIsBetter: false },
-                      { label: "Early",     delta: pureEarly(g)     - pureEarly(gr),     higherIsBetter: true },
-                    ]).map(({ label, delta, higherIsBetter }) => {
+                      { label: "Assigned",   delta: pureScheduled(gf) - pureScheduled(grf), higherIsBetter: true  },
+                      { label: "Cancelled",  delta: pureCancelled(gf) - pureCancelled(grf), higherIsBetter: false },
+                      { label: "Delayed",    delta: pureDelayed(gf)   - pureDelayed(grf),   higherIsBetter: false },
+                      { label: "Early",      delta: pureEarly(gf)     - pureEarly(grf),     higherIsBetter: true  },
+                      { label: "Avg Delay",  delta: g.averageDelayMinutes - gr.averageDelayMinutes, higherIsBetter: false, unit: " min", decimals: 1 },
+                      { label: "Throughput", delta: g.throughputFlightsPerHour - gr.throughputFlightsPerHour, higherIsBetter: true, unit: "/h", decimals: 2 },
+                    ] as { label: string; delta: number; higherIsBetter: boolean; unit?: string; decimals?: number }[]).map(({ label, delta, higherIsBetter, unit = "", decimals = 0 }) => {
                       const better = higherIsBetter ? delta > 0 : delta < 0;
                       const worse  = higherIsBetter ? delta < 0 : delta > 0;
                       const color  = better ? C.activeGreen : worse ? C.danger : C.textSub;
+                      const prefix = delta > 0 ? "+" : "";
+                      const formatted = decimals > 0 ? delta.toFixed(decimals) : String(delta);
                       return (
                         <div key={label} className="glass-card" style={{ padding: "7px 9px", textAlign: "center" }}>
                           <div style={S.label}>{label}</div>
                           <div style={{ fontSize: "14px", fontWeight: 800, color, marginTop: "3px" }}>
-                            {delta > 0 ? "+" : ""}{delta}
+                            {prefix}{formatted}{unit}
                           </div>
                         </div>
                       );
@@ -695,60 +685,6 @@ export default function SolverPage() {
                   })()}
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="glass-card" style={{ marginTop: "16px" }}>
-            <div style={{ ...S.label, marginBottom: "12px" }}>Delta (Genetic − Greedy)</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-              {([
-                {
-                  label: "Assigned",
-                  delta: (comparisonResult.genetic.totalScheduledFlights + comparisonResult.genetic.totalRescheduledFlights)
-                       - (comparisonResult.greedy.totalScheduledFlights + comparisonResult.greedy.totalRescheduledFlights),
-                  higherIsBetter: true,
-                },
-                {
-                  label: "Cancelled",
-                  delta: comparisonResult.genetic.totalCanceledFlights - comparisonResult.greedy.totalCanceledFlights,
-                  higherIsBetter: false,
-                },
-                {
-                  label: "Rescheduled",
-                  delta: comparisonResult.genetic.totalRescheduledFlights - comparisonResult.greedy.totalRescheduledFlights,
-                  higherIsBetter: true,
-                },
-                {
-                  label: "Avg Delay",
-                  delta: comparisonResult.genetic.averageDelayMinutes - comparisonResult.greedy.averageDelayMinutes,
-                  higherIsBetter: false,
-                  unit: " min",
-                  decimals: 1,
-                },
-                {
-                  label: "Throughput",
-                  delta: comparisonResult.genetic.throughputFlightsPerHour - comparisonResult.greedy.throughputFlightsPerHour,
-                  higherIsBetter: true,
-                  unit: "/h",
-                  decimals: 2,
-                },
-              ]).map(({ label, delta, higherIsBetter, unit = "", decimals = 0 }: { label: string; delta: number; higherIsBetter: boolean; unit?: string; decimals?: number }) => {
-                const better = higherIsBetter ? delta > 0 : delta < 0;
-                const worse  = higherIsBetter ? delta < 0 : delta > 0;
-                const color  = better ? C.activeGreen : worse ? C.danger : C.textSub;
-                const prefix = delta > 0 ? "+" : "";
-                const formatted = typeof decimals === "number" && decimals > 0
-                  ? delta.toFixed(decimals)
-                  : String(delta);
-                return (
-                  <div key={label} className="glass-card" style={{ padding: "10px 12px", textAlign: "center" }}>
-                    <div style={S.label}>{label}</div>
-                    <div style={{ fontSize: "17px", fontWeight: 800, color, marginTop: "4px" }}>
-                      {prefix}{formatted}{unit}
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </div>
         </div>

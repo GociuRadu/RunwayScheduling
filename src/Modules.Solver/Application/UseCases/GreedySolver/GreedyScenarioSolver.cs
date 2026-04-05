@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Modules.Solver.Application.PostProcessing;
 using Modules.Solver.Domain;
 
 namespace Modules.Solver.Application.GreedySolver;
@@ -17,13 +16,10 @@ public sealed class GreedyScenarioSolver : IScenarioSolver
             .ThenByDescending(f => f.Priority)
             .ToList();
 
-        var solvedFlights = SchedulerDecoder.Decode(orderedFlights, snapshot);
-
-        // Greedy rescheduling: attempt to recover canceled flights using MaxEarlyMinutes window
-        solvedFlights = SimpleReschedulingPostProcessor.Apply(solvedFlights, snapshot);
+        var solvedFlights = GreedySchedulerDecoder.Decode(orderedFlights, snapshot);
 
         stopwatch.Stop();
-        return SchedulerDecoder.BuildResult(
+        return GreedySchedulerDecoder.BuildResult(
             solvedFlights,
             snapshot.Flights.Count,
             stopwatch.Elapsed.TotalMilliseconds,
