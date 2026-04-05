@@ -18,6 +18,7 @@ public sealed class SolverResult
     public int TotalEarlyFlights { get; init; }
     public int TotalDelayedFlights { get; init; }
     public int TotalCanceledFlights { get; init; }
+    public int TotalRescheduledFlights { get; init; }
 
     public int TotalDelayMinutes { get; init; }
     public double AverageDelayMinutes { get; init; }

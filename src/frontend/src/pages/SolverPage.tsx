@@ -52,6 +52,7 @@ type SolverResultDto = {
   totalEarlyFlights: number;
   totalDelayedFlights: number;
   totalCanceledFlights: number;
+  totalRescheduledFlights: number;
   totalDelayMinutes: number;
   averageDelayMinutes: number;
   maxDelayMinutes: number;
@@ -99,6 +100,7 @@ function statusLabel(s: number) {
     case 2: return "Delayed";
     case 3: return "Canceled";
     case 4: return "Early";
+    case 5: return "Rescheduled";
     default: return String(s);
   }
 }
@@ -109,6 +111,7 @@ function statusColor(s: number) {
     case 2: return C.primary;
     case 3: return C.danger;
     case 4: return "#38bdf8";
+    case 5: return "#34d399";
     default: return C.textSub;
   }
 }
@@ -550,6 +553,7 @@ export default function SolverPage() {
                   { label: "Early", value: solverResult.totalEarlyFlights, color: "#38bdf8" },
                   { label: "Delayed", value: solverResult.totalDelayedFlights, color: C.primary },
                   { label: "Cancelled", value: solverResult.totalCanceledFlights, color: C.danger },
+                  { label: "Rescheduled", value: solverResult.totalRescheduledFlights, color: "#34d399" },
                   { label: "Avg Delay", value: `${solverResult.averageDelayMinutes.toFixed(1)} min`, color: C.primary },
                   { label: "Max Delay", value: `${solverResult.maxDelayMinutes} min`, color: C.primary },
                   { label: "Throughput", value: `${solverResult.throughputFlightsPerHour.toFixed(1)}/h`, color: C.text },
@@ -600,7 +604,9 @@ export default function SolverPage() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
                     {([
                       { label: "Total", value: r.totalFlights, color: C.text },
+                      { label: "Assigned", value: r.totalScheduledFlights + r.totalRescheduledFlights, color: C.activeGreen },
                       { label: "Scheduled", value: r.totalScheduledFlights, color: C.activeGreen },
+                      { label: "Rescheduled", value: r.totalRescheduledFlights, color: "#34d399" },
                       { label: "On Time", value: r.totalOnTimeFlights, color: C.activeGreen },
                       { label: "Early", value: r.totalEarlyFlights, color: "#38bdf8" },
                       { label: "Delayed", value: r.totalDelayedFlights, color: accentColor },
@@ -623,19 +629,94 @@ export default function SolverPage() {
             })}
           </div>
 
+          {/* Pure algorithm comparison — excludes CP-SAT rescheduling post-processor */}
+          <div className="glass-card" style={{ marginTop: "16px", border: `1px solid ${C.border}` }}>
+            <div style={{ ...S.label, marginBottom: "4px" }}>Pure Algorithm Comparison (excl. Rescheduled)</div>
+            <div style={{ fontSize: "11px", color: C.textMuted, marginBottom: "12px" }}>
+              Treats rescheduled flights as cancelled — compares raw algorithm output without post-processing.
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginBottom: "12px" }}>
+              {([comparisonResult.greedy, comparisonResult.genetic] as SolverResultDto[]).map((r) => {
+                const isGenetic = r.algorithmName === "Genetic";
+                const accentColor = isGenetic ? "#a78bfa" : C.primary;
+                const pureScheduled = r.flights.filter(f => f.status !== 3 && f.status !== 5).length;
+                const pureCancelled = r.flights.filter(f => f.status === 3 || f.status === 5).length;
+                const pureDelayed   = r.flights.filter(f => f.status === 2).length;
+                const pureEarly     = r.flights.filter(f => f.status === 4).length;
+                const pureOnTime    = r.flights.filter(f => f.status === 1).length;
+                return (
+                  <div key={r.algorithmName} className="glass-card" style={{ border: `1px solid ${accentColor}33` }}>
+                    <div style={{ fontSize: "13px", fontWeight: 800, color: accentColor, marginBottom: "10px" }}>{r.algorithmName}</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                      {([
+                        { label: "Assigned",   value: pureScheduled, color: C.activeGreen },
+                        { label: "Cancelled",  value: pureCancelled, color: C.danger },
+                        { label: "On Time",    value: pureOnTime,    color: C.activeGreen },
+                        { label: "Early",      value: pureEarly,     color: "#38bdf8" },
+                        { label: "Delayed",    value: pureDelayed,   color: accentColor },
+                      ]).map(stat => (
+                        <div key={stat.label} className="glass-card" style={{ padding: "7px 9px", textAlign: "center" }}>
+                          <div style={S.label}>{stat.label}</div>
+                          <div style={{ fontSize: "14px", fontWeight: 800, color: stat.color, marginTop: "3px" }}>{stat.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="glass-card" style={{ border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: "13px", fontWeight: 800, color: C.textSub, marginBottom: "10px" }}>Delta (G − Gr)</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                  {(() => {
+                    const g = comparisonResult.genetic.flights;
+                    const gr = comparisonResult.greedy.flights;
+                    const pureScheduled = (f: SolvedFlightDto[]) => f.filter(x => x.status !== 3 && x.status !== 5).length;
+                    const pureCancelled = (f: SolvedFlightDto[]) => f.filter(x => x.status === 3 || x.status === 5).length;
+                    const pureDelayed   = (f: SolvedFlightDto[]) => f.filter(x => x.status === 2).length;
+                    const pureEarly     = (f: SolvedFlightDto[]) => f.filter(x => x.status === 4).length;
+                    return ([
+                      { label: "Assigned",  delta: pureScheduled(g) - pureScheduled(gr), higherIsBetter: true },
+                      { label: "Cancelled", delta: pureCancelled(g) - pureCancelled(gr), higherIsBetter: false },
+                      { label: "Delayed",   delta: pureDelayed(g)   - pureDelayed(gr),   higherIsBetter: false },
+                      { label: "Early",     delta: pureEarly(g)     - pureEarly(gr),     higherIsBetter: true },
+                    ]).map(({ label, delta, higherIsBetter }) => {
+                      const better = higherIsBetter ? delta > 0 : delta < 0;
+                      const worse  = higherIsBetter ? delta < 0 : delta > 0;
+                      const color  = better ? C.activeGreen : worse ? C.danger : C.textSub;
+                      return (
+                        <div key={label} className="glass-card" style={{ padding: "7px 9px", textAlign: "center" }}>
+                          <div style={S.label}>{label}</div>
+                          <div style={{ fontSize: "14px", fontWeight: 800, color, marginTop: "3px" }}>
+                            {delta > 0 ? "+" : ""}{delta}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="glass-card" style={{ marginTop: "16px" }}>
             <div style={{ ...S.label, marginBottom: "12px" }}>Delta (Genetic − Greedy)</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
               {([
                 {
-                  label: "Scheduled",
-                  delta: comparisonResult.genetic.totalScheduledFlights - comparisonResult.greedy.totalScheduledFlights,
+                  label: "Assigned",
+                  delta: (comparisonResult.genetic.totalScheduledFlights + comparisonResult.genetic.totalRescheduledFlights)
+                       - (comparisonResult.greedy.totalScheduledFlights + comparisonResult.greedy.totalRescheduledFlights),
                   higherIsBetter: true,
                 },
                 {
                   label: "Cancelled",
                   delta: comparisonResult.genetic.totalCanceledFlights - comparisonResult.greedy.totalCanceledFlights,
                   higherIsBetter: false,
+                },
+                {
+                  label: "Rescheduled",
+                  delta: comparisonResult.genetic.totalRescheduledFlights - comparisonResult.greedy.totalRescheduledFlights,
+                  higherIsBetter: true,
                 },
                 {
                   label: "Avg Delay",

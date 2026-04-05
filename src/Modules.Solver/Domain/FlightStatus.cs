@@ -6,5 +6,6 @@ public enum FlightStatus
     Scheduled = 1,
     Delayed = 2,
     Canceled = 3,
-    Early = 4
+    Early = 4,
+    Rescheduled = 5
 }

@@ -5,8 +5,8 @@ namespace Modules.Solver.Application.GeneticAlgorithmSolver;
 
 public sealed class GeneticAlgorithmSolverHandler : IRequestHandler<GeneticAlgorithmScenarioSolverQuery,SolverResult>
 {
-    public readonly IScenarioSnapshotLoader _snapshotLoader;
-    public readonly GeneticAlgorithmScenarioSolver _geneticAlgorithmScenarioSolver;
+    private readonly IScenarioSnapshotLoader _snapshotLoader;
+    private readonly GeneticAlgorithmScenarioSolver _geneticAlgorithmScenarioSolver;
 
     public GeneticAlgorithmSolverHandler(
         IScenarioSnapshotLoader snapshotLoader,
@@ -20,6 +20,5 @@ public sealed class GeneticAlgorithmSolverHandler : IRequestHandler<GeneticAlgor
     {
         var snapshot = await _snapshotLoader.Load(request.ScenarioConfigId, ct);
         return _geneticAlgorithmScenarioSolver.Solve(snapshot);
-        
     }
 }

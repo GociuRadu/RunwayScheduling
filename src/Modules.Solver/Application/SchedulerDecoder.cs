@@ -32,7 +32,12 @@ internal static class SchedulerDecoder
                 .Select(r => (Runway: r, FreeAt: runwayAvailability[r.Name]))
                 .MinBy(c => c.FreeAt);
 
-            var assignedTime = runwayFreeAt > flight.ScheduledTime ? runwayFreeAt : flight.ScheduledTime;
+            var earliestAllowed = flight.ScheduledTime.AddMinutes(-flight.MaxEarlyMinutes);
+            var assignedTime    = runwayFreeAt > flight.ScheduledTime
+                ? runwayFreeAt
+                : runwayFreeAt >= earliestAllowed
+                    ? runwayFreeAt
+                    : flight.ScheduledTime;
 
             if (!IsWithinScenario(snapshot, assignedTime))
             {
@@ -97,11 +102,12 @@ internal static class SchedulerDecoder
         string algorithmName,
         ScenarioSnapshot snapshot)
     {
-        var scheduledFlights = flights.Count(f => f.Status != FlightStatus.Canceled);
-        var onTimeFlights    = flights.Count(f => f.Status == FlightStatus.Scheduled);
-        var earlyFlights     = flights.Count(f => f.Status == FlightStatus.Early);
-        var delayedFlights   = flights.Count(f => f.Status == FlightStatus.Delayed);
-        var canceledFlights  = flights.Count(f => f.Status == FlightStatus.Canceled);
+        var scheduledFlights    = flights.Count(f => f.Status != FlightStatus.Canceled);
+        var onTimeFlights       = flights.Count(f => f.Status == FlightStatus.Scheduled);
+        var earlyFlights        = flights.Count(f => f.Status == FlightStatus.Early);
+        var delayedFlights      = flights.Count(f => f.Status == FlightStatus.Delayed);
+        var canceledFlights     = flights.Count(f => f.Status == FlightStatus.Canceled);
+        var rescheduledFlights  = flights.Count(f => f.Status == FlightStatus.Rescheduled);
 
         var totalDelay   = flights.Sum(f => f.DelayMinutes);
         var maxDelay     = flights.Count > 0 ? flights.Max(f => f.DelayMinutes) : 0;
@@ -118,8 +124,9 @@ internal static class SchedulerDecoder
             TotalScheduledFlights  = scheduledFlights,
             TotalOnTimeFlights     = onTimeFlights,
             TotalEarlyFlights      = earlyFlights,
-            TotalDelayedFlights    = delayedFlights,
-            TotalCanceledFlights   = canceledFlights,
+            TotalDelayedFlights      = delayedFlights,
+            TotalCanceledFlights     = canceledFlights,
+            TotalRescheduledFlights  = rescheduledFlights,
             TotalDelayMinutes      = totalDelay,
             AverageDelayMinutes    = averageDelay,
             MaxDelayMinutes        = maxDelay,
@@ -138,13 +145,13 @@ internal static class SchedulerDecoder
     private static bool IsWithinScenario(ScenarioSnapshot snapshot, DateTime time) =>
         time >= snapshot.ScenarioConfig.StartTime && time <= snapshot.ScenarioConfig.EndTime;
 
-    private static WeatherInterval? GetActiveWeather(ScenarioSnapshot snapshot, DateTime time) =>
+    internal static WeatherInterval? GetActiveWeather(ScenarioSnapshot snapshot, DateTime time) =>
         snapshot.WeatherIntervals.FirstOrDefault(i => time >= i.StartTime && time <= i.EndTime);
 
-    private static RandomEvent? GetActiveRandomEvent(ScenarioSnapshot snapshot, DateTime time) =>
+    internal static RandomEvent? GetActiveRandomEvent(ScenarioSnapshot snapshot, DateTime time) =>
         snapshot.RandomEvents.FirstOrDefault(e => time >= e.StartTime && time <= e.EndTime);
 
-    private static TimeSpan CalculateSeparation(
+    internal static TimeSpan CalculateSeparation(
         ScenarioSnapshot snapshot,
         WeatherInterval? activeWeather,
         RandomEvent? activeEvent)
