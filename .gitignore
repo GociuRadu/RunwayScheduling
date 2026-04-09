@@ -44,6 +44,7 @@ ARM64/
 *.a
 
 coverage/
+coverage-html/
 coverage-report/
 coverage.*.xml
 coverage.*.json
