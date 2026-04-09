@@ -48,7 +48,7 @@ public sealed class JwtTokenService : ITokenService
             expires: DateTime.UtcNow.AddDays(3),
             signingCredentials: credentials
         );
-            
+
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

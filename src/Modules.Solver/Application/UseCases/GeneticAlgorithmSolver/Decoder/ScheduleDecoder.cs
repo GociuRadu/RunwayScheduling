@@ -1,59 +1,30 @@
-using System.Diagnostics;
 using Modules.Airports.Domain;
 using Modules.Scenarios.Domain;
 using Modules.Solver.Domain;
 
-namespace Modules.Solver.Application.GreedySolver;
+namespace Modules.Solver.Application.GeneticAlgorithmSolver.Decoder;
 
-public sealed class GreedyScenarioSolver : IScenarioSolver
+public sealed class ScheduleDecoder : IScheduleDecoder
 {
-    private const string AlgorithmName = "Greedy";
-
-    public SolverResult Solve(ScenarioSnapshot snapshot)
+    public Chromosome BuildGreedyChromosome(ScenarioSnapshot snapshot)
     {
-        var sw = Stopwatch.StartNew();
-
-        var orderedFlights = snapshot.Flights
-            .OrderBy(f => f.ScheduledTime)
-            .ThenByDescending(f => f.Priority)
-            .ToList();
-
-        var flights = Decode(orderedFlights, snapshot);
-
-        sw.Stop();
-
-        var scheduled = flights.Count(f => f.Status != FlightStatus.Canceled);
-        var scenarioHours = (snapshot.ScenarioConfig.EndTime - snapshot.ScenarioConfig.StartTime).TotalHours;
-        var totalDelay = flights.Sum(f => f.DelayMinutes);
-
-        return new SolverResult
-        {
-            AlgorithmName = AlgorithmName,
-            Flights = flights,
-            TotalFlights = snapshot.Flights.Count,
-            TotalScheduledFlights = scheduled,
-            TotalOnTimeFlights = flights.Count(f => f.Status == FlightStatus.Scheduled),
-            TotalEarlyFlights = flights.Count(f => f.Status == FlightStatus.Early),
-            TotalDelayedFlights = flights.Count(f => f.Status == FlightStatus.Delayed),
-            TotalCanceledFlights = flights.Count(f => f.Status == FlightStatus.Canceled),
-            TotalRescheduledFlights = flights.Count(f => f.Status == FlightStatus.Rescheduled),
-            TotalDelayMinutes = totalDelay,
-            AverageDelayMinutes = scheduled > 0 ? (double)totalDelay / scheduled : 0.0,
-            MaxDelayMinutes = flights.Count > 0 ? flights.Max(f => f.DelayMinutes) : 0,
-            SolveTimeMs = sw.Elapsed.TotalMilliseconds,
-            ThroughputFlightsPerHour = scenarioHours > 0 ? scheduled / scenarioHours : 0.0
-        };
+        var flights = snapshot.Flights;
+        var order = Enumerable.Range(0, flights.Count)
+            .OrderBy(i => flights[i].ScheduledTime)
+            .ThenByDescending(i => flights[i].Priority)
+            .ToArray();
+        return new Chromosome(order);
     }
 
-    private static List<SolvedFlight> Decode(IReadOnlyList<Flight> orderedFlights, ScenarioSnapshot snapshot)
+    public IReadOnlyList<SolvedFlight> Decode(Chromosome chromosome, ScenarioSnapshot snapshot)
     {
         var activeRunways = snapshot.Runways.Where(r => r.IsActive).ToList();
         var runwayAvailability = activeRunways.ToDictionary(r => r.Name, _ => snapshot.ScenarioConfig.StartTime);
-        var result = new List<SolvedFlight>(orderedFlights.Count);
+        var result = new List<SolvedFlight>(chromosome.FlightOrder.Length);
 
-        for (var i = 0; i < orderedFlights.Count; i++)
+        for (var i = 0; i < chromosome.FlightOrder.Length; i++)
         {
-            var flight = orderedFlights[i];
+            var flight = snapshot.Flights[chromosome.FlightOrder[i]];
 
             var required = flight.Type == FlightType.Arrival ? RunwayType.Landing : RunwayType.Takeoff;
             var compatible = activeRunways
@@ -161,13 +132,13 @@ public sealed class GreedyScenarioSolver : IScenarioSolver
             ? config.WeatherPercent / 100.0
             : weather.WeatherType switch
             {
-                WeatherCondition.Clear  => 1.00,
-                WeatherCondition.Cloud  => 1.10,
-                WeatherCondition.Rain   => 1.30,
-                WeatherCondition.Snow   => 1.50,
-                WeatherCondition.Fog    => 1.75,
-                WeatherCondition.Storm  => 2.00,
-                _                       => 1.00
+                WeatherCondition.Clear => 1.00,
+                WeatherCondition.Cloud => 1.10,
+                WeatherCondition.Rain  => 1.30,
+                WeatherCondition.Snow  => 1.50,
+                WeatherCondition.Fog   => 1.75,
+                WeatherCondition.Storm => 2.00,
+                _                      => 1.00
             };
 
         var eventMultiplier = randomEvent is not null
@@ -199,4 +170,6 @@ public sealed class GreedyScenarioSolver : IScenarioSolver
         WeatherAtAssignment = null,
         AffectedByRandomEvent = false
     };
+
+    
 }

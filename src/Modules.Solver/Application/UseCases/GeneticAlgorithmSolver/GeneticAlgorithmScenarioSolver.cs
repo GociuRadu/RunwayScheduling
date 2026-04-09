@@ -1,254 +1,110 @@
 using System.Diagnostics;
 using Modules.Scenarios.Domain;
+using Modules.Solver.Application.GeneticAlgorithmSolver.Decoder;
 using Modules.Solver.Domain;
 
 namespace Modules.Solver.Application.GeneticAlgorithmSolver;
 
-public sealed class GeneticAlgorithmScenarioSolver : IScenarioSolver
+public class GeneticAlgorithmScenarioSolver : IScenarioSolver
 {
-    private const string AlgorithmName      = "Genetic";
-    private const int    PopulationSize     = 60;
-    private const int    MaxGenerations     = 200;
-    private const int    NoImprovementLimit = 50;
-    private const int    EliteCount         = 5;
-    private const int    TournamentSize     = 3;
-    private const double MutationRate       = 0.15;
+    private const string AlgorithmName = "Genetic Algorithm";
+    private const int PopulationSize   = 50;
+    private const int MaxGenerations   = 100;
+    private const int ElitismCount     = 5;
 
-    private static readonly TimeSpan GaBudget = TimeSpan.FromSeconds(50);
+    private readonly ScheduleDecoder _decoder   = new();
+    private readonly FitnessEvaluator _evaluator = new();
+    private readonly Random _random              = new();
 
     public SolverResult Solve(ScenarioSnapshot snapshot)
     {
-        var totalSw = Stopwatch.StartNew();
-        var flights = snapshot.Flights.ToList();
-        var n       = flights.Count;
+        var stopwatch = Stopwatch.StartNew();
+        var operators = new GaOperators(_random);
 
-        if (n == 0)
+        var population = InitializePopulation(snapshot);
+        var ranked     = EvaluatePopulation(population, snapshot);
+
+        for (int gen = 0; gen < MaxGenerations; gen++)
         {
-            totalSw.Stop();
-            return GaSchedulerDecoder.BuildResult([], 0, totalSw.Elapsed.TotalMilliseconds, AlgorithmName, snapshot);
-        }
+            var next = new List<Chromosome>(PopulationSize);
 
-        var rng        = new Random();
-        var population = InitializePopulation(flights, snapshot, rng);
+            // elitism: top ElitismCount go directly to next generation
+            for (int i = 0; i < ElitismCount; i++)
+                next.Add(ranked[i].Chromosome);
 
-        var bestChromosome                = (int[])population[0].Chromosome.Clone();
-        var bestFitness                   = population[0].Fitness;
-        var generationsWithoutImprovement = 0;
+            // fill rest with crossover + mutation
+            while (next.Count < PopulationSize)
+            {
+                var parent1 = operators.TournamentSelect(ranked);
+                var parent2 = operators.TournamentSelect(ranked);
+                var child   = operators.OrderCrossover(parent1, parent2);
+                next.Add(operators.SwapMutate(child));
+            }
 
-        for (var gen = 0; gen < MaxGenerations
-             && generationsWithoutImprovement < NoImprovementLimit
-             && totalSw.Elapsed < GaBudget; gen++)
+            ranked = EvaluatePopulation(next, snapshot);
+        }             
+
+        stopwatch.Stop();
+
+        var bestFlights = _decoder.Decode(ranked[0].Chromosome, snapshot);
+        var scheduled   = bestFlights.Count(f => f.Status != FlightStatus.Canceled);
+        var totalDelay  = bestFlights.Sum(f => f.DelayMinutes);
+        var scenarioHours = (snapshot.ScenarioConfig.EndTime - snapshot.ScenarioConfig.StartTime).TotalHours;
+
+        return new SolverResult
         {
-            population.Sort((a, b) => a.Fitness.CompareTo(b.Fitness));
-
-            if (population[0].Fitness < bestFitness)
-            {
-                bestFitness                   = population[0].Fitness;
-                bestChromosome                = (int[])population[0].Chromosome.Clone();
-                generationsWithoutImprovement = 0;
-            }
-            else
-            {
-                generationsWithoutImprovement++;
-            }
-
-            var nextGeneration = new List<Individual>(PopulationSize);
-
-            for (var i = 0; i < EliteCount; i++)
-                nextGeneration.Add(population[i]);
-
-            while (nextGeneration.Count < PopulationSize)
-            {
-                var parent1 = TournamentSelect(population, rng);
-                var parent2 = TournamentSelect(population, rng);
-                var child   = OrderCrossover(parent1.Chromosome, parent2.Chromosome, rng);
-
-                if (rng.NextDouble() < MutationRate)
-                    Mutate(child, rng);
-
-                var fitness = EvaluateFitness(GaSchedulerDecoder.Decode(ToFlightList(child, flights), snapshot));
-                nextGeneration.Add(new Individual(child, fitness));
-            }
-
-            population = nextGeneration;
-        }
-
-        var decoded = GaSchedulerDecoder.Decode(ToFlightList(bestChromosome, flights), snapshot);
-
-        totalSw.Stop();
-        return GaSchedulerDecoder.BuildResult(decoded, n, totalSw.Elapsed.TotalMilliseconds, AlgorithmName, snapshot);
+            AlgorithmName           = AlgorithmName,
+            Flights                 = bestFlights,
+            TotalFlights            = snapshot.Flights.Count,
+            TotalScheduledFlights   = scheduled,
+            TotalOnTimeFlights      = bestFlights.Count(f => f.Status == FlightStatus.Scheduled),
+            TotalEarlyFlights       = bestFlights.Count(f => f.Status == FlightStatus.Early),
+            TotalDelayedFlights     = bestFlights.Count(f => f.Status == FlightStatus.Delayed),
+            TotalCanceledFlights    = bestFlights.Count(f => f.Status == FlightStatus.Canceled),
+            TotalRescheduledFlights = bestFlights.Count(f => f.Status == FlightStatus.Rescheduled),
+            TotalDelayMinutes       = totalDelay,
+            AverageDelayMinutes     = scheduled > 0 ? (double)totalDelay / scheduled : 0.0,
+            MaxDelayMinutes         = bestFlights.Count > 0 ? bestFlights.Max(f => f.DelayMinutes) : 0,
+            SolveTimeMs             = stopwatch.Elapsed.TotalMilliseconds,
+            ThroughputFlightsPerHour = scenarioHours > 0 ? scheduled / scenarioHours : 0.0
+        };
     }
 
-    // ── Initialization ─────────────────────────────────────────────────────────
-
-    private static List<Individual> InitializePopulation(
-        List<Flight>     flights,
-        ScenarioSnapshot snapshot,
-        Random           rng)
+    private List<Chromosome> InitializePopulation(ScenarioSnapshot snapshot)
     {
-        var n          = flights.Count;
-        var population = new List<Individual>(PopulationSize);
+        var population = new List<Chromosome>(PopulationSize);
+        population.Add(_decoder.BuildGreedyChromosome(snapshot));
+        population.Add(PerturbedGreedy(snapshot));
+        population.Add(PerturbedGreedy(snapshot));
 
-        var greedyOrder = Enumerable.Range(0, n)
-            .OrderBy(i => flights[i].ScheduledTime)
-            .ThenByDescending(i => flights[i].Priority)
-            .ToArray();
-        population.Add(Evaluate(greedyOrder, flights, snapshot));
-
-        for (var i = 0; i < 11 && population.Count < PopulationSize; i++)
+        var flightCount = snapshot.Flights.Count;
+        for (int i = 3; i < PopulationSize; i++)
         {
-            var bucketed = TimeBucketShuffle(greedyOrder, flights, rng, TimeSpan.FromMinutes(30));
-            population.Add(Evaluate(bucketed, flights, snapshot));
-        }
-
-        while (population.Count < PopulationSize)
-        {
-            var chromosome = Enumerable.Range(0, n).ToArray();
-            Shuffle(chromosome, rng);
-            population.Add(Evaluate(chromosome, flights, snapshot));
+            var order = Enumerable.Range(0, flightCount).ToArray();
+            _random.Shuffle(order);
+            population.Add(new Chromosome(order));
         }
 
         return population;
     }
 
-    private static Individual Evaluate(int[] chromosome, List<Flight> flights, ScenarioSnapshot snapshot)
-    {
-        var fitness = EvaluateFitness(GaSchedulerDecoder.Decode(ToFlightList(chromosome, flights), snapshot));
-        return new Individual(chromosome, fitness);
-    }
+    private List<(Chromosome Chromosome, FitnessScore Score)> EvaluatePopulation(
+        List<Chromosome> population, ScenarioSnapshot snapshot) =>
+        population
+            .Select(c => (Chromosome: c, Score: _evaluator.Evaluate(_decoder.Decode(c, snapshot))))
+            .OrderBy(x => x.Score)
+            .ToList();
 
-    private static int[] TimeBucketShuffle(
-        int[]        baseOrder,
-        List<Flight> flights,
-        Random       rng,
-        TimeSpan     bucketSize)
+    private Chromosome PerturbedGreedy(ScenarioSnapshot snapshot)
     {
-        var result = (int[])baseOrder.Clone();
-        var n      = result.Length;
-        var i      = 0;
-
-        while (i < n)
+        var order = _decoder.BuildGreedyChromosome(snapshot).FlightOrder.ToArray();
+        var swaps = _random.Next(2, 10);
+        for (int i = 0; i < swaps; i++)
         {
-            var bucketEnd = flights[result[i]].ScheduledTime + bucketSize;
-            var j         = i + 1;
-
-            while (j < n && flights[result[j]].ScheduledTime < bucketEnd)
-                j++;
-
-            for (var k = j - 1; k > i; k--)
-            {
-                var swapIdx = rng.Next(i, k + 1);
-                (result[k], result[swapIdx]) = (result[swapIdx], result[k]);
-            }
-
-            i = j;
+            int a = _random.Next(order.Length);
+            int b = _random.Next(order.Length);
+            (order[a], order[b]) = (order[b], order[a]);
         }
-
-        return result;
+        return new Chromosome(order);
     }
-
-    // ── Fitness ────────────────────────────────────────────────────────────────
-    // Lower is better. Rescheduled flights are treated as non-canceled.
-
-    private static double EvaluateFitness(List<SolvedFlight> flights)
-    {
-        var canceled              = flights.Count(f => f.Status == FlightStatus.Canceled);
-        var priorityWeightedDelay = flights.Sum(f => f.DelayMinutes * (f.Priority + 1));
-        var onTimeBonus           = flights.Count(f => f.Status == FlightStatus.Scheduled);
-
-        return canceled * 100_000.0 + priorityWeightedDelay - onTimeBonus * 10.0;
-    }
-
-    // ── Selection ──────────────────────────────────────────────────────────────
-
-    private static Individual TournamentSelect(List<Individual> population, Random rng)
-    {
-        var best = population[rng.Next(population.Count)];
-        for (var i = 1; i < TournamentSize; i++)
-        {
-            var candidate = population[rng.Next(population.Count)];
-            if (candidate.Fitness < best.Fitness)
-                best = candidate;
-        }
-        return best;
-    }
-
-    // ── Crossover (Order Crossover – OX) ───────────────────────────────────────
-
-    private static int[] OrderCrossover(int[] parent1, int[] parent2, Random rng)
-    {
-        var n     = parent1.Length;
-        var child = new int[n];
-        Array.Fill(child, -1);
-
-        var start  = rng.Next(n);
-        var end    = rng.Next(start, n);
-        var copied = new HashSet<int>();
-
-        for (var i = start; i <= end; i++)
-        {
-            child[i] = parent1[i];
-            copied.Add(parent1[i]);
-        }
-
-        var fillPos = 0;
-        foreach (var gene in parent2)
-        {
-            if (copied.Contains(gene)) continue;
-            while (child[fillPos] != -1) fillPos++;
-            child[fillPos++] = gene;
-        }
-
-        return child;
-    }
-
-    // ── Mutation ───────────────────────────────────────────────────────────────
-
-    private static void Mutate(int[] chromosome, Random rng)
-    {
-        if (chromosome.Length < 2) return;
-
-        if (rng.NextDouble() < 0.5)
-            SwapMutate(chromosome, rng);
-        else
-            InsertionMutate(chromosome, rng);
-    }
-
-    private static void SwapMutate(int[] chromosome, Random rng)
-    {
-        var i = rng.Next(chromosome.Length);
-        var j = rng.Next(chromosome.Length);
-        (chromosome[i], chromosome[j]) = (chromosome[j], chromosome[i]);
-    }
-
-    private static void InsertionMutate(int[] chromosome, Random rng)
-    {
-        var n = chromosome.Length;
-        var i = rng.Next(n);
-        var j = rng.Next(n);
-        if (i == j) return;
-
-        var gene = chromosome[i];
-        if (i < j)
-            Array.Copy(chromosome, i + 1, chromosome, i, j - i);
-        else
-            Array.Copy(chromosome, j, chromosome, j + 1, i - j);
-        chromosome[j] = gene;
-    }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
-    private static List<Flight> ToFlightList(int[] chromosome, List<Flight> flights) =>
-        [..chromosome.Select(i => flights[i])];
-
-    private static void Shuffle(int[] array, Random rng)
-    {
-        for (var i = array.Length - 1; i > 0; i--)
-        {
-            var j = rng.Next(i + 1);
-            (array[i], array[j]) = (array[j], array[i]);
-        }
-    }
-
-    private sealed record Individual(int[] Chromosome, double Fitness);
 }

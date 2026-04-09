@@ -260,7 +260,7 @@ public static class Endpoints
         secured.MapGet("/compare/{scenarioConfigId:guid}",
             async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
             {
-                var greedy  = await mediator.Send(new GreedySolverQuery(scenarioConfigId), ct);
+                var greedy = await mediator.Send(new GreedySolverQuery(scenarioConfigId), ct);
                 var genetic = await mediator.Send(new GeneticAlgorithmScenarioSolverQuery(scenarioConfigId), ct);
                 return Results.Ok(new { greedy, genetic });
             })

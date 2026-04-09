@@ -36,8 +36,8 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 
 //JWT
-var jwtKey      = builder.Configuration["JWT:KEY"]!;
-var jwtIssuer   = builder.Configuration["JWT:ISSUER"]!;
+var jwtKey = builder.Configuration["JWT:KEY"]!;
+var jwtIssuer = builder.Configuration["JWT:ISSUER"]!;
 var jwtAudience = builder.Configuration["JWT:AUDIENCE"]!;
 
 builder.Services
@@ -46,17 +46,17 @@ builder.Services
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer           = true,
-            ValidIssuer              = jwtIssuer,
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
 
-            ValidateAudience         = true,
-            ValidAudience            = jwtAudience,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
 
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
 
-            ValidateLifetime         = true,
-            ClockSkew                = TimeSpan.Zero
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -73,11 +73,11 @@ builder.Services.AddSwaggerGen(options =>
 
     options.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
     {
-        Type         = SecuritySchemeType.Http,
-        Scheme       = "bearer",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
         BearerFormat = "JWT",
-        Name         = "Authorization",
-        In           = ParameterLocation.Header
+        Name = "Authorization",
+        In = ParameterLocation.Header
     });
 
     options.AddSecurityRequirement(document =>
@@ -90,15 +90,15 @@ builder.Services.AddSwaggerGen(options =>
 
 
 // Stores
-builder.Services.AddScoped<IAirportStore,          EfAirportStore>();
-builder.Services.AddScoped<IRunwayStore,            EfRunwayStore>();
-builder.Services.AddScoped<IScenarioConfigStore,    EfScenarioConfigStore>();
-builder.Services.AddScoped<IAircraftStore,          EfAircraftStore>();
-builder.Services.AddScoped<IFlightStore,            EfFlightStore>();
-builder.Services.AddScoped<IWeatherIntervalStore,   EFWeatherIntervalStore>();
-builder.Services.AddScoped<IUserStore,              EfUserStore>();
-builder.Services.AddScoped<ITokenService,           JwtTokenService>();
-builder.Services.AddScoped<IRandomEventStore,       EFRandomEvent>();
+builder.Services.AddScoped<IAirportStore, EfAirportStore>();
+builder.Services.AddScoped<IRunwayStore, EfRunwayStore>();
+builder.Services.AddScoped<IScenarioConfigStore, EfScenarioConfigStore>();
+builder.Services.AddScoped<IAircraftStore, EfAircraftStore>();
+builder.Services.AddScoped<IFlightStore, EfFlightStore>();
+builder.Services.AddScoped<IWeatherIntervalStore, EFWeatherIntervalStore>();
+builder.Services.AddScoped<IUserStore, EfUserStore>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<IRandomEventStore, EFRandomEvent>();
 builder.Services.AddScoped<IScenarioSnapshotLoader, ScenarioSnapshotLoader>();
 builder.Services.AddScoped<GreedyScenarioSolver>();
 builder.Services.AddScoped<GeneticAlgorithmScenarioSolver>();
@@ -121,11 +121,11 @@ builder.Services.AddRateLimiter(options =>
 {
     options.AddSlidingWindowLimiter("login", opt =>
     {
-        opt.PermitLimit            = 5;
-        opt.Window                 = TimeSpan.FromMinutes(1);
-        opt.SegmentsPerWindow      = 6;
-        opt.QueueProcessingOrder   = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit             = 0;
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.SegmentsPerWindow = 6;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
