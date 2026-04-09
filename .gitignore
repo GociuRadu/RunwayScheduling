@@ -1,9 +1,12 @@
+# .NET build outputs
 bin/
 obj/
 out/
 artifacts/
 packages/
+publish/
 
+# IDEs
 .vs/
 .idea/
 .vscode/
@@ -14,11 +17,15 @@ packages/
 *.rsuser
 *.DotSettings.user
 _ReSharper*/
-TestResults/
 *.ncrunch*
-*.cache
-*.log
 
+# .NET runtime / compiled
+*.pdb
+*.mdb
+*.ilk
+*.exe
+*.dll
+*.app
 Debug/
 DebugPublic/
 Release/
@@ -28,21 +35,8 @@ AnyCPU/
 ARM/
 ARM64/
 
-*.pdb
-*.mdb
-*.ilk
-*.exe
-*.dll
-*.app
-*.msi
-*.msix
-*.msixbundle
-*.appxbundle
-*.appx
-*.dylib
-*.so
-*.a
-
+# Test results & coverage
+TestResults/
 coverage/
 coverage-html/
 coverage-report/
@@ -52,44 +46,56 @@ coverage.*.json
 *.coveragexml
 *.lcov
 
+# Publish profiles
 *.publishproj
-publish/
 PublishProfiles/
 *.pubxml.user
 
+# Databases
 *.db
 *.db-shm
 *.db-wal
 *.sqlite
 *.sqlite3
 
+# Secrets & environment
 .env
+.env.*
 src/.env
 appsettings.*.local.json
 appsettings.Local.json
 secrets.json
+**/Properties/launchSettings.json
 
+# Frontend (Node / Vite / React)
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 dist/
 build/
 .next/
 .vite/
 .vite-temp/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
 
+# OS
 .DS_Store
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Misc
 *.tmp
 *.temp
 *.bak
 *.swp
 *.swo
+*.log
+*.cache
 
+# Tooling
 .dotnet/
 src/.qodo/
 .superpowers/
