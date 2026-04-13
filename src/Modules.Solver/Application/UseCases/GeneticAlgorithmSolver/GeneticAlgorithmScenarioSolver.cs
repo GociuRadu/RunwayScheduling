@@ -7,10 +7,13 @@ namespace Modules.Solver.Application.GeneticAlgorithmSolver;
 
 public class GeneticAlgorithmScenarioSolver : IScenarioSolver
 {
-    private const string AlgorithmName = "Genetic Algorithm";
-    private const int PopulationSize   = 50;
-    private const int MaxGenerations   = 100;
-    private const int ElitismCount     = 5;
+    private const string AlgorithmName        = "Genetic Algorithm";
+    private const int PopulationSize          = 50;
+    private const int MaxGenerations          = 100;
+    private const int ElitismCount            = 5;
+    private const int MaxStagnantGenerations  = 20;
+    private const int RefineEveryNGen         = 5;
+    private const int CpSatEliteCount         = 2;
 
     private readonly ScheduleDecoder _decoder   = new();
     private readonly FitnessEvaluator _evaluator = new();
@@ -20,9 +23,12 @@ public class GeneticAlgorithmScenarioSolver : IScenarioSolver
     {
         var stopwatch = Stopwatch.StartNew();
         var operators = new GaOperators(_random);
+        var refiner   = new CpSatWindowRefiner(snapshot);
 
-        var population = InitializePopulation(snapshot);
-        var ranked     = EvaluatePopulation(population, snapshot);
+        var population     = InitializePopulation(snapshot);
+        var ranked         = EvaluatePopulation(population, snapshot);
+        var bestScore      = ranked[0].Score;
+        var stagnantCount  = 0;
 
         for (int gen = 0; gen < MaxGenerations; gen++)
         {
@@ -38,11 +44,36 @@ public class GeneticAlgorithmScenarioSolver : IScenarioSolver
                 var parent1 = operators.TournamentSelect(ranked);
                 var parent2 = operators.TournamentSelect(ranked);
                 var child   = operators.OrderCrossover(parent1, parent2);
-                next.Add(operators.SwapMutate(child));
+                next.Add(operators.Mutate(child));
             }
 
             ranked = EvaluatePopulation(next, snapshot);
-        }             
+
+            // CP-SAT local search on top elites every RefineEveryNGen generations
+            if ((gen + 1) % RefineEveryNGen == 0)
+            {
+                for (int i = 0; i < Math.Min(CpSatEliteCount, ranked.Count); i++)
+                {
+                    var decoded  = _decoder.Decode(ranked[i].Chromosome, snapshot);
+                    var refined  = refiner.Refine(decoded);
+                    var improved = ToChromosome(refined, snapshot);
+                    ranked[i]    = (improved, _evaluator.Evaluate(refined));
+                }
+                ranked = ranked.OrderBy(x => x.Score).ToList();
+            }
+
+            if (ranked[0].Score < bestScore)
+            {
+                bestScore     = ranked[0].Score;
+                stagnantCount = 0;
+            }
+            else
+            {
+                stagnantCount++;
+                if (stagnantCount >= MaxStagnantGenerations)
+                    break;
+            }
+        }
 
         stopwatch.Stop();
 
@@ -68,6 +99,21 @@ public class GeneticAlgorithmScenarioSolver : IScenarioSolver
             SolveTimeMs             = stopwatch.Elapsed.TotalMilliseconds,
             ThroughputFlightsPerHour = scenarioHours > 0 ? scheduled / scenarioHours : 0.0
         };
+    }
+
+    // rebuilds chromosome from CP-SAT refined solution by sorting on assigned time
+    private static Chromosome ToChromosome(IReadOnlyList<SolvedFlight> flights, ScenarioSnapshot snapshot)
+    {
+        var idToIndex = snapshot.Flights
+            .Select((f, i) => (f.Id, i))
+            .ToDictionary(x => x.Id, x => x.i);
+
+        var order = flights
+            .OrderBy(f => f.AssignedTime ?? f.ScheduledTime)
+            .Select(f => idToIndex[f.FlightId])
+            .ToArray();
+
+        return new Chromosome(order);
     }
 
     private List<Chromosome> InitializePopulation(ScenarioSnapshot snapshot)
