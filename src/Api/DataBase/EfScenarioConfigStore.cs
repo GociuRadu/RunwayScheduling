@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Domain;
-using System.Linq;
+
 namespace Api.DataBase;
 
 public sealed class EfScenarioConfigStore : IScenarioConfigStore
@@ -34,5 +34,4 @@ public sealed class EfScenarioConfigStore : IScenarioConfigStore
         await _db.SaveChangesAsync(ct);
         return true;
     }
-
 }

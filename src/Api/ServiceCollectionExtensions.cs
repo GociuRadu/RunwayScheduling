@@ -14,9 +14,11 @@ using Modules.Login.Application;
 using Modules.Login.Application.UseCases.Login;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Application.UseCases.CreateScenarioConfig;
-using Modules.Solver.Application;
-using Modules.Solver.Application.GeneticAlgorithmSolver;
-using Modules.Solver.Application.GreedySolver;
+using Modules.Solver.Application.Scheduling;
+using Modules.Solver.Application.Snapshot;
+using Modules.Solver.Application.UseCases.SolveGenetic;
+using Modules.Solver.Application.UseCases.Compare;
+using Modules.Solver.Application.UseCases.SolveGreedy;
 
 namespace Api;
 
@@ -99,13 +101,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IScenarioConfigStore, EfScenarioConfigStore>();
         services.AddScoped<IAircraftStore, EfAircraftStore>();
         services.AddScoped<IFlightStore, EfFlightStore>();
-        services.AddScoped<IWeatherIntervalStore, EFWeatherIntervalStore>();
+        services.AddScoped<IWeatherIntervalStore, EfWeatherIntervalStore>();
         services.AddScoped<IUserStore, EfUserStore>();
         services.AddScoped<ITokenService, JwtTokenService>();
-        services.AddScoped<IRandomEventStore, EFRandomEvent>();
-        services.AddScoped<IScenarioSnapshotLoader, ScenarioSnapshotLoader>();
-        services.AddScoped<GreedyScenarioSolver>();
-        services.AddScoped<GeneticAlgorithmScenarioSolver>();
+        services.AddScoped<IRandomEventStore, EfRandomEventStore>();
+        services.AddScoped<IScenarioSnapshotFactory, ScenarioSnapshotFactory>();
+        services.AddSingleton<ISchedulingEngine, SchedulingEngine>();
     }
 
     private static void AddMediatorHandlers(this IServiceCollection services)
@@ -117,7 +118,9 @@ public static class ServiceCollectionExtensions
                 typeof(CreateAirportHandler).Assembly,
                 typeof(CreateScenarioConfigHandler).Assembly,
                 typeof(LoginHandler).Assembly,
-                typeof(GreedySolverHandler).Assembly);
+                typeof(SolveGreedyHandler).Assembly,
+                typeof(SolveGeneticHandler).Assembly,
+                typeof(CompareHandler).Assembly);
         });
     }
 

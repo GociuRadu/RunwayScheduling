@@ -1,0 +1,190 @@
+Implement a Genetic Algorithm solver for runway scheduling in C# .NET 10. Create all files under src/Modules.Solver/Application/UseCases/SolveGenetic/ and src/Modules.Solver/Application/UseCases/Compare/. Also update src/Api/Endpoints.cs and src/Api/ServiceCollectionExtensions.cs.
+
+== PROJECT CONTEXT ==
+
+The project is a runway scheduling system. The core engine is SchedulingEngine (ISchedulingEngine) which takes an ordered list of flights and greedily assigns them to runways. The order matters - it is a permutation-based encoding for the GA.
+
+Key types:
+- ScenarioSnapshot: holds ScenarioConfig, Airport, Runways, Flights (with FlightSourceIds), RandomEvents, WeatherIntervals
+- PreparedScenario: preprocessed snapshot with SortedFlights (IReadOnlyList<(Flight Flight, Guid SourceId)>), RunwaysByType, SortedWeather, SortedEvents. Built via PreparedScenario.From(snapshot).
+- ISchedulingEngine.Evaluate(IReadOnlyList<(Flight, Guid)> orderedFlights, PreparedScenario) -> SchedulingEvaluation { IReadOnlyList<SolvedFlight> Flights; double Fitness; }
+- ISchedulingEngine.CreateResult(SchedulingEvaluation, Guid scenarioConfigId, string algorithmName, double solveTimeMs) -> SolverResult
+- SolverResult: Fitness (double, lower=better), TotalFlights, TotalScheduled, TotalCanceled, TotalDelayed, AlgorithmName, Flights, etc.
+- SolvedFlight: Status (FlightStatus: Scheduled/Early/Delayed/Canceled/Rescheduled), CancellationReason, AssignedTime?, DelayMinutes, EarlyMinutes, Priority, ScheduledTime, MaxDelayMinutes, MaxEarlyMinutes, Callsign, Type (FlightType: Arrival/Departure), FlightId (Guid), ScenarioConfigId
+- Flight (Modules.Scenarios.Domain): ScheduledTime, MaxDelayMinutes, MaxEarlyMinutes, Priority, Type, Callsign, AircraftId, ScenarioConfigId
+- CancellationReason: None, NoCompatibleRunway, OutsideScenarioWindow, ExceedsMaxDelay
+- IScenarioSnapshotFactory.CreateAsync(Guid scenarioConfigId, CancellationToken) -> Task<ScenarioSnapshot>
+- SolveGreedyQuery(Guid ScenarioConfigId) : IRequest<SolverResult> - use as reference pattern
+- SolveGreedyHandler: injects IScenarioSnapshotFactory and ISchedulingEngine, calls snapshotFactory.CreateAsync, PreparedScenario.From(snapshot), engine.Evaluate(prepared.SortedFlights, prepared), engine.CreateResult(...)
+- ScenarioConfig has: StartTime (DateTime), EndTime (DateTime), BaseSeparationSeconds (int)
+
+Fitness is a PENALTY - lower is better. Formula per flight: cancelled -> 180 * priority_multiplier; delayed -> delayMinutes * priority_multiplier; early -> earlyMinutes * 0.5 * priority_multiplier. priority_multiplier = pow(1.2, priority-1).
+
+Namespaces:
+- Modules.Solver.Application.Scheduling for ISchedulingEngine, PreparedScenario
+- Modules.Solver.Application.Snapshot for IScenarioSnapshotFactory
+- Modules.Solver.Domain for SolverResult, SolvedFlight, ScenarioSnapshot, FlightStatus, CancellationReason
+- Modules.Scenarios.Domain for Flight, ScenarioConfig, FlightType, WeatherInterval, RandomEvent
+- Modules.Airports.Domain for Runway, RunwayType, FlightType
+
+== GA DESIGN ==
+
+=== GaConfig ===
+Properties with defaults:
+- int PopulationSize = 80
+- int MaxGenerations = 200
+- double CrossoverRate = 0.85
+- double MutationRateLocal = 0.15
+- double MutationRateMemetic = 0.20
+- int TournamentSize = 3
+- int EliteCount = 2
+- TimeSpan TimeWindowSize = TimeSpan.FromHours(2)
+- int RandomSeed = 42
+
+=== Chromosome ===
+int[] of length N = prepared.SortedFlights.Count, representing a permutation of indices 0..N-1. To decode: reorder prepared.SortedFlights by the permutation and pass to engine.Evaluate.
+
+=== Time Window Partitioning ===
+Partition [ScenarioConfig.StartTime, ScenarioConfig.EndTime] into TimeWindowSize buckets.
+Flight i belongs to window w if SortedFlights[i].Flight.ScheduledTime falls in [windowStart, windowEnd).
+Return list of TimeWindow { DateTime Start; DateTime End; List<int> FlightIndices; }
+
+=== Initialization ===
+- Half: use the natural SortedFlights order (indices 0,1,...,N-1) as base, then apply a partial shuffle: swap ~10% of adjacent pairs
+- Half: full random Fisher-Yates shuffle
+
+=== OX Crossover (Order Crossover) ===
+Standard OX1: two random cut points on parent1, copy segment to child, fill remaining slots in order from parent2 skipping already-used indices.
+
+=== Tournament Selection ===
+Pick TournamentSize random individuals, return the one with lowest fitness.
+
+=== Mutation Type A: Local Window-Aware Swap ===
+For each position i in chromosome:
+  If Random.NextDouble() < MutationRateLocal / N (per-gene probability, so on average MutationRateLocal * N genes mutate... actually just use: for each i, if Random.NextDouble() < MutationRateLocal then do swap):
+    flightIdx = chromosome[i]
+    flight = prepared.SortedFlights[flightIdx].Flight
+    windowStart = flight.ScheduledTime.AddMinutes(-flight.MaxEarlyMinutes)
+    windowEnd   = flight.ScheduledTime.AddMinutes(flight.MaxDelayMinutes)
+    candidates = all positions j != i where prepared.SortedFlights[chromosome[j]].Flight.ScheduledTime is in [windowStart, windowEnd]
+    If candidates not empty: pick random j, swap chromosome[i] and chromosome[j]
+
+=== Mutation Type B: Memetic Destroy-and-Repair ===
+Only apply if Random.NextDouble() < MutationRateMemetic.
+This operator evaluates internally and only keeps the change if fitness improves.
+
+Algorithm:
+1. Evaluate current chromosome -> SchedulingEvaluation eval
+2. Compute per-window fitness: for each SolvedFlight in eval, compute its penalty and add to the window that contains its ScheduledTime
+3. Select target window by roulette wheel proportional to window fitness (higher penalty = more likely selected). If all windows have 0 fitness, skip.
+4. Get all flight positions in target window (from TimeWindow.FlightIndices mapped to their positions in chromosome)
+5. Determine intensity based on percentile of window's fitness among all non-zero window fitnesses:
+   - If window rank >= 95th percentile: intensity = 3
+   - If window rank >= 90th percentile: intensity = 2
+   - Else (>= 75th or any selected window): intensity = 1
+   Use: sort windows by fitness, find rank of selected window, compute percentile = rank / count * 100
+6. Sort flights in target window by cancel_cost descending:
+   cancel_cost(f) = if Canceled: 180 * pow(1.2, f.Priority-1); else: f.DelayMinutes * pow(1.2, f.Priority-1) + f.EarlyMinutes * 0.5 * pow(1.2, f.Priority-1)
+7. Select top `intensity` flights from sorted list (by highest cancel_cost) as destroy set
+8. Build rescheduling pool = destroy set + all flights already Canceled in this eval
+   Pool entries = (flightIdx, flight, cancel_cost)
+9. Build new chromosome: take current chromosome, remove destroy-set positions, creating a gap
+   Then prepend the pool flights (sorted by rescheduling priority) to the remaining chromosome
+   Rescheduling priority score = alpha * cancel_cost + beta * (1.0 / (flight.MaxDelayMinutes + 1)) - gamma * (flight.MaxEarlyMinutes + flight.MaxDelayMinutes)
+   where alpha=1.0, beta=100.0, gamma=0.01
+   Higher score = insert earlier (gets processed first by greedy, more likely to be scheduled)
+10. Evaluate new chromosome -> new eval
+11. If new eval.Fitness < eval.Fitness: apply mutation (replace chromosome in-place)
+    Else: keep original
+
+=== Elitism ===
+Keep top EliteCount chromosomes (lowest fitness) unchanged. After generating new population, replace the worst EliteCount with the saved elites.
+
+=== Main Loop ===
+- Initialize PopulationSize chromosomes
+- Evaluate all, store fitness[]
+- For gen = 1..MaxGenerations:
+  - Sort indices by fitness ascending
+  - Save elites (top EliteCount)
+  - Generate new_population:
+    - For each slot: tournament select parent1, parent2; apply OX if Random < CrossoverRate else clone parent1; apply MutationA; apply MutationB
+  - Inject elites at positions 0..EliteCount-1
+  - Evaluate all, update fitness[]
+- Return best individual's full SolverResult (use engine.CreateResult with algorithmName="Genetic Algorithm")
+
+== FILES TO CREATE ==
+
+FILE 1: src/Modules.Solver/Application/UseCases/SolveGenetic/GaConfig.cs
+Namespace: Modules.Solver.Application.UseCases.SolveGenetic
+
+FILE 2: src/Modules.Solver/Application/UseCases/SolveGenetic/GeneticAlgorithmSolver.cs
+Namespace: Modules.Solver.Application.UseCases.SolveGenetic
+Class GeneticAlgorithmSolver with constructor taking ISchedulingEngine.
+Public method: SolverResult Solve(PreparedScenario prepared, GaConfig config, Guid scenarioConfigId, out double solveTimeMs)
+
+FILE 3: src/Modules.Solver/Application/UseCases/SolveGenetic/SolveGeneticQuery.cs
+Namespace: Modules.Solver.Application.UseCases.SolveGenetic
+public sealed record SolveGeneticQuery(Guid ScenarioConfigId) : IRequest<SolverResult>;
+
+FILE 4: src/Modules.Solver/Application/UseCases/SolveGenetic/SolveGeneticHandler.cs
+Namespace: Modules.Solver.Application.UseCases.SolveGenetic
+MediatR handler for SolveGeneticQuery returning SolverResult.
+Inject IScenarioSnapshotFactory and ISchedulingEngine via primary constructor.
+Call snapshotFactory.CreateAsync, PreparedScenario.From, GeneticAlgorithmSolver.Solve.
+
+FILE 5: src/Modules.Solver/Application/UseCases/Compare/CompareQuery.cs
+Namespace: Modules.Solver.Application.UseCases.Compare
+public sealed record CompareQuery(Guid ScenarioConfigId) : IRequest<CompareResult>;
+public sealed record CompareResult(SolverResult Greedy, SolverResult Genetic);
+
+FILE 6: src/Modules.Solver/Application/UseCases/Compare/CompareHandler.cs
+Namespace: Modules.Solver.Application.UseCases.Compare
+MediatR handler for CompareQuery.
+Run Greedy and Genetic sequentially (not parallel - SchedulingEngine is stateless but let's be safe).
+Greedy: var sw = Stopwatch.StartNew(); var greedyEval = engine.Evaluate(prepared.SortedFlights, prepared); sw.Stop(); var greedyResult = engine.CreateResult(greedyEval, id, "Greedy", sw.Elapsed.TotalMilliseconds);
+Genetic: new GeneticAlgorithmSolver(engine).Solve(prepared, new GaConfig(), id, out var ms);
+Return new CompareResult(greedyResult, geneticResult).
+
+== UPDATES TO EXISTING FILES ==
+
+UPDATE src/Api/Endpoints.cs:
+Add these usings at the top (after existing usings):
+  using Modules.Solver.Application.UseCases.SolveGenetic;
+  using Modules.Solver.Application.UseCases.Compare;
+
+In MapSolverEndpoints, after the existing greedy endpoint, add:
+  secured.MapGet("/genetic/{scenarioConfigId:guid}",
+      async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+      {
+          var res = await mediator.Send(new SolveGeneticQuery(scenarioConfigId), ct);
+          return Results.Ok(res);
+      })
+      .WithName("SolveGenetic");
+
+  secured.MapGet("/compare/{scenarioConfigId:guid}",
+      async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+      {
+          var res = await mediator.Send(new CompareQuery(scenarioConfigId), ct);
+          return Results.Ok(res);
+      })
+      .WithName("CompareGreedyVsGenetic");
+
+UPDATE src/Api/ServiceCollectionExtensions.cs:
+Add usings:
+  using Modules.Solver.Application.UseCases.SolveGenetic;
+  using Modules.Solver.Application.UseCases.Compare;
+
+In AddMediatorHandlers, add to RegisterServicesFromAssemblies:
+  typeof(SolveGeneticHandler).Assembly,
+  typeof(CompareHandler).Assembly
+(They are the same assembly as SolveGreedyHandler but add explicitly for safety - MediatR deduplicates.)
+
+== CONSTRAINTS ==
+- .NET 10, C# 12, nullable enabled, implicit usings enabled
+- No new package references needed
+- DO NOT modify SchedulingEngine.cs, PreparedScenario.cs, ScenarioSnapshot.cs, SolverResult.cs, SolvedFlight.cs, domain files, or any file not listed above
+- All code must compile cleanly
+- Use System.Diagnostics.Stopwatch for timing
+- GeneticAlgorithmSolver must use a seeded Random (new Random(config.RandomSeed)) for reproducibility
+- When converting prepared.SortedFlights (IReadOnlyList) to a mutable working list for the GA, do: var flights = prepared.SortedFlights.ToList() or just index it directly
+- To call engine.Evaluate with a permuted order, build the permuted list: permuted[i] = prepared.SortedFlights[chromosome[i]]

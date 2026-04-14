@@ -18,11 +18,12 @@ using Modules.Scenarios.Application.UseCases.GetAllDataScenarioConfig;
 using Modules.Airports.Application.UseCases.DeleteAirport;
 using Modules.Login.Application.UseCases.Login;
 using Modules.Scenarios.Application.UseCases.CreateRandomEvent;
-using Modules.Solver.Application.GeneticAlgorithmSolver;
-using Modules.Solver.Application.GreedySolver;
 using Modules.Scenarios.Application.UseCases.DeleteRandomEvent;
 using Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId;
 using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
+using Modules.Solver.Application.UseCases.SolveGenetic;
+using Modules.Solver.Application.UseCases.Compare;
+using Modules.Solver.Application.UseCases.SolveGreedy;
 namespace Api;
 
 public static class Endpoints
@@ -46,7 +47,7 @@ public static class Endpoints
         secured.MapPost("/aircrafts/generate/{ScenarioId:guid}",
             async (Guid scenarioId, GenerateRandomAircraftCommand cmd, IMediator mediator, CancellationToken ct) =>
             {
-                var res = await mediator.Send(cmd, ct);
+                var res = await mediator.Send(cmd with { ScenarioConfigId = scenarioId }, ct);
                 return Results.Ok(res);
             })
             .WithName("GenerateRandomAircraftsByAirport");
@@ -248,27 +249,27 @@ public static class Endpoints
         secured.MapGet("/greedy/{scenarioConfigId:guid}",
             async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
             {
-                var res = await mediator.Send(new GreedySolverQuery(scenarioConfigId), ct);
+                var res = await mediator.Send(new SolveGreedyQuery(scenarioConfigId), ct);
                 return Results.Ok(res);
             })
-            .WithName("SolveScenarioGreedy");
+            .WithName("SolveGreedy");
 
         secured.MapGet("/genetic/{scenarioConfigId:guid}",
             async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
             {
-                var res = await mediator.Send(new GeneticAlgorithmScenarioSolverQuery(scenarioConfigId), ct);
+                var res = await mediator.Send(new SolveGeneticQuery(scenarioConfigId), ct);
                 return Results.Ok(res);
             })
-            .WithName("SolveScenarioGenetic");
+            .WithName("SolveGenetic");
 
         secured.MapGet("/compare/{scenarioConfigId:guid}",
             async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
             {
-                var greedy = await mediator.Send(new GreedySolverQuery(scenarioConfigId), ct);
-                var genetic = await mediator.Send(new GeneticAlgorithmScenarioSolverQuery(scenarioConfigId), ct);
-                return Results.Ok(new { greedy, genetic });
+                var res = await mediator.Send(new CompareQuery(scenarioConfigId), ct);
+                return Results.Ok(res);
             })
-            .WithName("CompareScenarioSolvers");
+            .WithName("CompareGreedyVsGenetic");
+
     }
 
     private static void MapAuthEndpoints(WebApplication app)

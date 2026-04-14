@@ -84,9 +84,13 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
         for (int i = 0; i < inboundPool.Count; i++)
         {
             var ac = inboundPool[i];
-            var (maxDelay, maxEarly) = GetTimingLimits(cfg.Difficulty, ac.WakeCategory, rng);
+            var (maxDelay, maxEarly) = GetTimingLimits(
+                cfg.Difficulty,
+                ac.WakeCategory,
+                FlightType.Arrival,
+                rng);
 
-            var arrTime = Clamp(arrivalTimes[i], safeStart, safeEnd);
+            var arrTime = RoundToNearestMinute(Clamp(arrivalTimes[i], safeStart, safeEnd));
             inboundArrivalByAircraft[ac.Id] = arrTime;
 
             flights.Add(new Flight
@@ -98,7 +102,7 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
                 ScheduledTime = arrTime,
                 MaxDelayMinutes = maxDelay,
                 MaxEarlyMinutes = maxEarly,
-                Priority = rng.Next(1, 6)
+                Priority = GeneratePriority(rng)
             });
         }
 
@@ -111,7 +115,11 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
             var aircraftId = departingAircraftIds[i];
 
             var ac = aircrafts.First(a => a.Id == aircraftId);
-            var (maxDelay, maxEarly) = GetTimingLimits(cfg.Difficulty, ac.WakeCategory, rng);
+            var (maxDelay, maxEarly) = GetTimingLimits(
+                cfg.Difficulty,
+                ac.WakeCategory,
+                FlightType.Departure,
+                rng);
 
             DateTime depTime;
 
@@ -124,16 +132,18 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
 
                 var availableWindowMinutes = (safeEnd - earliestDeparture).TotalMinutes;
 
-                depTime = earliestDeparture
-                    .AddMinutes(rng.NextDouble() * availableWindowMinutes);
+                depTime = RoundToNearestMinute(
+                    earliestDeparture.AddMinutes(rng.NextDouble() * availableWindowMinutes));
             }
             else
             {
                 var availableWindowMinutes = (safeEnd - safeStart).TotalMinutes;
 
-                depTime = safeStart
-                    .AddMinutes(rng.NextDouble() * availableWindowMinutes);
+                depTime = RoundToNearestMinute(
+                    safeStart.AddMinutes(rng.NextDouble() * availableWindowMinutes));
             }
+
+            depTime = Clamp(depTime, safeStart, safeEnd);
 
             flights.Add(new Flight
             {
@@ -144,7 +154,7 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
                 ScheduledTime = depTime,
                 MaxDelayMinutes = maxDelay,
                 MaxEarlyMinutes = maxEarly,
-                Priority = rng.Next(1, 6)
+                Priority = GeneratePriority(rng)
             });
         }
         flights.Sort((a, b) => a.ScheduledTime.CompareTo(b.ScheduledTime));
@@ -239,7 +249,7 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
 
         for (int i = 0; i < minutes.Count; i++)
         {
-            var t = start.AddMinutes(minutes[i]);
+            var t = RoundToNearestMinute(start.AddMinutes(minutes[i]));
             if (t < start) t = start;
             if (t > end) t = end;
             times.Add(t);
@@ -248,14 +258,20 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
         return times;
     }
 
-    private static (int maxDelay, int maxEarly) GetTimingLimits(int difficulty, WakeTurbulenceCategory wake, Random rng)
+    private static (int maxDelay, int maxEarly) GetTimingLimits(
+        int difficulty,
+        WakeTurbulenceCategory wake,
+        FlightType flightType,
+        Random rng)
     {
         if (difficulty < 1) difficulty = 1;
         if (difficulty > 5) difficulty = 5;
 
         var difficultyRatio = (difficulty - 1) / 4.0;
-        var baseDelay = (int)Math.Round(22 - 12 * difficultyRatio);
-        var baseEarly = (int)Math.Round(11 - 6 * difficultyRatio);
+        var baseDelay = (int)Math.Round(34 - 16 * difficultyRatio);
+        var baseEarly = flightType == FlightType.Arrival
+            ? (int)Math.Round(3 - 2 * difficultyRatio)
+            : (int)Math.Round(7 - 3 * difficultyRatio);
 
         var (wakeDelay, wakeEarly) = wake switch
         {
@@ -266,18 +282,46 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
             _ => (0, 0)
         };
 
-        var delayJitter = rng.Next(-5, 8);
-        var earlyJitter = rng.Next(-3, 5);
+        var delayJitter = rng.Next(-12, 13);
+        var earlyJitter = flightType == FlightType.Arrival
+            ? rng.Next(-2, 3)
+            : rng.Next(-3, 4);
 
         var maxDelay = baseDelay + wakeDelay + delayJitter;
         var maxEarly = baseEarly + wakeEarly + earlyJitter;
 
         if (maxDelay < 5) maxDelay = 5;
-        if (maxDelay > 30) maxDelay = 30;
+        if (maxDelay > 45) maxDelay = 45;
 
-        if (maxEarly < 2) maxEarly = 2;
-        if (maxEarly > 15) maxEarly = 15;
+        var maxEarlyCap = flightType == FlightType.Arrival ? 5 : 10;
+        if (maxEarly < 0) maxEarly = 0;
+        if (maxEarly > maxEarlyCap) maxEarly = maxEarlyCap;
 
         return (maxDelay, maxEarly);
+    }
+
+    private static int GeneratePriority(Random rng)
+    {
+        var roll = rng.Next(100);
+
+        if (roll < 35) return 1;
+        if (roll < 62) return 2;
+        if (roll < 82) return 3;
+        if (roll < 95) return 4;
+        return 5;
+    }
+
+    private static DateTime RoundToNearestMinute(DateTime value)
+    {
+        var truncated = new DateTime(
+            value.Year,
+            value.Month,
+            value.Day,
+            value.Hour,
+            value.Minute,
+            0,
+            value.Kind);
+
+        return value.Second >= 30 ? truncated.AddMinutes(1) : truncated;
     }
 }

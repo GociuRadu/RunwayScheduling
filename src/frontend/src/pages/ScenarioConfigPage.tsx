@@ -90,6 +90,10 @@ function toUtcString(localValue: string) {
   return new Date(localValue).toISOString();
 }
 
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 const thStyle: React.CSSProperties = {
   textAlign: "left",
   padding: "10px 14px",
@@ -177,7 +181,6 @@ export default function ScenarioConfigPage() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [seed, setSeed] = useState(0);
-  const [aircraftCount, setAircraftCount] = useState(20);
   const [aircraftDifficulty, setAircraftDifficulty] = useState(1);
   const [onGroundAircraftCount, setOnGroundAircraftCount] = useState(10);
   const [inboundAircraftCount, setInboundAircraftCount] = useState(10);
@@ -188,6 +191,9 @@ export default function ScenarioConfigPage() {
   const [weatherIntervalCount, setWeatherIntervalCount] = useState(4);
   const [minWeatherIntervalMinutes, setMinWeatherIntervalMinutes] = useState(60);
   const [weatherDifficulty, setWeatherDifficulty] = useState(1);
+
+  const derivedAircraftCount = onGroundAircraftCount + inboundAircraftCount;
+  const canCreateScenario = !!airportId && name.trim().length > 0 && startTime && endTime;
 
   const selectedScenario = useMemo(
     () => scenarios.find((s) => s.id === selectedScenarioId) ?? null,
@@ -221,6 +227,12 @@ export default function ScenarioConfigPage() {
     setSelectedScenarioName(selectedScenario.name);
     localStorage.setItem(STORAGE_SCENARIO_NAME, selectedScenario.name);
   }, [selectedScenario]);
+
+  useEffect(() => {
+    setRemainingOnGroundAircraftCount((current) =>
+      clampNumber(current, 0, onGroundAircraftCount),
+    );
+  }, [onGroundAircraftCount]);
 
   // Auto-load scenarios when airportId is available
   useEffect(() => {
@@ -292,7 +304,7 @@ export default function ScenarioConfigPage() {
         body: JSON.stringify({
           airportId: airportId.trim(), name: name.trim(), difficulty,
           startTime: toUtcString(startTime), endTime: toUtcString(endTime), seed,
-          aircraftCount, aircraftDifficulty, onGroundAircraftCount, inboundAircraftCount,
+          aircraftCount: derivedAircraftCount, aircraftDifficulty, onGroundAircraftCount, inboundAircraftCount,
           remainingOnGroundAircraftCount, baseSeparationSeconds, wakePercent,
           weatherPercent, weatherIntervalCount, minWeatherIntervalMinutes, weatherDifficulty,
         }),
@@ -301,7 +313,7 @@ export default function ScenarioConfigPage() {
       const created = (await res.json()) as ScenarioConfigDto;
       setShowCreateScenario(false);
       setName(""); setDifficulty(1); setStartTime(""); setEndTime(""); setSeed(0);
-      setAircraftCount(20); setAircraftDifficulty(1); setOnGroundAircraftCount(10);
+      setAircraftDifficulty(1); setOnGroundAircraftCount(10);
       setInboundAircraftCount(10); setRemainingOnGroundAircraftCount(5);
       setBaseSeparationSeconds(45); setWakePercent(100); setWeatherPercent(100);
       setWeatherIntervalCount(4); setMinWeatherIntervalMinutes(60); setWeatherDifficulty(1);
@@ -617,11 +629,27 @@ export default function ScenarioConfigPage() {
             <Field label="Start time"><input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="glass-input" /></Field>
             <Field label="End time"><input type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="glass-input" /></Field>
             <Field label="Seed"><NumberInput value={seed} onChange={setSeed} className="glass-input" min={0} /></Field>
-            <Field label="Aircraft count"><NumberInput value={aircraftCount} onChange={setAircraftCount} className="glass-input" min={1} /></Field>
+            <Field label="Aircraft count">
+              <NumberInput value={derivedAircraftCount} onChange={() => { }} className="glass-input" min={1} disabled />
+              <div style={{ ...S.label, marginTop: "6px", color: C.textSub }}>
+                Calculated automatically: on ground + inbound
+              </div>
+            </Field>
             <Field label="Aircraft difficulty"><NumberInput value={aircraftDifficulty} onChange={setAircraftDifficulty} className="glass-input" min={1} max={5} /></Field>
             <Field label="On ground aircraft"><NumberInput value={onGroundAircraftCount} onChange={setOnGroundAircraftCount} className="glass-input" min={0} /></Field>
             <Field label="Inbound aircraft"><NumberInput value={inboundAircraftCount} onChange={setInboundAircraftCount} className="glass-input" min={0} /></Field>
-            <Field label="Remaining on ground"><NumberInput value={remainingOnGroundAircraftCount} onChange={setRemainingOnGroundAircraftCount} className="glass-input" min={0} /></Field>
+            <Field label="Remaining on ground">
+              <NumberInput
+                value={remainingOnGroundAircraftCount}
+                onChange={(value) => setRemainingOnGroundAircraftCount(clampNumber(value, 0, onGroundAircraftCount))}
+                className="glass-input"
+                min={0}
+                max={onGroundAircraftCount}
+              />
+              <div style={{ ...S.label, marginTop: "6px", color: C.textSub }}>
+                Must be between 0 and on ground aircraft
+              </div>
+            </Field>
             <Field label="Base separation (s)"><NumberInput value={baseSeparationSeconds} onChange={setBaseSeparationSeconds} className="glass-input" min={0} /></Field>
             <Field label="Wake %"><NumberInput value={wakePercent} onChange={setWakePercent} className="glass-input" min={0} max={200} /></Field>
             <Field label="Weather %"><NumberInput value={weatherPercent} onChange={setWeatherPercent} className="glass-input" min={0} max={200} /></Field>
@@ -630,7 +658,7 @@ export default function ScenarioConfigPage() {
             <Field label="Weather difficulty"><NumberInput value={weatherDifficulty} onChange={setWeatherDifficulty} className="glass-input" min={1} max={5} /></Field>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
               <button onClick={() => setShowCreateScenario(false)} className="glass-btn-ghost">Cancel</button>
-              <button onClick={createScenario} className="glass-btn-primary" style={{ opacity: creatingScenario || !airportId || name.trim().length === 0 ? 0.5 : 1 }} disabled={creatingScenario || !airportId || name.trim().length === 0}>
+              <button onClick={createScenario} className="glass-btn-primary" style={{ opacity: creatingScenario || !canCreateScenario ? 0.5 : 1 }} disabled={creatingScenario || !canCreateScenario}>
                 {creatingScenario ? "Creating..." : "Create"}
               </button>
             </div>

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Modules.Airports.Domain;
-using Modules.Scenarios.Domain;
 using Modules.Aircrafts.Domain;
+using Modules.Airports.Domain;
 using Modules.Login.Domain;
+using Modules.Scenarios.Domain;
 
 namespace Api.DataBase;
 
@@ -21,6 +21,18 @@ public sealed class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        ConfigureAirport(modelBuilder);
+        ConfigureRunway(modelBuilder);
+        ConfigureScenarioConfig(modelBuilder);
+        ConfigureAircraft(modelBuilder);
+        ConfigureFlight(modelBuilder);
+        ConfigureWeatherInterval(modelBuilder);
+        ConfigureRandomEvent(modelBuilder);
+        ConfigureUser(modelBuilder);
+    }
+
+    private static void ConfigureAirport(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<Airport>(e =>
         {
             e.ToTable("airports");
@@ -34,7 +46,10 @@ public sealed class AppDbContext : DbContext
             e.Property(x => x.Latitude).IsRequired();
             e.Property(x => x.Longitude).IsRequired();
         });
+    }
 
+    private static void ConfigureRunway(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<Runway>(e =>
         {
             e.ToTable("runways");
@@ -55,7 +70,10 @@ public sealed class AppDbContext : DbContext
 
             e.HasIndex(x => x.AirportId);
         });
+    }
 
+    private static void ConfigureScenarioConfig(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<ScenarioConfig>(e =>
         {
             e.ToTable("scenario_configs");
@@ -106,7 +124,10 @@ public sealed class AppDbContext : DbContext
 
             e.HasIndex(x => x.AirportId);
         });
+    }
 
+    private static void ConfigureAircraft(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<Aircraft>(e =>
         {
             e.ToTable("aircrafts");
@@ -114,9 +135,11 @@ public sealed class AppDbContext : DbContext
 
             e.Property(x => x.ScenarioConfigId).IsRequired();
             e.HasIndex(x => x.ScenarioConfigId);
-
         });
+    }
 
+    private static void ConfigureFlight(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<Flight>(e =>
         {
             e.ToTable("flights");
@@ -144,7 +167,10 @@ public sealed class AppDbContext : DbContext
             e.HasIndex(x => new { x.ScenarioConfigId, x.Callsign }).IsUnique();
             e.HasIndex(x => x.AircraftId);
         });
+    }
 
+    private static void ConfigureWeatherInterval(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<WeatherInterval>(e =>
         {
             e.ToTable("weather_intervals");
@@ -157,41 +183,49 @@ public sealed class AppDbContext : DbContext
 
             e.HasIndex(x => x.ScenarioConfigId);
         });
+    }
 
+    private static void ConfigureRandomEvent(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<RandomEvent>(e =>
-{
-    e.ToTable("random_events");
+        {
+            e.ToTable("random_events");
 
-    e.HasKey(x => x.Id);
+            e.HasKey(x => x.Id);
 
-    e.Property(x => x.Id)
-        .IsRequired();
+            e.Property(x => x.Id)
+                .IsRequired();
 
-    e.Property(x => x.ScenarioConfigId)
-        .IsRequired();
+            e.Property(x => x.ScenarioConfigId)
+                .IsRequired();
 
-    e.Property(x => x.Name)
-        .IsRequired()
-        .HasMaxLength(200);
+            e.Property(x => x.Name)
+                .IsRequired()
+                .HasMaxLength(200);
 
-    e.Property(x => x.Description)
-        .HasMaxLength(1500);
+            e.Property(x => x.Description)
+                .HasMaxLength(1500);
 
-    e.Property(x => x.StartTime)
-        .IsRequired();
+            e.Property(x => x.StartTime)
+                .IsRequired();
 
-    e.Property(x => x.EndTime)
-        .IsRequired();
+            e.Property(x => x.EndTime)
+                .IsRequired();
 
-    e.Property(x => x.ImpactPercent)
-        .IsRequired();
+            e.Property(x => x.ImpactPercent)
+                .IsRequired();
 
-    e.HasOne<ScenarioConfig>()
-        .WithMany()
-        .HasForeignKey(x => x.ScenarioConfigId)
-        .OnDelete(DeleteBehavior.Cascade);
-});
+            e.HasOne<ScenarioConfig>()
+                .WithMany()
+                .HasForeignKey(x => x.ScenarioConfigId)
+                .OnDelete(DeleteBehavior.Cascade);
 
+            e.HasIndex(x => x.ScenarioConfigId);
+        });
+    }
+
+    private static void ConfigureUser(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<User>(e =>
         {
             e.ToTable("users");
@@ -214,31 +248,38 @@ public sealed class AppDbContext : DbContext
             e.HasIndex(x => x.Email).IsUnique();
 
             // TODO: SECURITY: This seeds deterministic admin accounts with plaintext passwords in source control. Replace with environment-provisioned bootstrap users or pre-hashed secrets stored outside the repository.
-            modelBuilder.Entity<User>().HasData(
-                new User
-                {
-                    Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-                    Email = "admin1@gmail.com",
-                    Username = "admin1",
-                    PasswordHash = "Admin1234",
-                    CreatedAtUtc = new DateTime(2026, 3, 9, 2, 0, 0, DateTimeKind.Utc)
-                },
-                new User
-                {
-                    Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-                    Email = "admin2@gmail.com",
-                    Username = "admin2",
-                    PasswordHash = "Admin1234",
-                    CreatedAtUtc = new DateTime(2026, 3, 9, 3, 0, 0, DateTimeKind.Utc)
-                },
-                new User
-                {
-                    Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
-                    Email = "admin3@gmail.com",
-                    Username = "admin3",
-                    PasswordHash = "Admin1234",
-                    CreatedAtUtc = new DateTime(2026, 3, 9, 4, 0, 0, DateTimeKind.Utc)
-                });
+            e.HasData(GetSeedUsers());
         });
+    }
+
+    private static User[] GetSeedUsers()
+    {
+        return
+        [
+            new User
+            {
+                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                Email = "admin1@gmail.com",
+                Username = "admin1",
+                PasswordHash = "Admin1234",
+                CreatedAtUtc = new DateTime(2026, 3, 9, 2, 0, 0, DateTimeKind.Utc)
+            },
+            new User
+            {
+                Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                Email = "admin2@gmail.com",
+                Username = "admin2",
+                PasswordHash = "Admin1234",
+                CreatedAtUtc = new DateTime(2026, 3, 9, 3, 0, 0, DateTimeKind.Utc)
+            },
+            new User
+            {
+                Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                Email = "admin3@gmail.com",
+                Username = "admin3",
+                PasswordHash = "Admin1234",
+                CreatedAtUtc = new DateTime(2026, 3, 9, 4, 0, 0, DateTimeKind.Utc)
+            }
+        ];
     }
 }

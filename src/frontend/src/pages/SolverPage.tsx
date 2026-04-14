@@ -54,9 +54,13 @@ type SolverResultDto = {
   totalDelayedFlights: number;
   totalCanceledFlights: number;
   totalRescheduledFlights: number;
+  canceledNoCompatibleRunway: number;
+  canceledOutsideWindow: number;
+  canceledExceedsMaxDelay: number;
   totalDelayMinutes: number;
   averageDelayMinutes: number;
   maxDelayMinutes: number;
+  fitness: number;
   solveTimeMs: number;
   throughputFlightsPerHour: number;
 };
@@ -103,9 +107,9 @@ function statusColor(s: number) {
 function cancellationLabel(r: number) {
   switch (r) {
     case 0: return "—";
-    case 1: return "Outside Window";
-    case 2: return "Exceeds Max Delay";
-    case 3: return "No Compatible Runway";
+    case 1: return "No Compatible Runway";
+    case 2: return "Outside Scenario Window";
+    case 3: return "Exceeds Max Delay";
     default: return String(r);
   }
 }
@@ -353,15 +357,13 @@ export default function SolverPage() {
     }
   }
 
-  const cancellationBreakdown: Record<string, number> = {};
-  if (solverResult) {
-    for (const f of solverResult.flights) {
-      if (f.status === 3) {
-        const lbl = cancellationLabel(f.cancellationReason);
-        cancellationBreakdown[lbl] = (cancellationBreakdown[lbl] ?? 0) + 1;
-      }
-    }
-  }
+  const cancellationBreakdown: { label: string; count: number }[] = solverResult
+    ? [
+        { label: "No Compatible Runway", count: solverResult.canceledNoCompatibleRunway },
+        { label: "Outside Scenario Window", count: solverResult.canceledOutsideWindow },
+        { label: "Exceeds Max Delay", count: solverResult.canceledExceedsMaxDelay },
+      ].filter((x) => x.count > 0)
+    : [];
 
   const canSave = !savingEvent && evName.trim().length > 0 && !!evStartTime && !!evEndTime;
 
@@ -540,7 +542,9 @@ export default function SolverPage() {
                   { label: "Rescheduled", value: solverResult.totalRescheduledFlights, color: "#34d399" },
                   { label: "Avg Delay", value: `${solverResult.averageDelayMinutes.toFixed(1)} min`, color: C.primary },
                   { label: "Max Delay", value: `${solverResult.maxDelayMinutes} min`, color: C.primary },
+                  { label: "Total Delay", value: `${solverResult.totalDelayMinutes} min`, color: C.primary },
                   { label: "Throughput", value: `${solverResult.throughputFlightsPerHour.toFixed(1)}/h`, color: C.text },
+                  { label: "Fitness", value: solverResult.fitness.toFixed(1), color: "#a78bfa" },
                   { label: "Solve Time", value: `${solverResult.solveTimeMs.toFixed(1)} ms`, color: C.textSub },
                 ] as const).map((stat) => (
                   <div key={stat.label} className="glass-card" style={{ padding: "10px 12px", textAlign: "center" }}>
@@ -555,12 +559,12 @@ export default function SolverPage() {
               {solverResult.totalCanceledFlights > 0 && (
                 <div className="glass-card" style={{ border: `1px solid ${C.borderAccentRed}` }}>
                   <div style={{ ...S.label, marginBottom: "8px", color: C.danger }}>Cancellation Breakdown</div>
-                  {Object.entries(cancellationBreakdown).map(([reason, count]) => (
+                  {cancellationBreakdown.map(({ label, count }) => (
                     <div
-                      key={reason}
+                      key={label}
                       style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "4px 0", borderBottom: `1px solid ${C.border}` }}
                     >
-                      <span style={{ color: C.textSub }}>{reason}</span>
+                      <span style={{ color: C.textSub }}>{label}</span>
                       <span style={{ color: C.danger, fontWeight: 700 }}>{count}</span>
                     </div>
                   ))}
@@ -597,6 +601,7 @@ export default function SolverPage() {
                       { label: "Cancelled", value: r.totalCanceledFlights, color: C.danger },
                       { label: "Avg Delay", value: `${r.averageDelayMinutes.toFixed(1)} min`, color: accentColor },
                       { label: "Max Delay", value: `${r.maxDelayMinutes} min`, color: accentColor },
+                      { label: "Fitness", value: r.fitness.toFixed(1), color: "#a78bfa" },
                       { label: "Throughput", value: `${r.throughputFlightsPerHour.toFixed(1)}/h`, color: C.text },
                       { label: "Solve Time", value: `${r.solveTimeMs.toFixed(1)} ms`, color: C.textSub },
                     ] as const).map((stat) => (

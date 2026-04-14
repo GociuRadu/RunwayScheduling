@@ -1,16 +1,15 @@
-using Api.DataBase;
-using Modules.Scenarios.Application;
-using Modules.Scenarios.Domain;
-using System.Collections.Generic;
-using Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId;
 using Microsoft.EntityFrameworkCore;
+using Modules.Scenarios.Application;
+using Modules.Scenarios.Application.UseCases.GetRandomEventsByScenarioConfigId;
+using Modules.Scenarios.Domain;
+
 namespace Api.DataBase;
 
-public sealed class EFRandomEvent : IRandomEventStore
+public sealed class EfRandomEventStore : IRandomEventStore
 {
     private readonly AppDbContext _db;
 
-    public EFRandomEvent(AppDbContext db)
+    public EfRandomEventStore(AppDbContext db)
     {
         _db = db;
     }
@@ -37,6 +36,7 @@ public sealed class EFRandomEvent : IRandomEventStore
     public async Task<IReadOnlyList<RandomEventDto>> GetAllByScenarioConfigId(Guid scenarioConfigId, CancellationToken ct)
     {
         return await _db.RandomEvents
+            .AsNoTracking()
             .Where(x => x.ScenarioConfigId == scenarioConfigId)
             .Select(x => new RandomEventDto(
                 x.Id,
@@ -48,8 +48,8 @@ public sealed class EFRandomEvent : IRandomEventStore
                 x.ImpactPercent
             ))
             .ToListAsync(ct);
-
     }
+
     public async Task<RandomEvent?> Update(
         Guid id,
         Guid scenarioConfigId,

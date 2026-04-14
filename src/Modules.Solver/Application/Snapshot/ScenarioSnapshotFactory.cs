@@ -9,15 +9,15 @@ using Modules.Scenarios.Application.UseCases.GetWeatherIntervals;
 using Modules.Scenarios.Domain;
 using Modules.Solver.Domain;
 
-namespace Modules.Solver.Application;
+namespace Modules.Solver.Application.Snapshot;
 
-public sealed class ScenarioSnapshotLoader : IScenarioSnapshotLoader
+public sealed class ScenarioSnapshotFactory : IScenarioSnapshotFactory
 {
     private readonly ISender _sender;
     private readonly IScenarioConfigStore _scenarioConfigStore;
     private readonly IAirportStore _airportStore;
 
-    public ScenarioSnapshotLoader(
+    public ScenarioSnapshotFactory(
         ISender sender,
         IScenarioConfigStore scenarioConfigStore,
         IAirportStore airportStore)
@@ -27,15 +27,13 @@ public sealed class ScenarioSnapshotLoader : IScenarioSnapshotLoader
         _airportStore = airportStore;
     }
 
-    public async Task<ScenarioSnapshot> Load(Guid scenarioConfigId, CancellationToken ct)
+    public async Task<ScenarioSnapshot> CreateAsync(Guid scenarioConfigId, CancellationToken ct)
     {
-        var scenarioConfig = await _scenarioConfigStore.GetById(scenarioConfigId, ct);
-        if (scenarioConfig is null)
-            throw new Exception("Scenario config not found.");
+        var scenarioConfig = await _scenarioConfigStore.GetById(scenarioConfigId, ct)
+            ?? throw new InvalidOperationException($"ScenarioConfig {scenarioConfigId} not found.");
 
-        var airport = _airportStore.GetAll().FirstOrDefault(x => x.Id == scenarioConfig.AirportId);
-        if (airport is null)
-            throw new Exception("Airport not found.");
+        var airport = _airportStore.GetAll().FirstOrDefault(x => x.Id == scenarioConfig.AirportId)
+            ?? throw new InvalidOperationException($"Airport {scenarioConfig.AirportId} not found.");
 
         var flightDtos = await _sender.Send(new FlightQuery(scenarioConfigId), ct);
         var weatherDtos = await _sender.Send(new WeatherIntervalsQuery(scenarioConfigId), ct);
@@ -85,7 +83,9 @@ public sealed class ScenarioSnapshotLoader : IScenarioSnapshotLoader
             ScenarioConfig = scenarioConfig,
             Airport = airport,
             Runways = runways,
+            RunwaySourceIds = runwayDtos.Select(x => x.id).ToList(),
             Flights = flights,
+            FlightSourceIds = flightDtos.Select(x => x.Id).ToList(),
             RandomEvents = randomEvents,
             WeatherIntervals = weatherIntervals
         };

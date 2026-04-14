@@ -1,7 +1,7 @@
-using Api.DataBase;
 using Microsoft.EntityFrameworkCore;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Domain;
+
 namespace Api.DataBase;
 
 public sealed class EfFlightStore : IFlightStore
@@ -15,6 +15,9 @@ public sealed class EfFlightStore : IFlightStore
 
     public async Task AddRange(List<Flight> flights, CancellationToken ct)
     {
+        if (flights.Count == 0)
+            return;
+
         await _db.Flights.AddRangeAsync(flights, ct);
     }
 
@@ -23,6 +26,9 @@ public sealed class EfFlightStore : IFlightStore
 
     public Task<List<Flight>> GetByScenarioConfigId(Guid scenarioConfigId, CancellationToken ct)
     {
-        return _db.Flights.Where(f => f.ScenarioConfigId == scenarioConfigId).ToListAsync(ct);
+        return _db.Flights
+            .AsNoTracking()
+            .Where(f => f.ScenarioConfigId == scenarioConfigId)
+            .ToListAsync(ct);
     }
 }

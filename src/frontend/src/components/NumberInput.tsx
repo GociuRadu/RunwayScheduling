@@ -8,9 +8,10 @@ type Props = {
   min?: number;
   max?: number;
   step?: number;
+  disabled?: boolean;
 };
 
-export function NumberInput({ value, onChange, className, placeholder, min, max, step }: Props) {
+export function NumberInput({ value, onChange, className, placeholder, min, max, step, disabled }: Props) {
   const [text, setText] = useState(String(value));
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export function NumberInput({ value, onChange, className, placeholder, min, max,
       min={min}
       max={max}
       step={step}
+      disabled={disabled}
       value={text}
       onChange={(e) => {
         setText(e.target.value);

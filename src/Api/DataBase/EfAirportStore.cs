@@ -6,9 +6,9 @@ namespace Api.DataBase;
 
 public sealed class EfAirportStore : IAirportStore
 {
-    private readonly Api.DataBase.AppDbContext _db;
+    private readonly AppDbContext _db;
 
-    public EfAirportStore(Api.DataBase.AppDbContext db) => _db = db;
+    public EfAirportStore(AppDbContext db) => _db = db;
 
     public Airport Add(Airport airport)
     {

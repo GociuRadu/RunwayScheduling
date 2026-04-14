@@ -6,7 +6,6 @@
     <Project Path="src/Modules.Scenarios/Modules.Scenarios.csproj" />
     <Project Path="src/Modules.Login/Modules.Login.csproj" />
     <Project Path="src/Modules.Solver/Modules.Solver.csproj" />
-    <Project Path="src/Modules.Solver.Benchmarks/Modules.Solver.Benchmarks.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/RunwayScheduling.Tests/RunwayScheduling.Tests.csproj" />

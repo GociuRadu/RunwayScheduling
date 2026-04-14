@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Modules.Airports.Application;
 using Modules.Airports.Domain;
-using Microsoft.EntityFrameworkCore;
 
 namespace Api.DataBase;
 
@@ -26,6 +23,7 @@ public sealed class EfRunwayStore : IRunwayStore
     public IEnumerable<Runway> GetByAirportId(Guid airportId)
     {
         return _db.Runways
+            .AsNoTracking()
             .Where(r => r.AirportId == airportId)
             .ToList();
     }
@@ -42,6 +40,7 @@ public sealed class EfRunwayStore : IRunwayStore
 
         return true;
     }
+
     public async Task<bool> Update(Guid runwayId, string name, bool isActive, RunwayType runwayType, CancellationToken ct)
     {
         var runway = await _db.Runways.FirstOrDefaultAsync(r => r.Id == runwayId, ct);
