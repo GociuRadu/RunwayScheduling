@@ -578,7 +578,7 @@ export default function SolverPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             {([comparisonResult.greedy, comparisonResult.genetic] as SolverResultDto[]).map((r) => {
-              const isGenetic = r.algorithmName === "Genetic";
+              const isGenetic = r.algorithmName === "Genetic Algorithm";
               const accentColor = isGenetic ? "#a78bfa" : C.primary;
               return (
                 <div key={r.algorithmName} className="glass-card" style={{ border: `1px solid ${accentColor}33` }}>
@@ -621,7 +621,7 @@ export default function SolverPage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginBottom: "12px" }}>
               {([comparisonResult.greedy, comparisonResult.genetic] as SolverResultDto[]).map((r) => {
-                const isGenetic = r.algorithmName === "Genetic";
+                const isGenetic = r.algorithmName === "Genetic Algorithm";
                 const accentColor = isGenetic ? "#a78bfa" : C.primary;
                 const pureScheduled = r.flights.filter(f => f.status !== 3 && f.status !== 5).length;
                 const pureCancelled = r.flights.filter(f => f.status === 3 || f.status === 5).length;

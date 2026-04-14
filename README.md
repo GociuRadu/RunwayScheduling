@@ -1,170 +1,113 @@
 # RunwayScheduling
 
-**RunwayScheduling** is a modular monolith system for simulating airport runway operations and optimizing flight scheduling using configurable algorithms.
+RunwayScheduling este o aplicație full-stack pentru simularea operațiunilor pe piste și compararea algoritmilor de planificare a zborurilor în scenarii aeroportuare încărcate.
 
-Designed for **simulation, research, and academic use**, with realistic constraints inspired by real-world Air Traffic Control (ATC) concepts.
+Backend-ul este construit ca modular monolith în .NET 10, iar frontend-ul este un SPA React + Vite. Proiectul include două implementări de solver:
 
----
+- `Greedy`, pentru o planificare rapidă și predictibilă
+- `Genetic Algorithm + CP-SAT`, pentru optimizare și experimente comparative
 
-## Tech Stack
+## Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | .NET 10 · ASP.NET Core Minimal API |
-| Architecture | Modular Monolith · Clean Architecture · CQRS + MediatR |
-| Database | PostgreSQL 17 · Entity Framework Core |
-| Frontend | React 19 · Vite · TypeScript |
-| Auth | JWT Bearer tokens · BCrypt |
-| Infra | Docker · Docker Compose |
-| CI/CD | GitHub Actions → GHCR |
-| Testing | xUnit · NSubstitute · Coverlet (~59% coverage) |
+- Backend: ASP.NET Core Minimal API, MediatR, Entity Framework Core, PostgreSQL
+- Frontend: React, TypeScript, Vite
+- Auth: JWT bearer
+- Tooling: Docker Compose, xUnit, Coverlet, GitHub Actions
 
----
+## Structură
 
-## Repository Structure
-
-```
-RunwayScheduling/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml          # Build, test, lint on push/PR
-│       └── cd.yml          # Build & push Docker images to GHCR on main
-│
-├── docs/
-│   └── IMPROVEMENTS.md     # Architecture notes & roadmap
-│
-├── scripts/
-│   ├── coverage.bat        # Run tests + generate HTML coverage report
-│   └── start-dev.bat       # Start local dev environment
-│
-├── src/
-│   ├── Api/                # Composition root, endpoints, EF DbContext, auth
-│   ├── Modules.Airports/   # Airport & runway domain
-│   ├── Modules.Aircrafts/  # Aircraft domain + random generation
-│   ├── Modules.Scenarios/  # Scenario config, flights, weather, random events
-│   ├── Modules.Solver/     # Solver engine (Greedy; GA planned)
-│   └── frontend/           # React SPA
-│
-├── tests/
-│   └── RunwayScheduling.Tests/   # xUnit integration & unit tests
-│
-├── global.json             # Pins .NET SDK version
-└── RunwayScheduling.slnx   # Solution file
+```text
+src/
+  Api/                        Composition root, pipeline HTTP, EF, auth
+  Modules.Aircrafts/          Generare și listare aeronave
+  Modules.Airports/           Aeroporturi și piste
+  Modules.Login/              Login și token issuing
+  Modules.Scenarios/          Configuri, zboruri, vreme, evenimente
+  Modules.Solver/             Solverele și încărcarea snapshot-ului
+  Modules.Solver.Benchmarks/  Benchmark pentru tuning GA
+  frontend/                   Aplicația React
+tests/
+  RunwayScheduling.Tests/     Teste unitare și de integrare ușoară
 ```
 
----
+## Fluxul aplicației
 
-## Module Overview
+1. Creezi un aeroport și pistele active.
+2. Creezi un `ScenarioConfig`.
+3. Generezi aeronave și zboruri pentru scenariu.
+4. Adaugi opțional intervale meteo și evenimente aleatorii.
+5. Rulezi solverul `Greedy`, `Genetic` sau endpoint-ul de comparație.
 
-### `Modules.Airports`
-Manages airports and their runways. Runways have a type (`Landing`, `Takeoff`, `Both`) and an active flag used by the solver.
+## Endpoint-uri importante
 
-### `Modules.Aircrafts`
-Aircraft domain with wake turbulence categories. Supports random generation seeded for reproducibility.
+- `POST /login`
+- `POST /airport`
+- `GET /airports`
+- `POST /airports/{airportId}/runways`
+- `POST /scenarios/configs`
+- `POST /flights/generate/{scenarioConfigId}`
+- `POST /weatherintervals/generate/{scenarioConfigId}`
+- `POST /scenarios/{scenarioConfigId}/random-events`
+- `GET /greedy/{scenarioConfigId}`
+- `GET /genetic/{scenarioConfigId}`
+- `GET /compare/{scenarioConfigId}`
 
-### `Modules.Scenarios`
-- **ScenarioConfig** — time window, difficulty, weather %, separation seconds, wake %, seed
-- **Flights** — callsign, priority, type (Arrival / Departure / OnGround), delay tolerance
-- **WeatherIntervals** — time-bounded weather conditions affecting separation
-- **RandomEvents** — time-bounded disruptions with an impact multiplier
+Toate endpoint-urile, în afară de `POST /login`, cer token JWT.
 
-### `Modules.Solver`
-Pluggable solver engine via `IScenarioSolver`. Current implementation: **Greedy** (priority + earliest-available-runway). Planned: **Genetic Algorithm**.
+## Rulare locală
 
-Separation formula:
-```
-separation = BaseSeparationSeconds × (WakePercent / 100)
-           × weatherMultiplier
-           × (1 + eventImpactPercent / 100)
-```
+### Variantă rapidă
 
----
-
-## Usage Flow
-
-```
-1. Create Airport + Runways
-2. Create ScenarioConfig (time window, difficulty, seed)
-3. Generate Aircraft (seeded, random)
-4. Generate Flights (callsign, priority, type, tolerance)
-5. (Optional) Add Weather Intervals
-6. (Optional) Add Random Events
-7. Run Solver → get SolverResult with stats & per-flight detail
+```powershell
+scripts\start-dev.bat
 ```
 
----
+### Backend manual
 
-## Database
-
-PostgreSQL runs in Docker on `localhost:5433`.
-
-```
-Host:     localhost
-Port:     5433
-Database: RunwayScheduling
+```powershell
+dotnet restore RunwayScheduling.slnx
+dotnet build RunwayScheduling.slnx
+dotnet run --project src\Api\Api.csproj
 ```
 
-**Tables:**
+### Frontend manual
 
-| Table | Description |
-|-------|-------------|
-| `airports` | Airport records |
-| `runways` | Runways per airport (CASCADE on delete) |
-| `scenario_configs` | Scenario parameters |
-| `aircrafts` | Generated aircraft per scenario |
-| `flights` | Generated flights per scenario |
-| `weather_intervals` | Time-bounded weather per scenario |
-| `random_events` | Time-bounded disruptions per scenario |
-| `users` | Auth accounts (hashed passwords) |
-
-**Cascade rules:** deleting a ScenarioConfig removes all aircrafts, flights, weather intervals, and random events.
-
----
-
-## Authentication
-
-JWT Bearer authentication is fully implemented.
-
-| Endpoint | Description |
-|----------|-------------|
-| `POST /auth/register` | Create account |
-| `POST /auth/login` | Returns JWT token |
-
-Protected endpoints require `Authorization: Bearer <token>`.
-
----
-
-## CI / CD
-
-| Pipeline | Trigger | Jobs |
-|----------|---------|------|
-| CI | push / PR on `main`, `develop` | Backend build + test · Frontend lint + build · Docker compose build |
-| CD | push to `main` | Build & push `runway-api` and `runway-frontend` images to GHCR |
-
-Docker images are tagged with `latest` and `sha-<commit>`.
-
-To generate a local coverage report:
+```powershell
+cd src\frontend
+npm install
+npm run dev
 ```
+
+## Benchmark și tuning
+
+Pentru benchmark-ul solverului genetic:
+
+```powershell
+run-benchmark.bat
+```
+
+Sau direct:
+
+```powershell
+dotnet run --project src\Modules.Solver.Benchmarks --configuration Release -- --output benchmark_results.csv
+```
+
+Detaliile de tuning sunt documentate în `PARAMETER_TUNING.md`.
+
+## Testare
+
+```powershell
+dotnet test tests\RunwayScheduling.Tests\RunwayScheduling.Tests.csproj
+```
+
+Pentru coverage:
+
+```powershell
 scripts\coverage.bat
 ```
 
----
+## Observații
 
-## Algorithms
-
-| Algorithm | Status | Description |
-|-----------|--------|-------------|
-| Greedy | ✅ Implemented | Assigns flights in priority order to the earliest available compatible runway |
-| Genetic Algorithm | 🔜 Planned | Population-based optimization for minimizing total delay and cancellations |
-
-The solver is abstracted behind `IScenarioSolver` — new algorithms are plug-in additions with no changes to existing code.
-
----
-
-## Design Goals
-
-- Realistic ATC-inspired scheduling constraints
-- Deterministic and reproducible simulations via seeded RNG
-- Pluggable solver architecture for algorithm comparison
-- Clean domain boundaries, no cross-module DB joins
-- Academic-grade codebase suitable for algorithm research
+- Migrațiile EF sunt aplicate la startup din proiectul API.
+- Solverul genetic folosește aceleași reguli de scheduling ca fallback-ul greedy, pentru a păstra consistența rezultatelor.
+- Proiectul de benchmark este inclus în soluție pentru experimente și reglaj de parametri.

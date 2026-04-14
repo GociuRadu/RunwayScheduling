@@ -17,7 +17,7 @@ public sealed class GetAirportsHandler : IRequestHandler<GetAirportsQuery, List<
         var airports = _store.GetAll();
 
         var res = airports
-            .Select(a => new AirportDto(a.Id, a.Name,a.StandCapacity, a.Latitude, a.Longitude))
+            .Select(a => new AirportDto(a.Id, a.Name, a.StandCapacity, a.Latitude, a.Longitude))
             .ToList();
 
         return Task.FromResult(res);

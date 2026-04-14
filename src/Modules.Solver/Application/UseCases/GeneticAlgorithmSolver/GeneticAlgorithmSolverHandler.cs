@@ -3,7 +3,7 @@ using Modules.Solver.Domain;
 
 namespace Modules.Solver.Application.GeneticAlgorithmSolver;
 
-public sealed class GeneticAlgorithmSolverHandler : IRequestHandler<GeneticAlgorithmScenarioSolverQuery,SolverResult>
+public sealed class GeneticAlgorithmSolverHandler : IRequestHandler<GeneticAlgorithmScenarioSolverQuery, SolverResult>
 {
     private readonly IScenarioSnapshotLoader _snapshotLoader;
     private readonly GeneticAlgorithmScenarioSolver _geneticAlgorithmScenarioSolver;

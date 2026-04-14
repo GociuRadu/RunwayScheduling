@@ -7,107 +7,93 @@ namespace Modules.Solver.Application.GeneticAlgorithmSolver;
 
 public class GeneticAlgorithmScenarioSolver : IScenarioSolver
 {
-    private const string AlgorithmName        = "Genetic Algorithm";
-    private const int PopulationSize          = 50;
-    private const int MaxGenerations          = 100;
-    private const int ElitismCount            = 5;
-    private const int MaxStagnantGenerations  = 20;
-    private const int RefineEveryNGen         = 5;
-    private const int CpSatEliteCount         = 2;
+    private const string AlgorithmName = "Genetic Algorithm";
 
-    private readonly ScheduleDecoder _decoder   = new();
+    private readonly GaSolverConfig _config;
+    private readonly ScheduleDecoder _decoder = new();
     private readonly FitnessEvaluator _evaluator = new();
-    private readonly Random _random              = new();
+    private readonly Random _random;
+
+    public GeneticAlgorithmScenarioSolver(GaSolverConfig? config = null, Random? random = null)
+    {
+        _config = config ?? new GaSolverConfig();
+        _random = random ?? new Random();
+    }
 
     public SolverResult Solve(ScenarioSnapshot snapshot)
     {
         var stopwatch = Stopwatch.StartNew();
-        var operators = new GaOperators(_random);
-        var refiner   = new CpSatWindowRefiner(snapshot);
+        var operators = new GaOperators(_random, _config);
+        var refiner = new CpSatWindowRefiner(snapshot, _config);
+        var idToIndex = snapshot.Flights
+            .Select((f, i) => (f.Id, i))
+            .ToDictionary(x => x.Id, x => x.i);
 
-        var population     = InitializePopulation(snapshot);
-        var ranked         = EvaluatePopulation(population, snapshot);
-        var bestScore      = ranked[0].Score;
-        var stagnantCount  = 0;
+        var population = InitializePopulation(snapshot);
+        var ranked = EvaluatePopulation(population, snapshot);
+        var globalBestScore = ranked[0].Score;
+        var globalBestFlights = _decoder.Decode(ranked[0].Chromosome, snapshot);
+        var stagnantCount = 0;
 
-        for (int gen = 0; gen < MaxGenerations; gen++)
+        for (int gen = 0; gen < _config.MaxGenerations; gen++)
         {
-            var next = new List<Chromosome>(PopulationSize);
+            var next = new List<Chromosome>(_config.PopulationSize);
 
             // elitism: top ElitismCount go directly to next generation
-            for (int i = 0; i < ElitismCount; i++)
+            for (int i = 0; i < Math.Min(_config.ElitismCount, ranked.Count); i++)
                 next.Add(ranked[i].Chromosome);
 
             // fill rest with crossover + mutation
-            while (next.Count < PopulationSize)
+            while (next.Count < _config.PopulationSize)
             {
                 var parent1 = operators.TournamentSelect(ranked);
                 var parent2 = operators.TournamentSelect(ranked);
-                var child   = operators.OrderCrossover(parent1, parent2);
+                var child = operators.OrderCrossover(parent1, parent2);
                 next.Add(operators.Mutate(child));
             }
 
             ranked = EvaluatePopulation(next, snapshot);
 
             // CP-SAT local search on top elites every RefineEveryNGen generations
-            if ((gen + 1) % RefineEveryNGen == 0)
+            if ((gen + 1) % _config.RefineEveryNGen == 0)
             {
-                for (int i = 0; i < Math.Min(CpSatEliteCount, ranked.Count); i++)
+                for (int i = 0; i < Math.Min(_config.CpSatEliteCount, ranked.Count); i++)
                 {
-                    var decoded  = _decoder.Decode(ranked[i].Chromosome, snapshot);
-                    var refined  = refiner.Refine(decoded);
-                    var improved = ToChromosome(refined, snapshot);
-                    ranked[i]    = (improved, _evaluator.Evaluate(refined));
+                    var decoded = _decoder.Decode(ranked[i].Chromosome, snapshot);
+                    var refined = refiner.Refine(decoded);
+                    var improved = ToChromosome(refined, idToIndex);
+                    ranked[i] = (improved, _evaluator.Evaluate(_decoder.Decode(improved, snapshot)));
                 }
                 ranked = ranked.OrderBy(x => x.Score).ToList();
             }
 
-            if (ranked[0].Score < bestScore)
+            if (ranked[0].Score < globalBestScore)
             {
-                bestScore     = ranked[0].Score;
+                globalBestScore = ranked[0].Score;
+                globalBestFlights = _decoder.Decode(ranked[0].Chromosome, snapshot);
                 stagnantCount = 0;
             }
             else
             {
                 stagnantCount++;
-                if (stagnantCount >= MaxStagnantGenerations)
+                if (stagnantCount >= _config.MaxStagnantGenerations)
                     break;
             }
         }
 
         stopwatch.Stop();
 
-        var bestFlights = _decoder.Decode(ranked[0].Chromosome, snapshot);
-        var scheduled   = bestFlights.Count(f => f.Status != FlightStatus.Canceled);
-        var totalDelay  = bestFlights.Sum(f => f.DelayMinutes);
-        var scenarioHours = (snapshot.ScenarioConfig.EndTime - snapshot.ScenarioConfig.StartTime).TotalHours;
-
-        return new SolverResult
-        {
-            AlgorithmName           = AlgorithmName,
-            Flights                 = bestFlights,
-            TotalFlights            = snapshot.Flights.Count,
-            TotalScheduledFlights   = scheduled,
-            TotalOnTimeFlights      = bestFlights.Count(f => f.Status == FlightStatus.Scheduled),
-            TotalEarlyFlights       = bestFlights.Count(f => f.Status == FlightStatus.Early),
-            TotalDelayedFlights     = bestFlights.Count(f => f.Status == FlightStatus.Delayed),
-            TotalCanceledFlights    = bestFlights.Count(f => f.Status == FlightStatus.Canceled),
-            TotalRescheduledFlights = bestFlights.Count(f => f.Status == FlightStatus.Rescheduled),
-            TotalDelayMinutes       = totalDelay,
-            AverageDelayMinutes     = scheduled > 0 ? (double)totalDelay / scheduled : 0.0,
-            MaxDelayMinutes         = bestFlights.Count > 0 ? bestFlights.Max(f => f.DelayMinutes) : 0,
-            SolveTimeMs             = stopwatch.Elapsed.TotalMilliseconds,
-            ThroughputFlightsPerHour = scenarioHours > 0 ? scheduled / scenarioHours : 0.0
-        };
+        return SolverResultFactory.Create(
+            AlgorithmName,
+            globalBestFlights,
+            snapshot.Flights.Count,
+            snapshot.ScenarioConfig.StartTime,
+            snapshot.ScenarioConfig.EndTime,
+            stopwatch.Elapsed.TotalMilliseconds);
     }
 
-    // rebuilds chromosome from CP-SAT refined solution by sorting on assigned time
-    private static Chromosome ToChromosome(IReadOnlyList<SolvedFlight> flights, ScenarioSnapshot snapshot)
+    private static Chromosome ToChromosome(IReadOnlyList<SolvedFlight> flights, Dictionary<Guid, int> idToIndex)
     {
-        var idToIndex = snapshot.Flights
-            .Select((f, i) => (f.Id, i))
-            .ToDictionary(x => x.Id, x => x.i);
-
         var order = flights
             .OrderBy(f => f.AssignedTime ?? f.ScheduledTime)
             .Select(f => idToIndex[f.FlightId])
@@ -118,13 +104,13 @@ public class GeneticAlgorithmScenarioSolver : IScenarioSolver
 
     private List<Chromosome> InitializePopulation(ScenarioSnapshot snapshot)
     {
-        var population = new List<Chromosome>(PopulationSize);
+        var population = new List<Chromosome>(_config.PopulationSize);
         population.Add(_decoder.BuildGreedyChromosome(snapshot));
         population.Add(PerturbedGreedy(snapshot));
         population.Add(PerturbedGreedy(snapshot));
 
         var flightCount = snapshot.Flights.Count;
-        for (int i = 3; i < PopulationSize; i++)
+        for (int i = 3; i < _config.PopulationSize; i++)
         {
             var order = Enumerable.Range(0, flightCount).ToArray();
             _random.Shuffle(order);
@@ -144,6 +130,9 @@ public class GeneticAlgorithmScenarioSolver : IScenarioSolver
     private Chromosome PerturbedGreedy(ScenarioSnapshot snapshot)
     {
         var order = _decoder.BuildGreedyChromosome(snapshot).FlightOrder.ToArray();
+        if (order.Length < 2)
+            return new Chromosome(order);
+
         var swaps = _random.Next(2, 10);
         for (int i = 0; i < swaps; i++)
         {
@@ -151,6 +140,7 @@ public class GeneticAlgorithmScenarioSolver : IScenarioSolver
             int b = _random.Next(order.Length);
             (order[a], order[b]) = (order[b], order[a]);
         }
+
         return new Chromosome(order);
     }
 }

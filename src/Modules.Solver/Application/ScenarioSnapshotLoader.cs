@@ -37,56 +37,56 @@ public sealed class ScenarioSnapshotLoader : IScenarioSnapshotLoader
         if (airport is null)
             throw new Exception("Airport not found.");
 
-        var flightDtos       = await _sender.Send(new FlightQuery(scenarioConfigId), ct);
-        var weatherDtos      = await _sender.Send(new WeatherIntervalsQuery(scenarioConfigId), ct);
-        var randomEventDtos  = await _sender.Send(new GetRandomEventsByScenarioConfigIdQuery(scenarioConfigId), ct);
-        var runwayDtos       = await _sender.Send(new GetRunwaysByAirportIdQuery(scenarioConfig.AirportId), ct);
+        var flightDtos = await _sender.Send(new FlightQuery(scenarioConfigId), ct);
+        var weatherDtos = await _sender.Send(new WeatherIntervalsQuery(scenarioConfigId), ct);
+        var randomEventDtos = await _sender.Send(new GetRandomEventsByScenarioConfigIdQuery(scenarioConfigId), ct);
+        var runwayDtos = await _sender.Send(new GetRunwaysByAirportIdQuery(scenarioConfig.AirportId), ct);
 
         var flights = flightDtos.Select(x => new Flight
         {
             ScenarioConfigId = x.ScenarioConfigId,
-            AircraftId       = x.AircraftId,
-            Callsign         = x.Callsign,
-            Type             = x.Type,
-            ScheduledTime    = x.ScheduledTime,
-            MaxDelayMinutes  = x.MaxDelayMinutes,
-            MaxEarlyMinutes  = x.MaxEarlyMinutes,
-            Priority         = x.Priority
+            AircraftId = x.AircraftId,
+            Callsign = x.Callsign,
+            Type = x.Type,
+            ScheduledTime = x.ScheduledTime,
+            MaxDelayMinutes = x.MaxDelayMinutes,
+            MaxEarlyMinutes = x.MaxEarlyMinutes,
+            Priority = x.Priority
         }).ToList();
 
         var weatherIntervals = weatherDtos.Select(x => new WeatherInterval
         {
             ScenarioConfigId = x.ScenarioConfigId,
-            StartTime        = x.StartTime,
-            EndTime          = x.EndTime,
-            WeatherType      = x.Condition
+            StartTime = x.StartTime,
+            EndTime = x.EndTime,
+            WeatherType = x.Condition
         }).ToList();
 
         var randomEvents = randomEventDtos.Select(x => new RandomEvent
         {
             ScenarioConfigId = x.ScenarioConfigId,
-            Name             = x.Name,
-            Description      = x.Description,
-            StartTime        = x.StartTime,
-            EndTime          = x.EndTime,
-            ImpactPercent    = x.ImpactPercent
+            Name = x.Name,
+            Description = x.Description,
+            StartTime = x.StartTime,
+            EndTime = x.EndTime,
+            ImpactPercent = x.ImpactPercent
         }).ToList();
 
         var runways = runwayDtos.Select(x => new Runway
         {
-            AirportId  = x.AirportId,
-            Name       = x.Name,
-            IsActive   = x.IsActive,
+            AirportId = x.AirportId,
+            Name = x.Name,
+            IsActive = x.IsActive,
             RunwayType = x.RunwayType
         }).ToList();
 
         return new ScenarioSnapshot
         {
-            ScenarioConfig   = scenarioConfig,
-            Airport          = airport,
-            Runways          = runways,
-            Flights          = flights,
-            RandomEvents     = randomEvents,
+            ScenarioConfig = scenarioConfig,
+            Airport = airport,
+            Runways = runways,
+            Flights = flights,
+            RandomEvents = randomEvents,
             WeatherIntervals = weatherIntervals
         };
     }

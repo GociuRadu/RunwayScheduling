@@ -33,7 +33,16 @@ public static class Endpoints
         secured.RequireAuthorization();
 
         // TODO: SECURITY: Most write endpoints forward DTOs directly to handlers without endpoint-level validation or a unified validation pipeline. Add FluentValidation or equivalent request validation so malformed input fails with 400 instead of surfacing as generic exceptions.
+        MapAircraftEndpoints(secured);
+        MapAirportEndpoints(secured);
+        MapScenarioEndpoints(secured);
+        MapRandomEventEndpoints(secured);
+        MapSolverEndpoints(secured);
+        MapAuthEndpoints(app);
+    }
 
+    private static void MapAircraftEndpoints(RouteGroupBuilder secured)
+    {
         secured.MapPost("/aircrafts/generate/{ScenarioId:guid}",
             async (Guid scenarioId, GenerateRandomAircraftCommand cmd, IMediator mediator, CancellationToken ct) =>
             {
@@ -49,7 +58,10 @@ public static class Endpoints
                 return Results.Ok(res);
             })
             .WithName("GetAircraftsByScenarioId");
+    }
 
+    private static void MapAirportEndpoints(RouteGroupBuilder secured)
+    {
         secured.MapPost("/airport",
             async (CreateAirportCommand cmd, IMediator mediator) =>
             {
@@ -103,7 +115,10 @@ public static class Endpoints
                 return Results.Ok(res);
             })
             .WithName("GetRunwaysByAirportId");
+    }
 
+    private static void MapScenarioEndpoints(RouteGroupBuilder secured)
+    {
         secured.MapPost("/scenarios/configs",
             async (CreateScenarioConfigCommand cmd, IMediator mediator) =>
             {
@@ -181,53 +196,39 @@ public static class Endpoints
                 return Results.NotFound();
             })
             .WithName("DeleteAirport");
+    }
 
-        app.MapPost("/login",
-     async (LoginCommand cmd, IMediator mediator, CancellationToken ct) =>
-     {
-         try
-         {
-             var res = await mediator.Send(cmd, ct);
-             return Results.Ok(res);
-         }
-         catch (UnauthorizedAccessException)
-         {
-             return Results.Unauthorized();
-         }
-     })
-     .AllowAnonymous()
-     .RequireRateLimiting("login")
-     .WithName("Login");
-
+    private static void MapRandomEventEndpoints(RouteGroupBuilder secured)
+    {
         secured.MapPost("/scenarios/{scenarioConfigId:guid}/random-events",
-       async (Guid scenarioConfigId, CreateRandomEventCommand cmd, IMediator mediator, CancellationToken ct) =>
-       {
-           var res = await mediator.Send(cmd with { ScenarioConfigId = scenarioConfigId }, ct);
-           return Results.Ok(res);
-       })
-       .WithName("CreateRandomEvent");
+            async (Guid scenarioConfigId, CreateRandomEventCommand cmd, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(cmd with { ScenarioConfigId = scenarioConfigId }, ct);
+                return Results.Ok(res);
+            })
+            .WithName("CreateRandomEvent");
 
 
         secured.MapDelete("/random-events/{randomEventId:guid}",
-         async (Guid randomEventId, IMediator mediator, CancellationToken ct) =>
-         {
-             var res = await mediator.Send(new DeleteRandomEventCommand(randomEventId), ct);
+            async (Guid randomEventId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new DeleteRandomEventCommand(randomEventId), ct);
 
-             if (res)
-                 return Results.NoContent();
+                if (res)
+                    return Results.NoContent();
 
-             return Results.NotFound();
-         })
-         .WithName("DeleteRandomEvent");
+                return Results.NotFound();
+            })
+            .WithName("DeleteRandomEvent");
 
         secured.MapGet("/random-events/{ScenarioConfigId:guid}",
-        async (Guid ScenarioConfigId, IMediator mediator, CancellationToken ct) =>
-        {
-            var res = await mediator.Send(new GetRandomEventsByScenarioConfigIdQuery(ScenarioConfigId), ct);
+            async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new GetRandomEventsByScenarioConfigIdQuery(scenarioConfigId), ct);
 
-            return Results.Ok(res);
-        })
-        .WithName("GetRandomEventByScenarioId");
+                return Results.Ok(res);
+            })
+            .WithName("GetRandomEventByScenarioId");
 
         secured.MapPut("/random-events/{randomEventId:guid}",
             async (Guid randomEventId, UpdateRandomEventCommand request, IMediator mediator, CancellationToken ct) =>
@@ -240,7 +241,10 @@ public static class Endpoints
                 return Results.Ok(res);
             })
             .WithName("UpdateRandomEvent");
+    }
 
+    private static void MapSolverEndpoints(RouteGroupBuilder secured)
+    {
         secured.MapGet("/greedy/{scenarioConfigId:guid}",
             async (Guid scenarioConfigId, IMediator mediator, CancellationToken ct) =>
             {
@@ -265,5 +269,25 @@ public static class Endpoints
                 return Results.Ok(new { greedy, genetic });
             })
             .WithName("CompareScenarioSolvers");
+    }
+
+    private static void MapAuthEndpoints(WebApplication app)
+    {
+        app.MapPost("/login",
+                async (LoginCommand cmd, IMediator mediator, CancellationToken ct) =>
+                {
+                    try
+                    {
+                        var res = await mediator.Send(cmd, ct);
+                        return Results.Ok(res);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        return Results.Unauthorized();
+                    }
+                })
+            .AllowAnonymous()
+            .RequireRateLimiting("login")
+            .WithName("Login");
     }
 }

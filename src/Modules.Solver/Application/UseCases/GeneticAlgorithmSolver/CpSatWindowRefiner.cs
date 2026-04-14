@@ -1,23 +1,21 @@
 using Google.OrTools.Sat;
-using Modules.Airports.Domain;
 using Modules.Scenarios.Domain;
+using Modules.Solver.Application;
 using Modules.Solver.Domain;
 
 namespace Modules.Solver.Application.GeneticAlgorithmSolver;
 
-public sealed class CpSatWindowRefiner(ScenarioSnapshot snapshot)
+public sealed class CpSatWindowRefiner(ScenarioSnapshot snapshot, GaSolverConfig config)
 {
-    private const int MaxWindowHours   = 3;
-    private const int CpSatTimeLimitMs = 75;
+    private readonly int _cpSatTimeLimitMs = config.CpSatTimeLimitMs;
+    private readonly int _maxWindowHours = config.MaxWindowHours;
 
-    // called by the GA loop on elite chromosomes
-    // returns an improved assignment for the same flights
     public IReadOnlyList<SolvedFlight> Refine(IReadOnlyList<SolvedFlight> current)
     {
-        var windows      = GetWindows();
+        var windows = ComputeWindowsFromCurrent(current);
         var runwayBounds = snapshot.Runways
-            .Where(r => r.IsActive)
-            .ToDictionary(r => r.Name, _ => snapshot.ScenarioConfig.StartTime);
+            .Where(runway => runway.IsActive)
+            .ToDictionary(runway => runway.Name, _ => snapshot.ScenarioConfig.StartTime);
         var result = new List<SolvedFlight>(current.Count);
 
         foreach (var window in windows)
@@ -26,28 +24,30 @@ public sealed class CpSatWindowRefiner(ScenarioSnapshot snapshot)
         return result;
     }
 
-    // divides [StartTime, EndTime] into ceil(totalHours / MaxWindowHours) equal slices
-    // e.g. 24h -> 12 windows, 38.25h -> 20 windows, 1.5h -> 1 window
-    private List<List<Flight>> GetWindows()
+    private List<List<Flight>> ComputeWindowsFromCurrent(IReadOnlyList<SolvedFlight> current)
     {
-        if (snapshot.Flights.Count == 0)
+        if (current.Count == 0)
             return [];
 
-        var start        = snapshot.ScenarioConfig.StartTime;
-        var totalHours   = (snapshot.ScenarioConfig.EndTime - start).TotalHours;
-        var windowCount  = Math.Max(1, (int)Math.Ceiling(totalHours / MaxWindowHours));
-        var totalSeconds = (snapshot.ScenarioConfig.EndTime - start).TotalSeconds;
-        var sliceSeconds = totalSeconds / windowCount;
+        var flightById = snapshot.Flights.ToDictionary(f => f.Id);
+        var ordered = current
+            .OrderBy(sf => sf.AssignedTime ?? sf.ScheduledTime)
+            .Select(sf => flightById[sf.FlightId])
+            .ToList();
+
+        var scenarioStart = snapshot.ScenarioConfig.StartTime;
+        var totalHours = (snapshot.ScenarioConfig.EndTime - scenarioStart).TotalHours;
+        var windowCount = Math.Max(1, (int)Math.Ceiling(totalHours / _maxWindowHours));
+        var sliceSize = ordered.Count / (double)windowCount;
 
         var windows = Enumerable.Range(0, windowCount)
             .Select(_ => new List<Flight>())
             .ToList();
 
-        foreach (var flight in snapshot.Flights)
+        for (int i = 0; i < ordered.Count; i++)
         {
-            var offset = (flight.ScheduledTime - start).TotalSeconds;
-            var index  = (int)Math.Min(offset / sliceSeconds, windowCount - 1);
-            windows[index].Add(flight);
+            var index = (int)Math.Min(i / sliceSize, windowCount - 1);
+            windows[index].Add(ordered[i]);
         }
 
         return windows;
@@ -61,101 +61,96 @@ public sealed class CpSatWindowRefiner(ScenarioSnapshot snapshot)
         if (window.Count == 0)
             return [];
 
-        var model         = new CpModel();
-        var epoch         = snapshot.ScenarioConfig.StartTime;
-        var activeRunways = snapshot.Runways.Where(r => r.IsActive).ToList();
-        var runwayItvs    = activeRunways.ToDictionary(r => r.Name, _ => new List<IntervalVar>());
+        var model = new CpModel();
+        var epoch = snapshot.ScenarioConfig.StartTime;
+        var activeRunways = snapshot.Runways.Where(runway => runway.IsActive).ToList();
+        var runwayIntervals = activeRunways.ToDictionary(runway => runway.Name, _ => new List<IntervalVar>());
 
-        var startVars   = new Dictionary<Guid, IntVar>();
+        var startVars = new Dictionary<Guid, IntVar>();
         var presentVars = new Dictionary<Guid, BoolVar>();
-        var assignedTo  = new Dictionary<Guid, Dictionary<string, BoolVar>>();
+        var assignedTo = new Dictionary<Guid, Dictionary<string, BoolVar>>();
 
         foreach (var flight in window)
         {
-            var schedSec    = (long)(flight.ScheduledTime - epoch).TotalSeconds;
-            var earliestSec = schedSec - flight.MaxEarlyMinutes * 60L;
-            var latestSec   = schedSec + flight.MaxDelayMinutes * 60L;
-            var sepSec      = (long)EstimateSeparation(flight).TotalSeconds;
-            var required    = flight.Type == FlightType.Arrival ? RunwayType.Landing : RunwayType.Takeoff;
-            var compatible  = activeRunways
-                .Where(r => r.RunwayType == RunwayType.Both || r.RunwayType == required)
-                .ToList();
+            var scheduledSeconds = (long)(flight.ScheduledTime - epoch).TotalSeconds;
+            var earliestSeconds = scheduledSeconds - flight.MaxEarlyMinutes * 60L;
+            var latestSeconds = scheduledSeconds + flight.MaxDelayMinutes * 60L;
+            var separationSeconds = (long)EstimateSeparation(flight).TotalSeconds;
+            var compatibleRunways = SchedulingRules.GetCompatibleRunways(activeRunways, flight.Type).ToList();
 
-            var startVar   = model.NewIntVar(earliestSec, latestSec, $"s_{flight.Id}");
+            var startVar = model.NewIntVar(earliestSeconds, latestSeconds, $"s_{flight.Id}");
             var presentVar = model.NewBoolVar($"p_{flight.Id}");
-            startVars[flight.Id]   = startVar;
+            startVars[flight.Id] = startVar;
             presentVars[flight.Id] = presentVar;
-            assignedTo[flight.Id]  = [];
+            assignedTo[flight.Id] = [];
 
-            if (compatible.Count == 0)
+            if (compatibleRunways.Count == 0)
             {
                 model.Add(presentVar == 0);
-                model.Add(startVar == schedSec);
+                model.Add(startVar == scheduledSeconds);
                 continue;
             }
 
-            // when not present, pin start to scheduled time so delay = 0
-            model.Add(startVar == schedSec).OnlyEnforceIf(presentVar.Not());
+            model.Add(startVar == scheduledSeconds).OnlyEnforceIf(presentVar.Not());
 
-            var assignedList = new List<BoolVar>();
-            foreach (var runway in compatible)
+            var assignedRunwayVars = new List<BoolVar>();
+            foreach (var runway in compatibleRunways)
             {
-                var lb          = (long)(runwayBounds[runway.Name] - epoch).TotalSeconds;
+                var lowerBound = (long)(runwayBounds[runway.Name] - epoch).TotalSeconds;
                 var assignedVar = model.NewBoolVar($"a_{flight.Id}_{runway.Name}");
-                var endVar      = model.NewIntVar(earliestSec + sepSec, latestSec + sepSec, $"e_{flight.Id}_{runway.Name}");
+                var endVar = model.NewIntVar(earliestSeconds + separationSeconds, latestSeconds + separationSeconds, $"e_{flight.Id}_{runway.Name}");
 
-                model.Add(startVar >= lb).OnlyEnforceIf(assignedVar);
-                model.Add(endVar == LinearExpr.Affine(startVar, 1, sepSec));
+                model.Add(startVar >= lowerBound).OnlyEnforceIf(assignedVar);
+                model.Add(endVar == LinearExpr.Affine(startVar, 1, separationSeconds));
 
-                var itv = model.NewOptionalIntervalVar(startVar, sepSec, endVar, assignedVar, $"i_{flight.Id}_{runway.Name}");
-                runwayItvs[runway.Name].Add(itv);
+                var interval = model.NewOptionalIntervalVar(startVar, separationSeconds, endVar, assignedVar, $"i_{flight.Id}_{runway.Name}");
+                runwayIntervals[runway.Name].Add(interval);
                 assignedTo[flight.Id][runway.Name] = assignedVar;
-                assignedList.Add(assignedVar);
+                assignedRunwayVars.Add(assignedVar);
             }
 
-            model.Add(LinearExpr.Sum(assignedList) == 1).OnlyEnforceIf(presentVar);
-            model.Add(LinearExpr.Sum(assignedList) == 0).OnlyEnforceIf(presentVar.Not());
+            model.Add(LinearExpr.Sum(assignedRunwayVars) == 1).OnlyEnforceIf(presentVar);
+            model.Add(LinearExpr.Sum(assignedRunwayVars) == 0).OnlyEnforceIf(presentVar.Not());
         }
 
-        foreach (var (_, itvs) in runwayItvs)
-            if (itvs.Count > 0)
-                model.AddNoOverlap(itvs);
+        foreach (var (_, intervals) in runwayIntervals)
+            if (intervals.Count > 0)
+                model.AddNoOverlap(intervals);
 
-        // objective: minimize delay cost — reward scheduling
-        // delay_sec * pScale - present * 10800 * pScale
-        // (10800 sec = 180 min = EU 261 cancellation threshold)
-        var objVars    = new List<IntVar>();
-        var objWeights = new List<long>();
+        var objectiveVars = new List<IntVar>();
+        var objectiveWeights = new List<long>();
 
         foreach (var flight in window)
         {
-            var schedSec   = (long)(flight.ScheduledTime - epoch).TotalSeconds;
-            var pScale     = (long)Math.Round(Math.Pow(1.2, flight.Priority - 1) * 100);
-            var startVar   = startVars[flight.Id];
+            var scheduledSeconds = (long)(flight.ScheduledTime - epoch).TotalSeconds;
+            var priorityScale = (long)Math.Round(Math.Pow(1.2, flight.Priority - 1) * 100);
+            var startVar = startVars[flight.Id];
             var presentVar = presentVars[flight.Id];
 
             var delayVar = model.NewIntVar(0, flight.MaxDelayMinutes * 60L, $"d_{flight.Id}");
-            model.AddMaxEquality(delayVar, [model.NewConstant(0L), LinearExpr.Affine(startVar, 1, -schedSec)]);
-            objVars.Add(delayVar);
-            objWeights.Add(pScale);
+            model.AddMaxEquality(delayVar, [model.NewConstant(0L), LinearExpr.Affine(startVar, 1, -scheduledSeconds)]);
 
-            objVars.Add(presentVar);
-            objWeights.Add(-10800L * pScale);
+            objectiveVars.Add(delayVar);
+            objectiveWeights.Add(priorityScale);
+            objectiveVars.Add(presentVar);
+            objectiveWeights.Add(-10800L * priorityScale);
         }
 
-        model.Minimize(LinearExpr.WeightedSum(objVars, objWeights));
+        model.Minimize(LinearExpr.WeightedSum(objectiveVars, objectiveWeights));
 
-        var solver = new CpSolver();
-        solver.StringParameters = $"max_time_in_seconds:{CpSatTimeLimitMs / 1000.0:F3}";
+        var solver = new CpSolver
+        {
+            StringParameters = $"max_time_in_seconds:{_cpSatTimeLimitMs / 1000.0:F3}"
+        };
+
         var status = solver.Solve(model);
-
         if (status is not CpSolverStatus.Optimal and not CpSolverStatus.Feasible)
         {
-            // fallback: return current solution for flights in this window
-            var currentById = current.ToDictionary(sf => sf.FlightId);
+            var currentById = current.ToDictionary(flight => flight.FlightId);
+
             return window
-                .Where(f => currentById.ContainsKey(f.Id))
-                .Select(f => currentById[f.Id])
+                .Where(flight => currentById.ContainsKey(flight.Id))
+                .Select(flight => currentById[flight.Id])
                 .ToList();
         }
 
@@ -164,107 +159,64 @@ public sealed class CpSatWindowRefiner(ScenarioSnapshot snapshot)
         {
             if (!solver.BooleanValue(presentVars[flight.Id]))
             {
-                result.Add(CanceledFlight(flight, CancellationReason.ExceedsMaxDelay));
+                result.Add(SchedulingRules.CreateCanceledFlight(flight, 0, CancellationReason.ExceedsMaxDelay));
                 continue;
             }
 
-            var startSec     = solver.Value(startVars[flight.Id]);
-            var assignedTime = epoch.AddSeconds(startSec);
-            var schedSec     = (long)(flight.ScheduledTime - epoch).TotalSeconds;
-            var delaySec     = Math.Max(0L, startSec - schedSec);
-            var earlySec     = Math.Max(0L, schedSec - startSec);
-            var sepSec       = (long)EstimateSeparation(flight).TotalSeconds;
+            var startSeconds = solver.Value(startVars[flight.Id]);
+            var assignedTime = epoch.AddSeconds(startSeconds);
+            var scheduledSeconds = (long)(flight.ScheduledTime - epoch).TotalSeconds;
+            var delaySeconds = Math.Max(0L, startSeconds - scheduledSeconds);
+            var earlySeconds = Math.Max(0L, scheduledSeconds - startSeconds);
+            var separationSeconds = (long)EstimateSeparation(flight).TotalSeconds;
+            var weather = SchedulingRules.FindWeatherAt(snapshot, assignedTime);
+            var randomEvent = SchedulingRules.FindRandomEventAt(snapshot, assignedTime);
 
             var assignedRunway = assignedTo[flight.Id]
-                .First(kv => solver.BooleanValue(kv.Value)).Key;
+                .First(pair => solver.BooleanValue(pair.Value))
+                .Key;
 
-            // propagate runway availability to next window
-            var newBound = assignedTime.AddSeconds(sepSec);
-            if (newBound > runwayBounds[assignedRunway])
-                runwayBounds[assignedRunway] = newBound;
+            var nextRunwayAvailability = assignedTime.AddSeconds(separationSeconds);
+            if (nextRunwayAvailability > runwayBounds[assignedRunway])
+                runwayBounds[assignedRunway] = nextRunwayAvailability;
 
             result.Add(new SolvedFlight
             {
-                FlightId                 = flight.Id,
-                ScenarioConfigId         = flight.ScenarioConfigId,
-                AircraftId               = flight.AircraftId,
-                Callsign                 = flight.Callsign,
-                Type                     = flight.Type,
-                Priority                 = flight.Priority,
-                ProcessingOrder          = 0,
-                ScheduledTime            = flight.ScheduledTime,
-                MaxDelayMinutes          = flight.MaxDelayMinutes,
-                MaxEarlyMinutes          = flight.MaxEarlyMinutes,
-                Status                   = delaySec > 0 ? FlightStatus.Delayed
-                                         : earlySec > 0 ? FlightStatus.Early
-                                         : FlightStatus.Scheduled,
-                CancellationReason       = CancellationReason.None,
-                AssignedRunway           = assignedRunway,
-                AssignedTime             = assignedTime,
-                DelayMinutes             = (int)(delaySec / 60),
-                EarlyMinutes             = (int)(earlySec / 60),
-                SeparationAppliedSeconds = (int)sepSec,
-                WeatherAtAssignment      = null,
-                AffectedByRandomEvent    = false
+                FlightId = flight.Id,
+                ScenarioConfigId = flight.ScenarioConfigId,
+                AircraftId = flight.AircraftId,
+                Callsign = flight.Callsign,
+                Type = flight.Type,
+                Priority = flight.Priority,
+                ProcessingOrder = 0,
+                ScheduledTime = flight.ScheduledTime,
+                MaxDelayMinutes = flight.MaxDelayMinutes,
+                MaxEarlyMinutes = flight.MaxEarlyMinutes,
+                Status = delaySeconds > 0
+                    ? FlightStatus.Delayed
+                    : earlySeconds > 0
+                        ? FlightStatus.Early
+                        : FlightStatus.Scheduled,
+                CancellationReason = CancellationReason.None,
+                AssignedRunway = assignedRunway,
+                AssignedTime = assignedTime,
+                DelayMinutes = (int)(delaySeconds / 60),
+                EarlyMinutes = (int)(earlySeconds / 60),
+                SeparationAppliedSeconds = (int)separationSeconds,
+                WeatherAtAssignment = weather?.WeatherType,
+                AffectedByRandomEvent = randomEvent is not null
             });
         }
 
         return result;
     }
 
-    // same separation logic as ScheduleDecoder.CalculateSeparation
     private TimeSpan EstimateSeparation(Flight flight)
     {
-        var config      = snapshot.ScenarioConfig;
-        var baseSeconds = config.BaseSeparationSeconds * (config.WakePercent / 100.0);
+        var weather = SchedulingRules.FindWeatherAt(snapshot, flight.ScheduledTime);
+        var randomEvent = SchedulingRules.FindRandomEventAt(snapshot, flight.ScheduledTime);
+        int? impactPercent = randomEvent is { ImpactPercent: < 100 } ? randomEvent.ImpactPercent : null;
 
-        var weather = snapshot.WeatherIntervals
-            .Where(w => w.StartTime <= flight.ScheduledTime)
-            .MaxBy(w => w.StartTime);
-
-        var weatherMultiplier = weather is null
-            ? config.WeatherPercent / 100.0
-            : weather.WeatherType switch
-            {
-                WeatherCondition.Clear => 1.00,
-                WeatherCondition.Cloud => 1.10,
-                WeatherCondition.Rain  => 1.30,
-                WeatherCondition.Snow  => 1.50,
-                WeatherCondition.Fog   => 1.75,
-                WeatherCondition.Storm => 2.00,
-                _                      => 1.00
-            };
-
-        var randomEvent = snapshot.RandomEvents
-            .FirstOrDefault(e => flight.ScheduledTime >= e.StartTime && flight.ScheduledTime < e.EndTime);
-
-        var eventMultiplier = randomEvent is not null && randomEvent.ImpactPercent < 100
-            ? 1.0 / (1.0 - randomEvent.ImpactPercent / 100.0)
-            : 1.0;
-
-        return TimeSpan.FromSeconds(baseSeconds * weatherMultiplier * eventMultiplier);
+        return SchedulingRules.CalculateSeparation(snapshot.ScenarioConfig, weather, impactPercent);
     }
-
-    private static SolvedFlight CanceledFlight(Flight flight, CancellationReason reason) => new()
-    {
-        FlightId                 = flight.Id,
-        ScenarioConfigId         = flight.ScenarioConfigId,
-        AircraftId               = flight.AircraftId,
-        Callsign                 = flight.Callsign,
-        Type                     = flight.Type,
-        Priority                 = flight.Priority,
-        ProcessingOrder          = 0,
-        ScheduledTime            = flight.ScheduledTime,
-        MaxDelayMinutes          = flight.MaxDelayMinutes,
-        MaxEarlyMinutes          = flight.MaxEarlyMinutes,
-        Status                   = FlightStatus.Canceled,
-        CancellationReason       = reason,
-        AssignedRunway           = null,
-        AssignedTime             = null,
-        DelayMinutes             = 0,
-        EarlyMinutes             = 0,
-        SeparationAppliedSeconds = 0,
-        WeatherAtAssignment      = null,
-        AffectedByRandomEvent    = false
-    };
 }

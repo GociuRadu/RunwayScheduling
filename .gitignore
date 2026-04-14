@@ -40,6 +40,7 @@ TestResults/
 coverage/
 coverage-html/
 coverage-report/
+coverage.info
 coverage.*.xml
 coverage.*.json
 *.coverage
@@ -62,6 +63,8 @@ PublishProfiles/
 .env
 .env.*
 src/.env
+!.env.example
+!src/.env.example
 appsettings.*.local.json
 appsettings.Local.json
 secrets.json
@@ -94,6 +97,8 @@ Desktop.ini
 *.swo
 *.log
 *.cache
+benchmark_results.csv
+benchmark_results.html
 
 # Tooling
 .dotnet/

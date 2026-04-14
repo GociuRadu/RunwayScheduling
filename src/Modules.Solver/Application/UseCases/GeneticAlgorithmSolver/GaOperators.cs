@@ -2,31 +2,35 @@ using Modules.Solver.Application.GeneticAlgorithmSolver.Decoder;
 
 namespace Modules.Solver.Application.GeneticAlgorithmSolver;
 
-public sealed class GaOperators(Random random)
+public sealed class GaOperators(Random random, GaSolverConfig config)
 {
-    private const double MutationRate = 0.05;
-    private const int TournamentSize  = 5;
+    private readonly double _mutationRate = config.MutationRate;
+    private readonly int _tournamentSize = config.TournamentSize;
 
     public Chromosome TournamentSelect(IReadOnlyList<(Chromosome Chromosome, FitnessScore Score)> ranked)
     {
         var best = ranked[random.Next(ranked.Count)];
-        for (int i = 1; i < TournamentSize; i++)
+        for (int i = 1; i < _tournamentSize; i++)
         {
             var candidate = ranked[random.Next(ranked.Count)];
             if (candidate.Score < best.Score)
                 best = candidate;
         }
+
         return best.Chromosome;
     }
 
     public Chromosome OrderCrossover(Chromosome parent1, Chromosome parent2)
     {
         var n = parent1.FlightOrder.Length;
+        if (n < 2)
+            return new Chromosome(parent1.FlightOrder.ToArray());
+
         var child = new int[n];
         Array.Fill(child, -1);
 
         var start = random.Next(n);
-        var end   = random.Next(n);
+        var end = random.Next(n);
         if (start > end) (start, end) = (end, start);
 
         // copy segment from parent1
@@ -52,7 +56,7 @@ public sealed class GaOperators(Random random)
 
     public Chromosome Mutate(Chromosome chromosome)
     {
-        if (random.NextDouble() > MutationRate)
+        if (chromosome.FlightOrder.Length < 2 || random.NextDouble() > _mutationRate)
             return chromosome;
 
         return random.Next(2) == 0 ? InversionMutate(chromosome) : InsertMutate(chromosome);
