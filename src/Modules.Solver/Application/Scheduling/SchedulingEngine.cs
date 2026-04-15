@@ -84,8 +84,8 @@ public sealed class SchedulingEngine : ISchedulingEngine
         if (windowStart > windowEnd)
             return null;
 
-        // Start at scheduled time (prefer on-time), only pushed earlier by scenario window edge
-        var candidateTime = Max(windowStart, flight.ScheduledTime);
+        // Start at earliest allowed time; scheduler prefers on-time via SlotScore
+        var candidateTime = windowStart;
 
         if (lastRunwayTime.TryGetValue(runway.Name, out var lastTime))
         {
@@ -260,21 +260,36 @@ public sealed class SchedulingEngine : ISchedulingEngine
         double solveTimeMs)
     {
         var flights = evaluation.Flights;
-        int total      = flights.Count;
-        int canceled   = flights.Count(f => f.Status == FlightStatus.Canceled);
-        int scheduled  = total - canceled;
-        int onTime     = flights.Count(f => f.Status == FlightStatus.Scheduled);
-        int early      = flights.Count(f => f.Status == FlightStatus.Early);
-        int delayed    = flights.Count(f => f.Status == FlightStatus.Delayed);
-        int rescheduled = flights.Count(f => f.Status == FlightStatus.Rescheduled);
+        int total           = flights.Count;
+        int canceled        = 0, onTime = 0, early = 0, delayed = 0, rescheduled = 0;
+        int canceledNoRunway = 0, canceledOutside = 0, canceledExceeds = 0;
+        int totalDelayMinutes = 0, maxDelayMinutes = 0;
 
-        int canceledNoRunway = flights.Count(f => f.CancellationReason == CancellationReason.NoCompatibleRunway);
-        int canceledOutside  = flights.Count(f => f.CancellationReason == CancellationReason.OutsideScenarioWindow);
-        int canceledExceeds  = flights.Count(f => f.CancellationReason == CancellationReason.ExceedsMaxDelay);
+        foreach (var f in flights)
+        {
+            switch (f.Status)
+            {
+                case FlightStatus.Canceled:
+                    canceled++;
+                    switch (f.CancellationReason)
+                    {
+                        case CancellationReason.NoCompatibleRunway:  canceledNoRunway++; break;
+                        case CancellationReason.OutsideScenarioWindow: canceledOutside++; break;
+                        case CancellationReason.ExceedsMaxDelay:     canceledExceeds++;  break;
+                    }
+                    break;
+                case FlightStatus.Scheduled:   onTime++;      break;
+                case FlightStatus.Early:       early++;       break;
+                case FlightStatus.Delayed:     delayed++;     break;
+                case FlightStatus.Rescheduled: rescheduled++; break;
+            }
 
-        int totalDelayMinutes = flights.Sum(f => f.DelayMinutes);
-        int maxDelayMinutes   = flights.Count > 0 ? flights.Max(f => f.DelayMinutes) : 0;
-        double avgDelay       = scheduled > 0 ? (double)totalDelayMinutes / scheduled : 0;
+            totalDelayMinutes += f.DelayMinutes;
+            if (f.DelayMinutes > maxDelayMinutes) maxDelayMinutes = f.DelayMinutes;
+        }
+
+        int scheduled = total - canceled;
+        double avgDelay = scheduled > 0 ? (double)totalDelayMinutes / scheduled : 0;
 
         double throughput = 0;
         var assignedTimes = flights

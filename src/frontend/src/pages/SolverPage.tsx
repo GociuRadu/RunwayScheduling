@@ -601,6 +601,7 @@ export default function SolverPage() {
                       { label: "Cancelled", value: r.totalCanceledFlights, color: C.danger },
                       { label: "Avg Delay", value: `${r.averageDelayMinutes.toFixed(1)} min`, color: accentColor },
                       { label: "Max Delay", value: `${r.maxDelayMinutes} min`, color: accentColor },
+                      { label: "Total Delay", value: `${r.totalDelayMinutes} min`, color: accentColor },
                       { label: "Fitness", value: r.fitness.toFixed(1), color: "#a78bfa" },
                       { label: "Throughput", value: `${r.throughputFlightsPerHour.toFixed(1)}/h`, color: C.text },
                       { label: "Solve Time", value: `${r.solveTimeMs.toFixed(1)} ms`, color: C.textSub },
@@ -670,8 +671,9 @@ export default function SolverPage() {
                       { label: "Cancelled",  delta: pureCancelled(gf) - pureCancelled(grf), higherIsBetter: false },
                       { label: "Delayed",    delta: pureDelayed(gf)   - pureDelayed(grf),   higherIsBetter: false },
                       { label: "Early",      delta: pureEarly(gf)     - pureEarly(grf),     higherIsBetter: true  },
-                      { label: "Avg Delay",  delta: g.averageDelayMinutes - gr.averageDelayMinutes, higherIsBetter: false, unit: " min", decimals: 1 },
-                      { label: "Throughput", delta: g.throughputFlightsPerHour - gr.throughputFlightsPerHour, higherIsBetter: true, unit: "/h", decimals: 2 },
+                      { label: "Avg Delay",   delta: g.averageDelayMinutes - gr.averageDelayMinutes, higherIsBetter: false, unit: " min", decimals: 1 },
+                      { label: "Total Delay", delta: g.totalDelayMinutes - gr.totalDelayMinutes, higherIsBetter: false, unit: " min" },
+                      { label: "Throughput",  delta: g.throughputFlightsPerHour - gr.throughputFlightsPerHour, higherIsBetter: true, unit: "/h", decimals: 2 },
                     ] as { label: string; delta: number; higherIsBetter: boolean; unit?: string; decimals?: number }[]).map(({ label, delta, higherIsBetter, unit = "", decimals = 0 }) => {
                       const better = higherIsBetter ? delta > 0 : delta < 0;
                       const worse  = higherIsBetter ? delta < 0 : delta > 0;

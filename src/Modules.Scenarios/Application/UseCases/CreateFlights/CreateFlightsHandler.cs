@@ -110,11 +110,13 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
         departureTimes.Sort();
         ShuffleInPlace(departingAircraftIds, rng);
 
+        var aircraftById = aircrafts.ToDictionary(a => a.Id);
+
         for (int i = 0; i < departingAircraftIds.Count; i++)
         {
             var aircraftId = departingAircraftIds[i];
 
-            var ac = aircrafts.First(a => a.Id == aircraftId);
+            var ac = aircraftById[aircraftId];
             var (maxDelay, maxEarly) = GetTimingLimits(
                 cfg.Difficulty,
                 ac.WakeCategory,

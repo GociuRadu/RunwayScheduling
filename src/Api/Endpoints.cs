@@ -116,6 +116,17 @@ public static class Endpoints
                 return Results.Ok(res);
             })
             .WithName("GetRunwaysByAirportId");
+
+        secured.MapDelete("/airports/{airportId:guid}",
+            async (Guid airportId, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(new DeleteAirportCommand(airportId), ct);
+                if (res)
+                    return Results.NoContent();
+
+                return Results.NotFound();
+            })
+            .WithName("DeleteAirport");
     }
 
     private static void MapScenarioEndpoints(RouteGroupBuilder secured)
@@ -187,16 +198,6 @@ public static class Endpoints
             })
             .WithName("GetAllDataScenarioConfig");
 
-        secured.MapDelete("/airports/{airportId:guid}",
-            async (Guid airportId, IMediator mediator, CancellationToken ct) =>
-            {
-                var res = await mediator.Send(new DeleteAirportCommand(airportId), ct);
-                if (res)
-                    return Results.NoContent();
-
-                return Results.NotFound();
-            })
-            .WithName("DeleteAirport");
     }
 
     private static void MapRandomEventEndpoints(RouteGroupBuilder secured)

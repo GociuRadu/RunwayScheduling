@@ -16,8 +16,6 @@ using Modules.Scenarios.Application;
 using Modules.Scenarios.Application.UseCases.CreateScenarioConfig;
 using Modules.Solver.Application.Scheduling;
 using Modules.Solver.Application.Snapshot;
-using Modules.Solver.Application.UseCases.SolveGenetic;
-using Modules.Solver.Application.UseCases.Compare;
 using Modules.Solver.Application.UseCases.SolveGreedy;
 
 namespace Api;
@@ -118,9 +116,7 @@ public static class ServiceCollectionExtensions
                 typeof(CreateAirportHandler).Assembly,
                 typeof(CreateScenarioConfigHandler).Assembly,
                 typeof(LoginHandler).Assembly,
-                typeof(SolveGreedyHandler).Assembly,
-                typeof(SolveGeneticHandler).Assembly,
-                typeof(CompareHandler).Assembly);
+                typeof(SolveGreedyHandler).Assembly);
         });
     }
 

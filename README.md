@@ -40,17 +40,42 @@ tests/
 
 ## Endpoint-uri importante
 
-- `POST /login`
-- `POST /airport`
-- `GET /airports`
-- `POST /airports/{airportId}/runways`
-- `POST /scenarios/configs`
-- `POST /flights/generate/{scenarioConfigId}`
-- `POST /weatherintervals/generate/{scenarioConfigId}`
+### Auth
+- `POST /login` — public, rate-limited (5 req/min)
+
+### Aeroporturi & piste
+- `POST /airport` — creare aeroport
+- `GET /airports` — listare aeroporturi
+- `DELETE /airports/{airportId}` — ștergere aeroport
+- `POST /airports/{airportId}/runways` — adăugare pistă
+- `GET /airports/{airportId}/runways` — listare piste
+- `PUT /runways/{runwayId}` — actualizare pistă
+- `DELETE /runways/{runwayId}` — ștergere pistă
+
+### Scenarii
+- `POST /scenarios/configs` — creare configurație scenariu
+- `GET /scenarios/configs` — listare configurații
+- `GET /scenarios/configs/{scenarioConfigId}` — date complete scenariu
+- `DELETE /scenarios/configs/{scenarioConfigId}` — ștergere scenariu
+- `POST /flights/generate/{scenarioConfigId}` — generare zboruri
+- `GET /flights/{scenarioConfigId}` — listare zboruri
+- `POST /weatherintervals/generate/{scenarioConfigId}` — generare intervale meteo
+- `GET /weatherintervals/{scenarioConfigId}` — listare intervale meteo
+
+### Aeronave
+- `POST /aircrafts/generate/{scenarioId}` — generare aeronave
+- `GET /aircrafts/{scenarioId}` — listare aeronave
+
+### Evenimente aleatorii
 - `POST /scenarios/{scenarioConfigId}/random-events`
-- `GET /greedy/{scenarioConfigId}`
-- `GET /genetic/{scenarioConfigId}`
-- `GET /compare/{scenarioConfigId}`
+- `GET /random-events/{scenarioConfigId}`
+- `PUT /random-events/{randomEventId}`
+- `DELETE /random-events/{randomEventId}`
+
+### Solver
+- `GET /greedy/{scenarioConfigId}` — planificare greedy
+- `GET /genetic/{scenarioConfigId}` — planificare genetic + CP-SAT
+- `GET /compare/{scenarioConfigId}` — comparație greedy vs genetic
 
 Toate endpoint-urile, în afară de `POST /login`, cer token JWT.
 

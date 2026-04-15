@@ -15,6 +15,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
     private const double Gamma = 0.01;
 
     private readonly ISchedulingEngine _engine = engine;
+    private readonly CpSatWindowRefiner _refiner = new(engine);
 
     public SolverResult Solve(PreparedScenario prepared, GaConfig config, Guid scenarioConfigId, out double solveTimeMs)
     {
@@ -54,6 +55,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         var crossoverRate = Math.Clamp(config.CrossoverRate, 0.0, 1.0);
         var mutationRateLocal = Math.Clamp(config.MutationRateLocal, 0.0, 1.0);
         var mutationRateMemetic = Math.Clamp(config.MutationRateMemetic, 0.0, 1.0);
+        var noImprovementLimit = Math.Max(config.NoImprovementGenerations, 0);
 
         var timeWindows = BuildTimeWindows(prepared, config.TimeWindowSize);
         var flightWindowIndices = BuildFlightWindowLookup(timeWindows, flightsCount);
@@ -61,6 +63,14 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
         var population = InitializePopulation(flightsCount, populationSize, random);
         var fitness = EvaluatePopulation(population, prepared);
+
+        var bestFitnessIdx = 0;
+        for (var i = 1; i < populationSize; i++)
+            if (fitness[i] < fitness[bestFitnessIdx]) bestFitnessIdx = i;
+
+        var bestFitness = fitness[bestFitnessIdx];
+        var bestChromosome = CloneChromosome(population[bestFitnessIdx]);
+        var generationsWithoutImprovement = 0;
 
         for (var generation = 0; generation < config.MaxGenerations; generation++)
         {
@@ -105,18 +115,81 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
             population = nextPopulation;
             fitness = EvaluatePopulation(population, prepared);
-        }
 
-        var bestIndex = 0;
-        for (var i = 1; i < fitness.Length; i++)
-        {
-            if (fitness[i] < fitness[bestIndex])
+            // ── CP-SAT micro-refinement ───────────────────────────────────────
+            if (config.EnableCpSatRefinement && config.CpSatMicroEnabled
+                && generation % Math.Max(1, config.CpSatMicroEveryNGenerations) == 0)
             {
-                bestIndex = i;
+                var ranked2 = Enumerable.Range(0, populationSize)
+                    .OrderBy(idx => fitness[idx])
+                    .ToArray();
+
+                var microCount = Math.Min(config.CpSatEliteCount, populationSize);
+                for (var ei = 0; ei < microCount; ei++)
+                {
+                    var ci = ranked2[ei];
+                    var eval = EvaluateChromosome(population[ci], prepared);
+                    var improved = ApplyCpSatRefinement(
+                        population[ci], prepared, timeWindows, flightWindowIndices,
+                        sourceIdToFlightIndex, 1, config.CpSatNeighborhoodSize,
+                        config.CpSatTimeLimitMsMicro, eval);
+                    if (improved)
+                        fitness[ci] = EvaluateChromosome(population[ci], prepared).Fitness;
+                }
+
+                for (var ri = 0; ri < config.CpSatRandomCount; ri++)
+                {
+                    var ci = random.Next(populationSize);
+                    var eval = EvaluateChromosome(population[ci], prepared);
+                    var improved = ApplyCpSatRefinement(
+                        population[ci], prepared, timeWindows, flightWindowIndices,
+                        sourceIdToFlightIndex, 1, config.CpSatNeighborhoodSize,
+                        config.CpSatTimeLimitMsMicro, eval);
+                    if (improved)
+                        fitness[ci] = EvaluateChromosome(population[ci], prepared).Fitness;
+                }
+            }
+
+            // ── CP-SAT macro-refinement ───────────────────────────────────────
+            if (config.EnableCpSatRefinement && config.CpSatMacroEnabled
+                && generation % Math.Max(1, config.CpSatMacroEveryNGenerations) == 0)
+            {
+                var bestIdx2 = 0;
+                for (var idx = 1; idx < populationSize; idx++)
+                    if (fitness[idx] < fitness[bestIdx2]) bestIdx2 = idx;
+
+                var macroNeighborSize = Math.Min(config.CpSatNeighborhoodSize * 2, flightsCount);
+                var eval = EvaluateChromosome(population[bestIdx2], prepared);
+                var improved = ApplyCpSatRefinement(
+                    population[bestIdx2], prepared, timeWindows, flightWindowIndices,
+                    sourceIdToFlightIndex, config.CpSatMacroWindowCount,
+                    macroNeighborSize, config.CpSatTimeLimitMsMacro, eval);
+                if (improved)
+                    fitness[bestIdx2] = EvaluateChromosome(population[bestIdx2], prepared).Fitness;
+            }
+
+            var generationBestFitness = fitness.Min();
+            if (generationBestFitness < bestFitness)
+            {
+                bestFitness = generationBestFitness;
+                generationsWithoutImprovement = 0;
+
+                var genBestIdx = 0;
+                for (var i = 1; i < populationSize; i++)
+                    if (fitness[i] < fitness[genBestIdx]) genBestIdx = i;
+                bestChromosome = CloneChromosome(population[genBestIdx]);
+            }
+            else if (noImprovementLimit > 0)
+            {
+                generationsWithoutImprovement++;
+                if (generationsWithoutImprovement >= noImprovementLimit)
+                {
+                    break;
+                }
             }
         }
 
-        var bestEvaluation = EvaluateChromosome(population[bestIndex], prepared);
+        var bestEvaluation = EvaluateChromosome(bestChromosome, prepared);
 
         sw.Stop();
         solveTimeMs = sw.Elapsed.TotalMilliseconds;
@@ -156,7 +229,11 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         {
             var chromosome = CreateNaturalOrder(chromosomeLength);
 
-            if (i < structuredCount)
+            if (i == 0)
+            {
+                // Keep natural order as greedy seed — guarantees GA starts no worse than greedy
+            }
+            else if (i < structuredCount)
             {
                 ApplyPartialAdjacentShuffle(chromosome, random);
             }
@@ -612,6 +689,56 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         }
 
         return map;
+    }
+
+    /// <summary>
+    /// Selects the worst <paramref name="windowCount"/> time windows, builds a neighborhood of
+    /// up to <paramref name="neighborhoodSize"/> flights, and delegates to <see cref="CpSatWindowRefiner"/>.
+    /// Returns true if the chromosome was improved.
+    /// </summary>
+    private bool ApplyCpSatRefinement(
+        int[] chromosome,
+        PreparedScenario prepared,
+        IReadOnlyList<TimeWindow> timeWindows,
+        int[] flightWindowIndices,
+        Dictionary<Guid, int> sourceIdToFlightIndex,
+        int windowCount,
+        int neighborhoodSize,
+        int timeLimitMs,
+        SchedulingEvaluation currentEval)
+    {
+        // Compute per-window penalty from the already-decoded evaluation
+        var windowFitness = new double[timeWindows.Count];
+        foreach (var sf in currentEval.Flights)
+        {
+            if (!sourceIdToFlightIndex.TryGetValue(sf.FlightId, out var fi)) continue;
+            windowFitness[flightWindowIndices[fi]] += ComputePenalty(sf);
+        }
+
+        // Pick worst N windows
+        var worstWindows = Enumerable.Range(0, timeWindows.Count)
+            .Where(w => windowFitness[w] > 0)
+            .OrderByDescending(w => windowFitness[w])
+            .Take(windowCount)
+            .ToList();
+
+        if (worstWindows.Count == 0) return false;
+
+        // Build neighborhood (union of flight indices, capped at neighborhoodSize)
+        var neighborhood = new List<int>(neighborhoodSize);
+        foreach (var wi in worstWindows)
+        {
+            foreach (var fi in timeWindows[wi].FlightIndices)
+            {
+                neighborhood.Add(fi);
+                if (neighborhood.Count >= neighborhoodSize) break;
+            }
+            if (neighborhood.Count >= neighborhoodSize) break;
+        }
+
+        if (neighborhood.Count == 0) return false;
+
+        return _refiner.Refine(chromosome, prepared, neighborhood, currentEval, timeLimitMs);
     }
 
     private static int[] CloneChromosome(int[] chromosome) => (int[])chromosome.Clone();
