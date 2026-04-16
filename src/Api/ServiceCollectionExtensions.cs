@@ -1,6 +1,8 @@
+using Api.Authentication;
 using System.Text;
 using System.Threading.RateLimiting;
 using Api.DataBase;
+using Api.Errors;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +28,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddDatabase(configuration);
         services.AddJwtAuthentication(configuration);
+        services.AddApiProblemDetails();
         services.AddOpenApiDocumentation();
         services.AddApplicationServices();
         services.AddMediatorHandlers();
@@ -42,28 +45,54 @@ public static class ServiceCollectionExtensions
 
     private static void AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        var jwtKey = configuration["JWT:KEY"]!;
-        var jwtIssuer = configuration["JWT:ISSUER"]!;
-        var jwtAudience = configuration["JWT:AUDIENCE"]!;
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetRequiredSection(JwtOptions.SectionName))
+            .ValidateDataAnnotations()
+            .Validate(options => options.Key.Length >= 32, "JWT signing key must contain at least 32 characters.")
+            .ValidateOnStart();
+
+        var jwtOptions = configuration.GetRequiredSection(JwtOptions.SectionName).Get<JwtOptions>()
+            ?? throw new InvalidOperationException("JWT configuration is missing.");
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
+                options.MapInboundClaims = false;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = jwtIssuer,
+                    ValidIssuer = jwtOptions.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = jwtAudience,
+                    ValidAudience = jwtOptions.Audience,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
                     ValidateLifetime = true,
+                    RequireExpirationTime = true,
                     ClockSkew = TimeSpan.Zero
                 };
             });
 
         services.AddAuthorization();
+    }
+
+    private static void AddApiProblemDetails(this IServiceCollection services)
+    {
+        services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = context =>
+            {
+                context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+                context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                if (context.ProblemDetails.Status is { } statusCode)
+                {
+                    var defaults = ProblemDetailsDefaults.Create(statusCode);
+                    context.ProblemDetails.Title ??= defaults.Title;
+                    context.ProblemDetails.Detail ??= defaults.Detail;
+                }
+            };
+        });
     }
 
     private static void AddOpenApiDocumentation(this IServiceCollection services)

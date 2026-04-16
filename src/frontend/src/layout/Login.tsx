@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { apiFetch } from "../lib/api";
+import { ApiError, apiFetchJson, getApiErrorMessage } from "../lib/api";
+import { storeAccessToken } from "../lib/auth";
 import { C, S } from "../styles/tokens";
 
 type Props = {
@@ -36,23 +37,17 @@ export default function LoginModal({ onClose }: Props) {
       setLoading(true);
       setError("");
 
-      const response = await apiFetch("/api/login", {
+      const data = await apiFetchJson<LoginResponse>("/api/login", {
         method: "POST",
         body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      if (!response.ok) {
-        setError(response.status === 401 ? "Invalid email or password" : `Login failed: ${response.status}`);
-        return;
-      }
-
-      const data = (await response.json()) as LoginResponse;
       if (!data.accessToken) {
         setError("Token missing from response");
         return;
       }
 
-      localStorage.setItem("token", data.accessToken);
+      storeAccessToken(data.accessToken);
 
       if (rememberEmail) {
         localStorage.setItem("savedEmail", email.trim());
@@ -67,7 +62,12 @@ export default function LoginModal({ onClose }: Props) {
       window.location.reload();
     } catch (err) {
       console.error("Login request failed:", err);
-      setError("Login failed. Check network/CORS.");
+      if (err instanceof ApiError && err.status === 401) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      setError(getApiErrorMessage(err, "Login failed. Check network/CORS."));
     } finally {
       setLoading(false);
     }

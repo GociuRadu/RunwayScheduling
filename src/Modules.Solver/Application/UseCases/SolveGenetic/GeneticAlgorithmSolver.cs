@@ -8,7 +8,7 @@ namespace Modules.Solver.Application.UseCases.SolveGenetic;
 public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 {
     private const string AlgorithmName = "Genetic Algorithm";
-    private const double CancellationBase = 200.0;
+    private const double CancellationBase = 180.0;
 
     private const double Alpha = 1.0;
     private const double Beta = 100.0;
@@ -116,7 +116,6 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             population = nextPopulation;
             fitness = EvaluatePopulation(population, prepared);
 
-            // ── CP-SAT micro-refinement ───────────────────────────────────────
             if (config.EnableCpSatRefinement && config.CpSatMicroEnabled
                 && generation % Math.Max(1, config.CpSatMicroEveryNGenerations) == 0)
             {
@@ -150,7 +149,6 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
                 }
             }
 
-            // ── CP-SAT macro-refinement ───────────────────────────────────────
             if (config.EnableCpSatRefinement && config.CpSatMacroEnabled
                 && generation % Math.Max(1, config.CpSatMacroEveryNGenerations) == 0)
             {
@@ -231,7 +229,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
             if (i == 0)
             {
-                // Keep natural order as greedy seed — guarantees GA starts no worse than greedy
+                // Use the greedy order as the first seed.
             }
             else if (i < structuredCount)
             {
@@ -597,7 +595,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         var multiplier = PriorityMultiplier(flight.Priority);
         return flight.Status == FlightStatus.Canceled
             ? CancellationBase * multiplier
-            : flight.DelayMinutes * multiplier + flight.EarlyMinutes * 0.5 * multiplier;
+            : flight.DelaySeconds / 60.0 * multiplier + flight.EarlySeconds / 60.0 * 0.5 * multiplier;
     }
 
     private static double PriorityMultiplier(int priority) => Math.Pow(1.2, priority - 1);
@@ -691,11 +689,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return map;
     }
 
-    /// <summary>
-    /// Selects the worst <paramref name="windowCount"/> time windows, builds a neighborhood of
-    /// up to <paramref name="neighborhoodSize"/> flights, and delegates to <see cref="CpSatWindowRefiner"/>.
-    /// Returns true if the chromosome was improved.
-    /// </summary>
+    /// <summary>Scores windows from the current evaluation and sends the worst flights to CP-SAT.</summary>
     private bool ApplyCpSatRefinement(
         int[] chromosome,
         PreparedScenario prepared,
@@ -707,7 +701,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         int timeLimitMs,
         SchedulingEvaluation currentEval)
     {
-        // Compute per-window penalty from the already-decoded evaluation
+        // Score each time window from the current evaluation.
         var windowFitness = new double[timeWindows.Count];
         foreach (var sf in currentEval.Flights)
         {
@@ -715,7 +709,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             windowFitness[flightWindowIndices[fi]] += ComputePenalty(sf);
         }
 
-        // Pick worst N windows
+        // Keep the worst windows.
         var worstWindows = Enumerable.Range(0, timeWindows.Count)
             .Where(w => windowFitness[w] > 0)
             .OrderByDescending(w => windowFitness[w])
@@ -724,17 +718,30 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
         if (worstWindows.Count == 0) return false;
 
-        // Build neighborhood (union of flight indices, capped at neighborhoodSize)
-        var neighborhood = new List<int>(neighborhoodSize);
+        // Map flight indices back to chromosome positions.
+        var posLookup = new Dictionary<int, int>(chromosome.Length);
+        for (var pos = 0; pos < chromosome.Length; pos++)
+            posLookup[chromosome[pos]] = pos;
+
+        // Keep the highest-penalty flights in the neighborhood.
+        var neighborhoodCandidates = new List<(int fi, double penalty)>();
         foreach (var wi in worstWindows)
         {
             foreach (var fi in timeWindows[wi].FlightIndices)
             {
-                neighborhood.Add(fi);
-                if (neighborhood.Count >= neighborhoodSize) break;
+                if (posLookup.TryGetValue(fi, out var flightPos))
+                {
+                    var penalty = ComputePenalty(currentEval.Flights[flightPos]);
+                    neighborhoodCandidates.Add((fi, penalty));
+                }
             }
-            if (neighborhood.Count >= neighborhoodSize) break;
         }
+
+        var neighborhood = neighborhoodCandidates
+            .OrderByDescending(x => x.penalty)
+            .Take(neighborhoodSize)
+            .Select(x => x.fi)
+            .ToList();
 
         if (neighborhood.Count == 0) return false;
 

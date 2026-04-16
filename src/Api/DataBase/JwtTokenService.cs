@@ -1,7 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.Extensions.Configuration;
+using Api.Authentication;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Modules.Login.Application;
 using Modules.Login.Domain;
@@ -10,42 +11,38 @@ namespace Api.DataBase;
 
 public sealed class JwtTokenService : ITokenService
 {
-    private readonly IConfiguration _configuration;
+    private readonly JwtOptions _options;
 
-    public JwtTokenService(IConfiguration configuration)
+    public JwtTokenService(IOptions<JwtOptions> options)
     {
-        _configuration = configuration;
+        _options = options.Value;
     }
+
     public string GenerateToken(User user)
     {
-        var key = _configuration["JWT:KEY"];
-        // TODO: SECURITY: JWT signing material is loaded from configuration that is currently checked into the repo in development settings. Move secrets to user secrets or environment variables and rotate any exposed keys.
-        if (string.IsNullOrEmpty(key))
-            throw new InvalidOperationException("JWT__KEY missing.");
-
-        var issuer = _configuration["JWT:ISSUER"];
-        if (string.IsNullOrEmpty(issuer))
-            throw new InvalidOperationException("JWT__ISSUER missing.");
-
-        var audience = _configuration["JWT:AUDIENCE"];
-        if (string.IsNullOrEmpty(audience))
-            throw new InvalidOperationException("JWT__AUDIENCE missing.");
+        ArgumentNullException.ThrowIfNull(user);
+        var issuedAt = DateTime.UtcNow;
 
         var claims = new List<Claim>
-    {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email),
-        new Claim(JwtRegisteredClaimNames.Name, user.Username)
-    };
+        {
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Name, user.Username),
+            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(JwtRegisteredClaimNames.Name, user.Username)
+        };
 
-        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
+            issuer: _options.Issuer,
+            audience: _options.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(3),
+            notBefore: issuedAt,
+            expires: issuedAt.AddMinutes(_options.AccessTokenLifetimeMinutes),
             signingCredentials: credentials
         );
 

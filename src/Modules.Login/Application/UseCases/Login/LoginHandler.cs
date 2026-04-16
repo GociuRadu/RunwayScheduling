@@ -17,10 +17,11 @@ public sealed class LoginHandler : IRequestHandler<LoginCommand, LoginDto>
 
     public async Task<LoginDto> Handle(LoginCommand request, CancellationToken ct)
     {
-        var user = await _userStore.GetByEmail(request.Email, ct);
+        var email = request.Email.Trim();
+        var user = await _userStore.GetByEmail(email, ct);
 
         if (user is null || !_userStore.Verify(request.Password, user.PasswordHash))
-            throw new UnauthorizedAccessException("Invalid email or password.");
+            throw new UnauthorizedAccessException("Invalid credentials.");
 
         var accessToken = _tokenService.GenerateToken(user);
 

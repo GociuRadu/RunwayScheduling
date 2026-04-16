@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuthSession } from "../hooks/useAuthSession";
 import LoginModal from "./Login";
 import { C } from "../styles/tokens";
 
@@ -38,16 +39,21 @@ export default function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogin, setShowLogin] = useState(false);
+  const { isAuthenticated, logout } = useAuthSession();
 
-  const isLoggedIn = !!localStorage.getItem("token");
+  const isLoggedIn = isAuthenticated;
+
+  useEffect(() => {
+    if (isLoggedIn || !NAV_ITEMS.some((item) => item.path === location.pathname)) {
+      return;
+    }
+
+    navigate("/", { replace: true });
+  }, [isLoggedIn, location.pathname, navigate]);
 
   function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("selectedAirportId");
-    localStorage.removeItem("selectedAirportName");
-    localStorage.removeItem("selectedScenarioId");
-    localStorage.removeItem("selectedScenarioName");
-    window.location.reload();
+    logout();
+    navigate("/", { replace: true });
   }
 
   return (

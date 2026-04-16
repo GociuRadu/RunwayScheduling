@@ -6,15 +6,10 @@ using Modules.Solver.Domain;
 
 namespace Modules.Solver.Application.UseCases.SolveGenetic;
 
-/// <summary>
-/// Refines a subset of flights (neighborhood) within a chromosome using CP-SAT.
-/// The refiner respects the runway state at the neighborhood's left boundary,
-/// uses exact separation computed from weather/events, and only accepts the
-/// result if SchedulingEngine confirms a fitness improvement.
-/// </summary>
+/// <summary>Runs CP-SAT on a slice of the chromosome and keeps it only if it helps.</summary>
 internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
 {
-    private const double CancellationBase = 200.0;
+    private const double CancellationBase = 180.0;
 
     private static readonly Dictionary<WeatherCondition, double> WeatherMultipliers = new()
     {
@@ -26,10 +21,7 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
         [WeatherCondition.Storm] = 2.1
     };
 
-    /// <summary>
-    /// Attempts to refine a neighborhood of flights in the chromosome using CP-SAT.
-    /// Modifies <paramref name="chromosome"/> in-place and returns true if fitness improved.
-    /// </summary>
+    /// <summary>Refines the neighborhood in place and returns true when fitness improves.</summary>
     public bool Refine(
         int[] chromosome,
         PreparedScenario prepared,
@@ -39,12 +31,10 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
     {
         if (neighborhoodFlightIndices.Count == 0) return false;
 
-        // Map flight index -> chromosome position
         var flightIndexToPosition = new Dictionary<int, int>(chromosome.Length);
         for (var pos = 0; pos < chromosome.Length; pos++)
             flightIndexToPosition[chromosome[pos]] = pos;
 
-        // Sorted positions of neighborhood flights in the chromosome
         var neighborhoodPositions = neighborhoodFlightIndices
             .Where(fi => flightIndexToPosition.ContainsKey(fi))
             .Select(fi => flightIndexToPosition[fi])
@@ -58,7 +48,7 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
         var originTime = scenario.StartTime;
         var scenarioEndSec = (long)(scenario.EndTime - originTime).TotalSeconds;
 
-        // Compute runway last-used time from flights BEFORE the neighborhood boundary
+        // Read runway state from the fixed prefix before the neighborhood.
         var lastRunwayTimeSec = new Dictionary<string, long>();
         for (var pos = 0; pos < leftBoundary; pos++)
         {
@@ -75,22 +65,19 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
         var n = flightIndices.Count;
         var flights = flightIndices.Select(fi => prepared.SortedFlights[fi].Flight).ToList();
 
-        // Compute conservative separation for this neighborhood window
+        // Use a conservative separation for the whole neighborhood.
         var windowEarliest = flights.Select(f => f.ScheduledTime.AddMinutes(-f.MaxEarlyMinutes)).Min();
         var windowLatest   = flights.Select(f => f.ScheduledTime.AddMinutes(f.MaxDelayMinutes)).Max();
         var separationSec  = ComputeMaxSeparationSeconds(windowEarliest, windowLatest, prepared, scenario);
 
-        // ── Build CP-SAT model ──────────────────────────────────────────────────
         var model  = new CpModel();
         var startVars       = new IntVar[n];
         var isScheduledVars = new BoolVar[n];
 
-        // Optional interval vars per runway for NoOverlap
         var runwayIntervals = new Dictionary<string, List<IntervalVar>>();
         foreach (var rw in prepared.ActiveRunways)
             runwayIntervals[rw.Name] = [];
 
-        // presence[i] = list of (BoolVar, runwayName) for each compatible runway
         var presencePerFlight = new List<(BoolVar var, string runwayName)>[n];
 
         for (var i = 0; i < n; i++)
@@ -105,7 +92,6 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
 
             if (compatibleRwys.Count == 0 || earliestSec > latestSec)
             {
-                // Cannot be scheduled
                 model.Add(isScheduledVars[i] == 0);
                 startVars[i] = model.NewIntVar(0, scenarioEndSec, $"s_{i}");
                 continue;
@@ -135,12 +121,12 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
             model.Add(LinearExpr.Sum(allPresence) == 0).OnlyEnforceIf(isScheduledVars[i].Not());
         }
 
-        // NoOverlap constraint per runway (interval duration = separationSec, so NoOverlap ≡ separation enforced)
+        // Fixed-size intervals make NoOverlap enforce separation on each runway.
         foreach (var (_, intervals) in runwayIntervals)
             if (intervals.Count >= 2)
                 model.AddNoOverlap(intervals);
 
-        // Boundary constraint: first flight on each runway must respect last-used time from prefix
+        // Keep enough gap from the last fixed use of each runway.
         for (var i = 0; i < n; i++)
         {
             foreach (var (presenceVar, rwName) in presencePerFlight[i])
@@ -154,10 +140,7 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
             }
         }
 
-        // ── Objective ───────────────────────────────────────────────────────────
-        // Scale penalty to integers. Multiply priority multiplier × 100.
-        // Use ×2 scaling on delay (vs early) to keep 2:1 ratio without division.
-        // cancel_penalty_scaled = CancellationBase * 60 * 2 * pMult100
+        // Scale the objective to integers and keep delay weighted 2x vs early.
         var objVars   = new List<IntVar>();
         var objCoeffs = new List<long>();
 
@@ -173,7 +156,6 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
             var earlySec  = model.NewIntVar(0, maxSec, $"er_{i}");
             var cancelVar = model.NewBoolVar($"can_{i}");
 
-            // When scheduled: delaySec and earlySec are tight from below
             model.Add(delaySec >= startVars[i] - scheduledSec).OnlyEnforceIf(isScheduledVars[i]);
             model.Add(earlySec >= scheduledSec - startVars[i]).OnlyEnforceIf(isScheduledVars[i]);
             model.Add(delaySec == 0).OnlyEnforceIf(isScheduledVars[i].Not());
@@ -182,7 +164,6 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
             model.Add(cancelVar == 1).OnlyEnforceIf(isScheduledVars[i].Not());
             model.Add(cancelVar == 0).OnlyEnforceIf(isScheduledVars[i]);
 
-            // cancel penalty as explicit IntVar (required for WeightedSum)
             var cancelPenaltyVar = model.NewIntVar(0, cancelScaled, $"cp_{i}");
             model.Add(cancelPenaltyVar == cancelScaled).OnlyEnforceIf(cancelVar);
             model.Add(cancelPenaltyVar == 0).OnlyEnforceIf(cancelVar.Not());
@@ -194,7 +175,6 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
 
         model.Minimize(LinearExpr.WeightedSum(objVars.ToArray(), objCoeffs.ToArray()));
 
-        // ── Solve ───────────────────────────────────────────────────────────────
         var solver = new CpSolver();
         solver.StringParameters =
             $"max_time_in_seconds:{timeLimitMs / 1000.0:F3}," +
@@ -205,9 +185,7 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
         if (status != CpSolverStatus.Optimal && status != CpSolverStatus.Feasible)
             return false;
 
-        // ── Reconstruct chromosome ──────────────────────────────────────────────
-        // Scheduled flights: sort by CP-SAT assigned start time
-        // Cancelled flights: append at end of neighborhood (greedy may recover them)
+        // Scheduled flights stay ordered by assigned time; unscheduled ones fall to the end.
         var sortedNeighborhood = Enumerable.Range(0, n)
             .OrderBy(i => solver.BooleanValue(isScheduledVars[i]) ? solver.Value(startVars[i]) : long.MaxValue)
             .Select(i => flightIndices[i])
@@ -217,7 +195,6 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
         for (var p = 0; p < neighborhoodPositions.Count; p++)
             newChromosome[neighborhoodPositions[p]] = sortedNeighborhood[p];
 
-        // ── Accept only if SchedulingEngine confirms improvement ─────────────────
         var permuted = newChromosome
             .Select(idx => prepared.SortedFlights[idx])
             .ToList();

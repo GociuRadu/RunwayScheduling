@@ -23,7 +23,9 @@ public sealed class SolvedFlight
     public string? AssignedRunway { get; init; }
     public DateTime? AssignedTime { get; init; }
     public int DelayMinutes { get; init; }
+    public int DelaySeconds { get; init; }
     public int EarlyMinutes { get; init; }
+    public int EarlySeconds { get; init; }
     public int SeparationAppliedSeconds { get; init; }
 
     public WeatherCondition? WeatherAtAssignment { get; init; }

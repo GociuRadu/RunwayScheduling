@@ -65,6 +65,10 @@ public sealed class SchedulingEngine : ISchedulingEngine
         };
     }
 
+    // Fixed cost for any early assignment — makes early undesirable unless it clearly beats a delay.
+    private const double EarlyActivationPenalty = 1.0;
+    private const double EarlyMinuteWeight = 0.5;
+
     private static SolvedFlight? TryAssign(
         Flight flight,
         Guid sourceId,
@@ -77,15 +81,46 @@ public sealed class SchedulingEngine : ISchedulingEngine
         var earliestWanted = flight.ScheduledTime.AddMinutes(-flight.MaxEarlyMinutes);
         var latestAllowed  = flight.ScheduledTime.AddMinutes(flight.MaxDelayMinutes);
 
-        // Clamp to scenario window
         var windowStart = Max(earliestWanted, scenario.StartTime);
         var windowEnd   = Min(latestAllowed,  scenario.EndTime);
+        if (windowStart > windowEnd) return null;
 
-        if (windowStart > windowEnd)
-            return null;
+        // ── Attempt 1: on-time or delayed ────────────────────────────────────────
+        var onTimeSlot = TryBuildSlot(
+            flight, sourceId, order, runway,
+            start: Max(windowStart, flight.ScheduledTime),
+            end:   windowEnd,
+            lastRunwayTime, prepared, scenario);
 
-        // Start at earliest allowed time; scheduler prefers on-time via SlotScore
-        var candidateTime = windowStart;
+        // Perfect on-time → return immediately, no need to try early
+        if (onTimeSlot?.Status == FlightStatus.Scheduled)
+            return onTimeSlot;
+
+        // ── Attempt 2: early fallback ─────────────────────────────────────────────
+        SolvedFlight? earlySlot = null;
+        if (windowStart < flight.ScheduledTime)
+        {
+            earlySlot = TryBuildSlot(
+                flight, sourceId, order, runway,
+                start: windowStart,
+                end:   flight.ScheduledTime.AddSeconds(-1),  // must stay strictly early
+                lastRunwayTime, prepared, scenario);
+        }
+
+        return BetterSlot(earlySlot, onTimeSlot);
+    }
+
+    /// <summary>Tries to assign the flight on the given runway starting at <paramref name="start"/>.</summary>
+    private static SolvedFlight? TryBuildSlot(
+        Flight flight, Guid sourceId, int order,
+        Runway runway,
+        DateTime start, DateTime end,
+        Dictionary<string, DateTime> lastRunwayTime,
+        PreparedScenario prepared, ScenarioConfig scenario)
+    {
+        if (start > end) return null;
+
+        var candidateTime = start;
 
         if (lastRunwayTime.TryGetValue(runway.Name, out var lastTime))
         {
@@ -95,25 +130,25 @@ public sealed class SchedulingEngine : ISchedulingEngine
                 candidateTime = afterSep;
         }
 
-        // Skip past fully-closed intervals (ImpactPercent == 100 → runway blocked)
         candidateTime = PushPastBlockingEvents(candidateTime, prepared);
 
-        if (candidateTime > windowEnd)
-            return null;
+        if (candidateTime > end) return null;
 
-        // Compute offsets
-        int delayMinutes = 0;
-        int earlyMinutes = 0;
+        int delayMinutes = 0, delaySeconds = 0, earlyMinutes = 0, earlySeconds = 0;
         FlightStatus status;
 
         if (candidateTime < flight.ScheduledTime)
         {
-            earlyMinutes = (int)(flight.ScheduledTime - candidateTime).TotalMinutes;
+            var diff = (flight.ScheduledTime - candidateTime).TotalSeconds;
+            earlySeconds = (int)diff;
+            earlyMinutes = earlySeconds / 60;
             status = FlightStatus.Early;
         }
         else if (candidateTime > flight.ScheduledTime)
         {
-            delayMinutes = (int)(candidateTime - flight.ScheduledTime).TotalMinutes;
+            var diff = (candidateTime - flight.ScheduledTime).TotalSeconds;
+            delaySeconds = (int)diff;
+            delayMinutes = delaySeconds / 60;
             status = FlightStatus.Delayed;
         }
         else
@@ -123,26 +158,36 @@ public sealed class SchedulingEngine : ISchedulingEngine
 
         return new SolvedFlight
         {
-            FlightId          = sourceId,
-            ScenarioConfigId  = flight.ScenarioConfigId,
-            AircraftId        = flight.AircraftId,
-            Callsign          = flight.Callsign,
-            Type              = flight.Type,
-            Priority          = flight.Priority,
-            ProcessingOrder   = order,
-            ScheduledTime     = flight.ScheduledTime,
-            MaxDelayMinutes   = flight.MaxDelayMinutes,
-            MaxEarlyMinutes   = flight.MaxEarlyMinutes,
-            Status            = status,
-            CancellationReason = CancellationReason.None,
-            AssignedRunway    = runway.Name,
-            AssignedTime      = candidateTime,
-            DelayMinutes      = delayMinutes,
-            EarlyMinutes      = earlyMinutes,
+            FlightId              = sourceId,
+            ScenarioConfigId      = flight.ScenarioConfigId,
+            AircraftId            = flight.AircraftId,
+            Callsign              = flight.Callsign,
+            Type                  = flight.Type,
+            Priority              = flight.Priority,
+            ProcessingOrder       = order,
+            ScheduledTime         = flight.ScheduledTime,
+            MaxDelayMinutes       = flight.MaxDelayMinutes,
+            MaxEarlyMinutes       = flight.MaxEarlyMinutes,
+            Status                = status,
+            CancellationReason    = CancellationReason.None,
+            AssignedRunway        = runway.Name,
+            AssignedTime          = candidateTime,
+            DelayMinutes          = delayMinutes,
+            DelaySeconds          = delaySeconds,
+            EarlyMinutes          = earlyMinutes,
+            EarlySeconds          = earlySeconds,
             SeparationAppliedSeconds = GetSeparationSeconds(candidateTime, prepared, scenario),
-            WeatherAtAssignment  = GetWeatherAt(candidateTime, prepared),
+            WeatherAtAssignment   = GetWeatherAt(candidateTime, prepared),
             AffectedByRandomEvent = IsAffectedByEvent(candidateTime, prepared)
         };
+    }
+
+    /// <summary>Returns the slot with lower penalty; prefers non-null over null.</summary>
+    private static SolvedFlight? BetterSlot(SolvedFlight? a, SolvedFlight? b)
+    {
+        if (a is null) return b;
+        if (b is null) return a;
+        return SlotScore(a) <= SlotScore(b) ? a : b;
     }
 
     private static int GetSeparationSeconds(DateTime time, PreparedScenario prepared, ScenarioConfig scenario)
@@ -210,11 +255,14 @@ public sealed class SchedulingEngine : ISchedulingEngine
     // EU 261/2004: each priority level adds 20% more weight
     private static double PriorityMultiplier(int priority) => Math.Pow(1.2, priority - 1);
 
-    // Lower penalty = better slot (used to pick best runway)
+    // Lower penalty = better slot (used to pick best runway).
+    // Early carries an activation cost so it is only chosen when it clearly beats a delay.
     private static double SlotScore(SolvedFlight f)
     {
         var m = PriorityMultiplier(f.Priority);
-        return f.DelayMinutes * m + f.EarlyMinutes * 0.5 * m;
+        if (f.EarlySeconds > 0)
+            return (EarlyActivationPenalty + f.EarlySeconds / 60.0 * EarlyMinuteWeight) * m;
+        return f.DelaySeconds / 60.0 * m;
     }
 
     private static CancellationReason ResolveReason(
@@ -247,7 +295,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
             var m = PriorityMultiplier(f.Priority);
             penalty += f.Status == FlightStatus.Canceled
                 ? CancellationBase * m
-                : f.DelayMinutes * m + f.EarlyMinutes * 0.5 * m;
+                : f.DelaySeconds / 60.0 * m + f.EarlySeconds / 60.0 * 0.5 * m;
         }
 
         return penalty;
@@ -263,7 +311,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
         int total           = flights.Count;
         int canceled        = 0, onTime = 0, early = 0, delayed = 0, rescheduled = 0;
         int canceledNoRunway = 0, canceledOutside = 0, canceledExceeds = 0;
-        int totalDelayMinutes = 0, maxDelayMinutes = 0;
+        int totalDelaySeconds = 0, maxDelayMinutes = 0, totalEarlySeconds = 0;
 
         foreach (var f in flights)
         {
@@ -284,11 +332,14 @@ public sealed class SchedulingEngine : ISchedulingEngine
                 case FlightStatus.Rescheduled: rescheduled++; break;
             }
 
-            totalDelayMinutes += f.DelayMinutes;
+            totalDelaySeconds += f.DelaySeconds;
             if (f.DelayMinutes > maxDelayMinutes) maxDelayMinutes = f.DelayMinutes;
+            totalEarlySeconds += f.EarlySeconds;
         }
 
         int scheduled = total - canceled;
+        int totalDelayMinutes = totalDelaySeconds / 60;
+        int totalEarlyMinutes = totalEarlySeconds / 60;
         double avgDelay = scheduled > 0 ? (double)totalDelayMinutes / scheduled : 0;
 
         double throughput = 0;
@@ -321,6 +372,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
             TotalDelayMinutes         = totalDelayMinutes,
             AverageDelayMinutes       = avgDelay,
             MaxDelayMinutes           = maxDelayMinutes,
+            TotalEarlyMinutes         = totalEarlyMinutes,
             Fitness                   = evaluation.Fitness,
             SolveTimeMs               = solveTimeMs,
             ThroughputFlightsPerHour  = throughput

@@ -24,22 +24,27 @@ using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
 using Modules.Solver.Application.UseCases.SolveGenetic;
 using Modules.Solver.Application.UseCases.Compare;
 using Modules.Solver.Application.UseCases.SolveGreedy;
+using Modules.Solver.Application.UseCases.GaBenchmark;
+using Modules.Solver.Application.UseCases.SolveFromPayload;
+using Api.Validation;
 namespace Api;
 
 public static class Endpoints
 {
     public static void MapAll(WebApplication app)
     {
-        var secured = app.MapGroup("");
+        var api = app.MapGroup("")
+            .AddRequestValidation();
+
+        var secured = api.MapGroup("");
         secured.RequireAuthorization();
 
-        // TODO: SECURITY: Most write endpoints forward DTOs directly to handlers without endpoint-level validation or a unified validation pipeline. Add FluentValidation or equivalent request validation so malformed input fails with 400 instead of surfacing as generic exceptions.
         MapAircraftEndpoints(secured);
         MapAirportEndpoints(secured);
         MapScenarioEndpoints(secured);
         MapRandomEventEndpoints(secured);
         MapSolverEndpoints(secured);
-        MapAuthEndpoints(app);
+        MapAuthEndpoints(api);
     }
 
     private static void MapAircraftEndpoints(RouteGroupBuilder secured)
@@ -271,22 +276,31 @@ public static class Endpoints
             })
             .WithName("CompareGreedyVsGenetic");
 
+        secured.MapPost("/solver/benchmark",
+            async (GaBenchmarkQuery query, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(query, ct);
+                return Results.Ok(res);
+            })
+            .WithName("GaBenchmark");
+
+        secured.MapPost("/solver/solve-from-payload",
+            async (SolveFromPayloadQuery query, IMediator mediator, CancellationToken ct) =>
+            {
+                var res = await mediator.Send(query, ct);
+                return Results.Ok(res);
+            })
+            .WithName("SolveFromPayload");
+
     }
 
-    private static void MapAuthEndpoints(WebApplication app)
+    private static void MapAuthEndpoints(RouteGroupBuilder app)
     {
         app.MapPost("/login",
                 async (LoginCommand cmd, IMediator mediator, CancellationToken ct) =>
                 {
-                    try
-                    {
-                        var res = await mediator.Send(cmd, ct);
-                        return Results.Ok(res);
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                        return Results.Unauthorized();
-                    }
+                    var res = await mediator.Send(cmd, ct);
+                    return Results.Ok(res);
                 })
             .AllowAnonymous()
             .RequireRateLimiting("login")

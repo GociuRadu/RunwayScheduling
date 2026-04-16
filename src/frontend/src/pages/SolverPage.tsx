@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import scenarioMinimal from "../scenarios/scenario-minimal.json";
+import scenario500 from "../scenarios/scenario-500.json";
 import { apiFetch } from "../lib/api";
 import { formatDate, toLocalDatetime, toUtcString } from "../lib/utils";
 import { C, S } from "../styles/tokens";
@@ -60,6 +62,7 @@ type SolverResultDto = {
   totalDelayMinutes: number;
   averageDelayMinutes: number;
   maxDelayMinutes: number;
+  totalEarlyMinutes: number;
   fitness: number;
   solveTimeMs: number;
   throughputFlightsPerHour: number;
@@ -106,7 +109,7 @@ function statusColor(s: number) {
 
 function cancellationLabel(r: number) {
   switch (r) {
-    case 0: return "—";
+    case 0: return "–";
     case 1: return "No Compatible Runway";
     case 2: return "Outside Scenario Window";
     case 3: return "Exceeds Max Delay";
@@ -122,7 +125,7 @@ function weatherLabel(v: number | null | undefined) {
     case 3: return "Snow";
     case 4: return "Fog";
     case 5: return "Storm";
-    default: return "—";
+    default: return "–";
   }
 }
 
@@ -179,6 +182,9 @@ const STORAGE_SCENARIO_ID = "selectedScenarioId";
 const STORAGE_SCENARIO_NAME = "selectedScenarioName";
 const STORAGE_AIRPORT_NAME = "selectedAirportName";
 
+const EXAMPLE_SCENARIO = JSON.stringify(scenarioMinimal, null, 2);
+const SCENARIO_500 = JSON.stringify(scenario500, null, 2);
+
 export default function SolverPage() {
   const { showToast } = useToast();
 
@@ -212,6 +218,11 @@ export default function SolverPage() {
   const [comparisonResult, setComparisonResult] = useState<ComparisonResultDto | null>(null);
   const [showComparePanel, setShowComparePanel] = useState(false);
 
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importJson, setImportJson] = useState(EXAMPLE_SCENARIO);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [solvingImport, setSolvingImport] = useState(false);
+
   useEffect(() => {
     if (hasScenario) {
       loadScenarioConfig();
@@ -223,11 +234,10 @@ export default function SolverPage() {
   async function loadScenarioConfig() {
     try {
       const res = await apiFetch(`/api/scenarios/configs/${scenarioId}`);
-      if (!res.ok) throw new Error(`Failed to load scenario (${res.status})`);
       const data = (await res.json()) as ScenarioConfigDto;
       setScenarioConfig(data);
-    } catch {
-      // non-critical
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to load scenario", "error");
     }
   }
 
@@ -357,6 +367,39 @@ export default function SolverPage() {
     }
   }
 
+  async function runSolverFromPayload(algorithm: "greedy" | "genetic") {
+    setImportError(null);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(importJson);
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : "Invalid JSON");
+      return;
+    }
+    try {
+      setSolvingImport(true);
+      setSolverResult(null);
+      setShowFlightsModal(false);
+      const payload = { ...(parsed as object), algorithm };
+      const res = await apiFetch("/api/solver/solve-from-payload", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Solver failed (${res.status}): ${text}`);
+      }
+      const data = (await res.json()) as SolverResultDto;
+      setSolverResult(data);
+      setShowImportModal(false);
+      showToast(`Solved with ${data.algorithmName}`, "success");
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : "Solver failed");
+    } finally {
+      setSolvingImport(false);
+    }
+  }
+
   const cancellationBreakdown: { label: string; count: number }[] = solverResult
     ? [
         { label: "No Compatible Runway", count: solverResult.canceledNoCompatibleRunway },
@@ -423,7 +466,7 @@ export default function SolverPage() {
           {!hasScenario ? (
             <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>No scenario selected.</div>
           ) : loadingEvents ? (
-            <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>Loading events…</div>
+            <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>Loading eventsâ€¦</div>
           ) : events.length === 0 ? (
             <div style={{ ...S.card, color: C.textSub, fontSize: "13px" }}>
               No random events yet. Add one to affect the simulation.
@@ -482,7 +525,7 @@ export default function SolverPage() {
                 disabled={!hasScenario || solving || comparing}
                 style={{ opacity: !hasScenario || solving || comparing ? 0.5 : 1, minWidth: "130px" }}
               >
-                {solving ? "Solving…" : "Run Greedy"}
+                {solving ? "Solving..." : "Run Greedy"}
               </button>
               <button
                 onClick={() => runSolver("genetic")}
@@ -490,7 +533,14 @@ export default function SolverPage() {
                 disabled={!hasScenario || solving || comparing}
                 style={{ opacity: !hasScenario || solving || comparing ? 0.5 : 1, minWidth: "130px" }}
               >
-                {solving ? "Solving…" : "Run Genetic"}
+                {solving ? "Solving..." : "Run Genetic"}
+              </button>
+              <button
+                onClick={() => { setShowImportModal(true); setImportError(null); }}
+                className="glass-btn-ghost"
+                style={{ minWidth: "130px" }}
+              >
+                Import JSON
               </button>
             </div>
           </div>
@@ -507,7 +557,7 @@ export default function SolverPage() {
                 disabled={!hasScenario || comparing || solving}
                 style={{ opacity: !hasScenario || comparing || solving ? 0.5 : 1, minWidth: "160px" }}
               >
-                {comparing ? "Comparing…" : "Compare Greedy vs Genetic"}
+                {comparing ? "Comparingâ€¦" : "Compare Greedy vs Genetic"}
               </button>
               {comparisonResult && (
                 <button
@@ -524,7 +574,7 @@ export default function SolverPage() {
             <div style={{ animation: "fadeInUp 0.3s ease both" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                 <div style={{ fontSize: "15px", fontWeight: 700 }}>
-                  Results — <span style={{ color: C.primary }}>{solverResult.algorithmName}</span>
+                  Results – <span style={{ color: C.primary }}>{solverResult.algorithmName}</span>
                 </div>
                 <button onClick={() => setShowFlightsModal(true)} className="glass-btn-ghost">
                   View all flights
@@ -543,6 +593,7 @@ export default function SolverPage() {
                   { label: "Avg Delay", value: `${solverResult.averageDelayMinutes.toFixed(1)} min`, color: C.primary },
                   { label: "Max Delay", value: `${solverResult.maxDelayMinutes} min`, color: C.primary },
                   { label: "Total Delay", value: `${solverResult.totalDelayMinutes} min`, color: C.primary },
+                  { label: "Total Early", value: `${solverResult.totalEarlyMinutes} min`, color: "#38bdf8" },
                   { label: "Throughput", value: `${solverResult.throughputFlightsPerHour.toFixed(1)}/h`, color: C.text },
                   { label: "Fitness", value: solverResult.fitness.toFixed(1), color: "#a78bfa" },
                   { label: "Solve Time", value: `${solverResult.solveTimeMs.toFixed(1)} ms`, color: C.textSub },
@@ -578,7 +629,7 @@ export default function SolverPage() {
       {showComparePanel && comparisonResult && (
         <div style={{ marginTop: "32px", animation: "fadeInUp 0.3s ease both" }}>
           <div style={{ ...S.sectionTitle, marginBottom: "16px" }}>
-            Comparison — <span style={{ color: C.primary }}>Greedy</span> vs <span style={{ color: "#a78bfa" }}>Genetic</span>
+            Comparison – <span style={{ color: C.primary }}>Greedy</span> vs <span style={{ color: "#a78bfa" }}>Genetic</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             {([comparisonResult.greedy, comparisonResult.genetic] as SolverResultDto[]).map((r) => {
@@ -602,6 +653,7 @@ export default function SolverPage() {
                       { label: "Avg Delay", value: `${r.averageDelayMinutes.toFixed(1)} min`, color: accentColor },
                       { label: "Max Delay", value: `${r.maxDelayMinutes} min`, color: accentColor },
                       { label: "Total Delay", value: `${r.totalDelayMinutes} min`, color: accentColor },
+                      { label: "Total Early", value: `${r.totalEarlyMinutes} min`, color: "#38bdf8" },
                       { label: "Fitness", value: r.fitness.toFixed(1), color: "#a78bfa" },
                       { label: "Throughput", value: `${r.throughputFlightsPerHour.toFixed(1)}/h`, color: C.text },
                       { label: "Solve Time", value: `${r.solveTimeMs.toFixed(1)} ms`, color: C.textSub },
@@ -619,11 +671,10 @@ export default function SolverPage() {
             })}
           </div>
 
-          {/* Pure algorithm comparison — excludes CP-SAT rescheduling post-processor */}
           <div className="glass-card" style={{ marginTop: "16px", border: `1px solid ${C.border}` }}>
             <div style={{ ...S.label, marginBottom: "4px" }}>Pure Algorithm Comparison (excl. Rescheduled)</div>
             <div style={{ fontSize: "11px", color: C.textMuted, marginBottom: "12px" }}>
-              Treats rescheduled flights as cancelled — compares raw algorithm output without post-processing.
+              Treats rescheduled flights as cancelled – compares raw algorithm output without post-processing.
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginBottom: "12px" }}>
               {([comparisonResult.greedy, comparisonResult.genetic] as SolverResultDto[]).map((r) => {
@@ -673,6 +724,7 @@ export default function SolverPage() {
                       { label: "Early",      delta: pureEarly(gf)     - pureEarly(grf),     higherIsBetter: true  },
                       { label: "Avg Delay",   delta: g.averageDelayMinutes - gr.averageDelayMinutes, higherIsBetter: false, unit: " min", decimals: 1 },
                       { label: "Total Delay", delta: g.totalDelayMinutes - gr.totalDelayMinutes, higherIsBetter: false, unit: " min" },
+                      { label: "Total Early", delta: g.totalEarlyMinutes - gr.totalEarlyMinutes, higherIsBetter: false, unit: " min" },
                       { label: "Throughput",  delta: g.throughputFlightsPerHour - gr.throughputFlightsPerHour, higherIsBetter: true, unit: "/h", decimals: 2 },
                     ] as { label: string; delta: number; higherIsBetter: boolean; unit?: string; decimals?: number }[]).map(({ label, delta, higherIsBetter, unit = "", decimals = 0 }) => {
                       const better = higherIsBetter ? delta > 0 : delta < 0;
@@ -699,7 +751,7 @@ export default function SolverPage() {
 
       {showFlightsModal && solverResult && (
         <LargeModal
-          title={`Solved Flights — ${solverResult.algorithmName}`}
+          title={`Solved Flights – ${solverResult.algorithmName}`}
           onClose={() => setShowFlightsModal(false)}
         >
           <div style={{ border: `1px solid ${C.border}`, borderRadius: "6px", overflow: "auto", maxHeight: "68vh", background: C.bgCard }}>
@@ -721,9 +773,9 @@ export default function SolverPage() {
                     <td style={{ ...tdStyle, color: statusColor(f.status), fontWeight: 700 }}>
                       {statusLabel(f.status)}
                     </td>
-                    <td style={tdStyle}>{f.assignedRunway ?? "—"}</td>
+                    <td style={tdStyle}>{f.assignedRunway ?? "–"}</td>
                     <td style={tdStyle}>{formatDate(f.scheduledTime)}</td>
-                    <td style={tdStyle}>{f.assignedTime ? formatDate(f.assignedTime) : "—"}</td>
+                    <td style={tdStyle}>{f.assignedTime ? formatDate(f.assignedTime) : "–"}</td>
                     <td style={{ ...tdStyle, color: f.delayMinutes > 0 ? C.primary : f.earlyMinutes > 0 ? C.activeGreen : C.textSub }}>
                       {f.delayMinutes > 0
                         ? `+${f.delayMinutes}m`
@@ -736,7 +788,7 @@ export default function SolverPage() {
                     </td>
                     <td style={tdStyle}>{weatherLabel(f.weatherAtAssignment)}</td>
                     <td style={{ ...tdStyle, color: f.affectedByRandomEvent ? C.primary : C.textSub }}>
-                      {f.affectedByRandomEvent ? "Yes" : "—"}
+                      {f.affectedByRandomEvent ? "Yes" : "–"}
                     </td>
                   </tr>
                 ))}
@@ -810,11 +862,84 @@ export default function SolverPage() {
                 disabled={!canSave}
                 style={{ opacity: canSave ? 1 : 0.5 }}
               >
-                {savingEvent ? "Saving…" : editingEvent ? "Update" : "Create"}
+                {savingEvent ? "Savingâ€¦" : editingEvent ? "Update" : "Create"}
               </button>
             </div>
           </div>
         </Modal>
+      )}
+
+      {showImportModal && (
+        <div className="glass-modal-backdrop" style={{ padding: "20px" }} onClick={() => setShowImportModal(false)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="glass-modal-panel"
+            style={{ width: "860px", maxWidth: "95vw", maxHeight: "88vh", overflow: "hidden", padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: "16px" }}>Import Scenario JSON</div>
+              <button onClick={() => setShowImportModal(false)} className="glass-btn-ghost">Close</button>
+            </div>
+
+            <div style={{ fontSize: "12px", color: C.textSub }}>
+              Paste a scenario payload below or use the examples. Edit directly in the textarea.
+              <br />
+              <span style={{ color: C.textMuted }}>runwayType: 0=Landing, 1=Takeoff, 2=Both &nbsp;|&nbsp; flight type: 0=Arrival, 1=Departure, 2=OnGround &nbsp;|&nbsp; weather: 0=Clear...5=Storm</span>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={() => setImportJson(EXAMPLE_SCENARIO)} className="glass-btn-ghost" style={{ fontSize: "12px" }}>
+                Load minimal example (5 flights)
+              </button>
+              <button onClick={() => setImportJson(SCENARIO_500)} className="glass-btn-ghost" style={{ fontSize: "12px" }}>
+                Load scenario-500 (500 flights)
+              </button>
+            </div>
+
+            <textarea
+              value={importJson}
+              onChange={(e) => { setImportJson(e.target.value); setImportError(null); }}
+              className="glass-input"
+              spellCheck={false}
+              style={{
+                flex: 1,
+                minHeight: "380px",
+                fontFamily: "monospace",
+                fontSize: "12px",
+                resize: "vertical",
+                lineHeight: 1.5,
+                whiteSpace: "pre",
+                overflowWrap: "normal",
+                overflowX: "auto",
+              }}
+            />
+
+            {importError && (
+              <div style={{ color: C.danger, fontSize: "12px", background: `${C.danger}11`, border: `1px solid ${C.borderAccentRed}`, borderRadius: "6px", padding: "8px 12px" }}>
+                {importError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button onClick={() => setShowImportModal(false)} className="glass-btn-ghost">Cancel</button>
+              <button
+                onClick={() => runSolverFromPayload("greedy")}
+                className="glass-btn-primary"
+                disabled={solvingImport}
+                style={{ opacity: solvingImport ? 0.5 : 1, minWidth: "130px" }}
+              >
+                {solvingImport ? "Solving..." : "Solve Greedy"}
+              </button>
+              <button
+                onClick={() => runSolverFromPayload("genetic")}
+                className="glass-btn-primary"
+                disabled={solvingImport}
+                style={{ opacity: solvingImport ? 0.5 : 1, minWidth: "130px" }}
+              >
+                {solvingImport ? "Solving..." : "Solve Genetic"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {confirmDelete && (

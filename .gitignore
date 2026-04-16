@@ -103,7 +103,15 @@ benchmark_results.html
 # Tooling
 .dotnet/
 src/.qodo/
+
+# Claude & Codex generated
+.claude/
 .superpowers/
 docs/superpowers/
-.claude/
 CLAUDE.md
+AGENTS.md
+GEMINI.md
+codex_*.txt
+codex_*.md
+*.prompt.txt
+*.prompt.md

@@ -30,6 +30,20 @@ public sealed class LoginHandlerTests
     }
 
     [Fact]
+    public async Task Handle_TrimsEmailBeforeLookup()
+    {
+        var user = new User { Email = "test@test.com", PasswordHash = "hash" };
+        _userStore.GetByEmail("test@test.com", Arg.Any<CancellationToken>()).Returns(user);
+        _userStore.Verify("password", "hash").Returns(true);
+        _tokenService.GenerateToken(user).Returns("jwt-token");
+
+        var result = await _sut.Handle(new LoginCommand("  test@test.com  ", "password"), CancellationToken.None);
+
+        Assert.Equal("jwt-token", result.AccessToken);
+        await _userStore.Received(1).GetByEmail("test@test.com", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Handle_Throws_WhenUserNotFound()
     {
         _userStore.GetByEmail(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns((User?)null);

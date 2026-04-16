@@ -21,6 +21,7 @@ public sealed class SolverResult
     public int TotalDelayMinutes { get; init; }
     public double AverageDelayMinutes { get; init; }
     public int MaxDelayMinutes { get; init; }
+    public int TotalEarlyMinutes { get; init; }
 
     public double Fitness { get; init; }
     public double SolveTimeMs { get; init; }

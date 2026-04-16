@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { useAuthSession } from "../hooks/useAuthSession";
 import { C } from "../styles/tokens";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem("token");
+  const { isAuthenticated } = useAuthSession();
+  const isLoggedIn = isAuthenticated;
 
   return (
     <div
@@ -16,7 +18,6 @@ export default function HomePage() {
         overflow: "hidden",
       }}
     >
-      {/* Glow orb */}
       <div
         style={{
           position: "absolute",
@@ -31,7 +32,6 @@ export default function HomePage() {
       />
 
       <div style={{ textAlign: "center", position: "relative", maxWidth: "560px", padding: "0 24px" }}>
-        {/* Badge */}
         <div
           style={{
             display: "inline-flex",
@@ -59,7 +59,6 @@ export default function HomePage() {
           </span>
         </div>
 
-        {/* Title */}
         <h1
           style={{
             color: C.text,
@@ -82,7 +81,6 @@ export default function HomePage() {
           </span>
         </h1>
 
-        {/* Subtitle */}
         <p
           style={{
             color: C.textSub,
@@ -95,7 +93,6 @@ export default function HomePage() {
           Configure scenarios, generate flights, and solve.
         </p>
 
-        {/* CTA buttons */}
         {isLoggedIn ? (
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
             <button className="glass-btn-primary" onClick={() => navigate("/airports")}>
@@ -116,9 +113,8 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Feature pills */}
         <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "36px", flexWrap: "wrap" }}>
-          {["✈ Multi-runway", "⛅ Weather simulation", "⚡ Greedy solver"].map((pill) => (
+          {["Multi-runway", "Weather simulation", "Greedy solver"].map((pill) => (
             <span
               key={pill}
               style={{

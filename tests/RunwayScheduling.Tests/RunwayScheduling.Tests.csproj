@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\src\Modules.Airports\Modules.Airports.csproj" />
     <ProjectReference Include="..\..\src\Modules.Login\Modules.Login.csproj" />
     <ProjectReference Include="..\..\src\Modules.Scenarios\Modules.Scenarios.csproj" />
+    <ProjectReference Include="..\..\src\Modules.Solver\Modules.Solver.csproj" />
   </ItemGroup>
 
 </Project>

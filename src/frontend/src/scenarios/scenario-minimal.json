@@ -1,0 +1,21 @@
+{
+  "scenarioConfig": {
+    "name": "Demo — 5 zboruri",
+    "startTime": "2026-06-15T06:00:00.000Z",
+    "endTime": "2026-06-15T14:00:00.000Z",
+    "baseSeparationSeconds": 45
+  },
+  "runways": [
+    { "name": "08L", "runwayType": 0, "isActive": true },
+    { "name": "08R", "runwayType": 1, "isActive": true }
+  ],
+  "flights": [
+    { "callsign": "ROT001", "type": 0, "scheduledTime": "2026-06-15T06:30:00.000Z", "maxDelayMinutes": 20, "maxEarlyMinutes": 0, "priority": 1 },
+    { "callsign": "ROT002", "type": 0, "scheduledTime": "2026-06-15T07:00:00.000Z", "maxDelayMinutes": 15, "maxEarlyMinutes": 5, "priority": 2 },
+    { "callsign": "WIZ100", "type": 1, "scheduledTime": "2026-06-15T07:30:00.000Z", "maxDelayMinutes": 30, "maxEarlyMinutes": 10, "priority": 1 },
+    { "callsign": "BAW210", "type": 0, "scheduledTime": "2026-06-15T08:00:00.000Z", "maxDelayMinutes": 25, "maxEarlyMinutes": 0, "priority": 3 },
+    { "callsign": "RYR456", "type": 1, "scheduledTime": "2026-06-15T08:45:00.000Z", "maxDelayMinutes": 20, "maxEarlyMinutes": 15, "priority": 2 }
+  ],
+  "weatherIntervals": [],
+  "randomEvents": []
+}

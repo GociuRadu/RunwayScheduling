@@ -15,9 +15,11 @@ public sealed class EfUserStore : IUserStore
 
     public Task<User?> GetByEmail(string email, CancellationToken ct)
     {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+
         return _db.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Email == email, ct);
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == normalizedEmail, ct);
     }
 
     public bool Verify(string password, string passwordHash)

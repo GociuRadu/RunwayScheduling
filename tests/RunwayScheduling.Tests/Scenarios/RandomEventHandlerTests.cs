@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Application.UseCases.CreateRandomEvent;
 using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
@@ -18,10 +19,10 @@ public sealed class RandomEventHandlerTests
 
         _scenarioConfigStore.GetById(scenarioConfigId, Arg.Any<CancellationToken>()).Returns(new ScenarioConfig());
 
-        var exception = await Assert.ThrowsAsync<Exception>(() => sut.Handle(
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => sut.Handle(
             new CreateRandomEventCommand(scenarioConfigId, "", "Desc", DateTime.UtcNow, DateTime.UtcNow.AddMinutes(5), 10),
             CancellationToken.None));
-        Assert.Equal("Name is required.", exception.Message);
+        Assert.Equal("Random event name is required.", exception.Message);
     }
 
     [Fact]

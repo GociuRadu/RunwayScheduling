@@ -2,44 +2,42 @@ namespace Modules.Solver.Application.UseCases.SolveGenetic;
 
 public sealed class GaConfig
 {
-    // ── GA core ─────────────────────────────────────────────────────────────────
-    public int PopulationSize { get; set; } = 80;
+    public int PopulationSize { get; set; } = 96;
     public int MaxGenerations { get; set; } = 250;
-    public double CrossoverRate { get; set; } = 0.85;
-    public double MutationRateLocal { get; set; } = 0.15;
-    public double MutationRateMemetic { get; set; } = 0.20;
-    public int TournamentSize { get; set; } = 5;
-    public int EliteCount { get; set; } = 2;
+    public double CrossoverRate { get; set; } = 0.90;
+    public double MutationRateLocal { get; set; } = 0.02;
+    public double MutationRateMemetic { get; set; } = 0.08;
+    public int TournamentSize { get; set; } = 3;
+    public int EliteCount { get; set; } = 4;
     public TimeSpan TimeWindowSize { get; set; } = TimeSpan.FromHours(2);
-    public int NoImprovementGenerations { get; set; } = 20;
+    public int NoImprovementGenerations { get; set; } = 30;
     public int RandomSeed { get; set; } = 42;
 
-    // ── CP-SAT refinement ────────────────────────────────────────────────────────
     public bool EnableCpSatRefinement { get; set; } = true;
 
-    /// <summary>Fast refinement: 1 worst window, runs every N generations on top elites + random chromosomes.</summary>
+    /// <summary>Runs a small CP-SAT pass during the GA loop.</summary>
     public bool CpSatMicroEnabled { get; set; } = true;
-    public int CpSatMicroEveryNGenerations { get; set; } = 2;
+    public int CpSatMicroEveryNGenerations { get; set; } = 5;
 
-    /// <summary>Deep refinement: union of top N worst windows, runs periodically on best elite only.</summary>
+    /// <summary>Runs a deeper CP-SAT pass on the current best chromosome.</summary>
     public bool CpSatMacroEnabled { get; set; } = true;
-    public int CpSatMacroEveryNGenerations { get; set; } = 10;
+    public int CpSatMacroEveryNGenerations { get; set; } = 15;
 
-    /// <summary>How many top-ranked chromosomes receive micro-refinement each trigger.</summary>
-    public int CpSatEliteCount { get; set; } = 1;
+    /// <summary>Top chromosomes refined on each micro pass.</summary>
+    public int CpSatEliteCount { get; set; } = 2;
 
-    /// <summary>How many randomly-chosen chromosomes receive micro-refinement each trigger (diversity).</summary>
-    public int CpSatRandomCount { get; set; } = 1;
+    /// <summary>Random chromosomes refined on each micro pass.</summary>
+    public int CpSatRandomCount { get; set; } = 0;
 
-    /// <summary>Number of worst time-windows merged into the macro-refinement neighborhood.</summary>
+    /// <summary>Worst windows merged for a macro pass.</summary>
     public int CpSatMacroWindowCount { get; set; } = 3;
 
-    /// <summary>CP-SAT wall-clock time limit for micro-refinement (ms).</summary>
-    public int CpSatTimeLimitMsMicro { get; set; } = 150;
+    /// <summary>Time limit for a micro pass, in ms.</summary>
+    public int CpSatTimeLimitMsMicro { get; set; } = 60;
 
-    /// <summary>CP-SAT wall-clock time limit for macro-refinement (ms).</summary>
-    public int CpSatTimeLimitMsMacro { get; set; } = 400;
+    /// <summary>Time limit for a macro pass, in ms.</summary>
+    public int CpSatTimeLimitMsMacro { get; set; } = 150;
 
-    /// <summary>Maximum number of flights in a micro-refinement neighborhood.</summary>
-    public int CpSatNeighborhoodSize { get; set; } = 12;
+    /// <summary>Max flights included in a refinement neighborhood.</summary>
+    public int CpSatNeighborhoodSize { get; set; } = 8;
 }

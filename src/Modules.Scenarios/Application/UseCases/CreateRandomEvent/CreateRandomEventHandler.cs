@@ -1,5 +1,6 @@
 using MediatR;
 using Modules.Scenarios.Application;
+using Modules.Scenarios.Application.UseCases.RandomEvents;
 using Modules.Scenarios.Domain;
 
 namespace Modules.Scenarios.Application.UseCases.CreateRandomEvent;
@@ -20,19 +21,8 @@ public sealed class CreateRandomEventHandler
 
     public async Task<RandomEvent> Handle(CreateRandomEventCommand request, CancellationToken ct)
     {
-        // TODO: SECURITY: Validation only checks null/ordering/basic range. Enforce scenario-window bounds, max lengths, and a central validator so invalid payloads cannot reach persistence as 500-level exceptions.
         var cfg = await _configStore.GetById(request.ScenarioConfigId, ct);
-        if (cfg is null)
-            throw new Exception("Scenario config not found.");
-
-        if (string.IsNullOrWhiteSpace(request.Name))
-            throw new Exception("Name is required.");
-
-        if (request.StartTime >= request.EndTime)
-            throw new Exception("StartTime must be earlier than EndTime.");
-
-        if (request.ImpactPercent < 0)
-            throw new Exception("ImpactPercent must be greater than or equal to 0.");
+        RandomEventCommandValidator.Validate(cfg, request.Name, request.StartTime, request.EndTime, request.ImpactPercent);
 
         var randomEvent = new RandomEvent
         {
