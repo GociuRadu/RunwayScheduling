@@ -64,6 +64,9 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         var population = InitializePopulation(flightsCount, populationSize, random);
         var fitness = EvaluatePopulation(population, prepared);
 
+        object seedLock = new();
+        var threadRandom = new ThreadLocal<Random>(() => { lock (seedLock) { return new Random(random.Next()); } });
+
         var bestFitnessIdx = 0;
         for (var i = 1; i < populationSize; i++)
             if (fitness[i] < fitness[bestFitnessIdx]) bestFitnessIdx = i;
@@ -86,16 +89,17 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
             var nextPopulation = new int[populationSize][];
 
-            for (var i = 0; i < populationSize; i++)
+            Parallel.For(0, populationSize, i =>
             {
-                var parent1 = population[TournamentSelect(fitness, tournamentSize, random)];
-                var parent2 = population[TournamentSelect(fitness, tournamentSize, random)];
+                var rng = threadRandom.Value!;
+                var parent1 = population[TournamentSelect(fitness, tournamentSize, rng)];
+                var parent2 = population[TournamentSelect(fitness, tournamentSize, rng)];
 
-                var child = random.NextDouble() < crossoverRate
-                    ? OrderCrossover(parent1, parent2, random)
+                var child = rng.NextDouble() < crossoverRate
+                    ? OrderCrossover(parent1, parent2, rng)
                     : CloneChromosome(parent1);
 
-                MutateLocalSwap(child, prepared, mutationRateLocal, random);
+                MutateLocalSwap(child, prepared, mutationRateLocal, rng);
                 MutateMemetic(
                     child,
                     prepared,
@@ -103,10 +107,10 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
                     flightWindowIndices,
                     sourceIdToFlightIndex,
                     mutationRateMemetic,
-                    random);
+                    rng);
 
                 nextPopulation[i] = child;
-            }
+            });
 
             for (var i = 0; i < eliteCount; i++)
             {
@@ -197,12 +201,8 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
     private double[] EvaluatePopulation(int[][] population, PreparedScenario prepared)
     {
         var fitness = new double[population.Length];
-
-        for (var i = 0; i < population.Length; i++)
-        {
-            fitness[i] = EvaluateChromosome(population[i], prepared).Fitness;
-        }
-
+        Parallel.For(0, population.Length, i =>
+            fitness[i] = EvaluateChromosome(population[i], prepared).Fitness);
         return fitness;
     }
 
@@ -689,7 +689,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return map;
     }
 
-    /// <summary>Scores windows from the current evaluation and sends the worst flights to CP-SAT.</summary>
+    // Scores each time window by penalty, picks the worst ones, and hands their flights to CP-SAT for exact optimization.
     private bool ApplyCpSatRefinement(
         int[] chromosome,
         PreparedScenario prepared,

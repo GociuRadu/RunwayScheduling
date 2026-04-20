@@ -110,7 +110,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
         return BetterSlot(earlySlot, onTimeSlot);
     }
 
-    /// <summary>Tries to assign the flight on the given runway starting at <paramref name="start"/>.</summary>
+    // Tries to place the flight on the given runway starting at 'start'. Returns null if no valid slot fits in the window.
     private static SolvedFlight? TryBuildSlot(
         Flight flight, Guid sourceId, int order,
         Runway runway,
@@ -182,7 +182,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
         };
     }
 
-    /// <summary>Returns the slot with lower penalty; prefers non-null over null.</summary>
+    // Returns whichever slot has a lower penalty score; null always loses to a real slot.
     private static SolvedFlight? BetterSlot(SolvedFlight? a, SolvedFlight? b)
     {
         if (a is null) return b;
@@ -229,10 +229,8 @@ public sealed class SchedulingEngine : ISchedulingEngine
         return false;
     }
 
-    /// <summary>
-    /// Pushes <paramref name="time"/> past any fully-closed events (ImpactPercent == 100).
-    /// Repeats until no blocking event covers the candidate time.
-    /// </summary>
+    // Keeps pushing time forward past any fully-blocking event (ImpactPercent == 100).
+    // Loops because one push can land inside another blocking event.
     private static DateTime PushPastBlockingEvents(DateTime time, PreparedScenario prepared)
     {
         bool moved;

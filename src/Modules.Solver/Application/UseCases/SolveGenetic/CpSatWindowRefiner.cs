@@ -6,7 +6,7 @@ using Modules.Solver.Domain;
 
 namespace Modules.Solver.Application.UseCases.SolveGenetic;
 
-/// <summary>Runs CP-SAT on a slice of the chromosome and keeps it only if it helps.</summary>
+// Runs CP-SAT on a slice of the chromosome and writes the result back only if fitness actually improves.
 internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
 {
     private const double CancellationBase = 180.0;
@@ -21,7 +21,7 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
         [WeatherCondition.Storm] = 2.1
     };
 
-    /// <summary>Refines the neighborhood in place and returns true when fitness improves.</summary>
+    // Rewrites the neighborhood positions in the chromosome in-place. Returns true if fitness improved.
     public bool Refine(
         int[] chromosome,
         PreparedScenario prepared,

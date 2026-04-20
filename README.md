@@ -1,6 +1,6 @@
 # RunwayScheduling
 
-Aplicație full-stack pentru simularea și optimizarea planificării zborurilor pe piste de aeroport. Compară un algoritm greedy rapid cu un solver hibrid Genetic + CP-SAT pe scenarii reale sau generate.
+Aplicație full-stack pentru simularea și optimizarea planificării zborurilor pe piste de aeroport. Compară un algoritm greedy cu un solver hibrid Genetic + CP-SAT pe scenarii configurabile.
 
 ## Stack
 
@@ -8,7 +8,7 @@ Aplicație full-stack pentru simularea și optimizarea planificării zborurilor 
 |---|---|
 | Backend | ASP.NET Core Minimal API (.NET 10), MediatR, EF Core, PostgreSQL |
 | Frontend | React 19, TypeScript, Vite |
-| Auth | JWT Bearer (BCrypt pentru parole) |
+| Auth | JWT Bearer, BCrypt |
 | Solver | Greedy + Genetic Algorithm + CP-SAT (Google OR-Tools) |
 | Infra | Docker Compose, GitHub Actions |
 | Teste | xUnit, Coverlet |
@@ -17,22 +17,26 @@ Aplicație full-stack pentru simularea și optimizarea planificării zborurilor 
 
 ```
 src/
-  Api/                          Composition root, pipeline HTTP, auth, EF migrations
-  Modules.Aircrafts/            Generare si listare aeronave
-  Modules.Airports/             Aeroporturi si piste
-  Modules.Login/                Autentificare, JWT issuing
-  Modules.Scenarios/            Configuratii, zboruri, vreme, evenimente aleatorii
-  Modules.Solver/               Solverele greedy si genetic, snapshot loader
-  Modules.Solver.Benchmarks/    BenchmarkDotNet pentru tuning GA
-  frontend/                     SPA React
+  Api/                   Composition root, pipeline HTTP, auth, migrari EF
+  Modules.Aircrafts/     Generare si listare aeronave
+  Modules.Airports/      Aeroporturi si piste
+  Modules.Login/         Autentificare, emitere JWT
+  Modules.Scenarios/     Configuratii, zboruri, vreme, evenimente aleatorii
+  Modules.Solver/        Solvere greedy, genetic si compare
+  frontend/              SPA React
 
 tests/
-  RunwayScheduling.Tests/       Unit tests pentru auth, solver, scenarii
+  RunwayScheduling.Tests/
+
+scripts/
+  start-dev.bat          Porneste backend + frontend in paralel
+  coverage.bat           Teste cu raport HTML de coverage
+  generate-scenario.mjs  Genereaza scenario-500.json
 ```
 
 ## Cum rulezi local
 
-### Rapid (recomandat)
+### Rapid
 
 ```bash
 scripts\start-dev.bat
@@ -44,7 +48,7 @@ scripts\start-dev.bat
 ```bash
 dotnet restore RunwayScheduling.slnx
 dotnet run --project src\Api\Api.csproj
-# API disponibil la http://localhost:5000
+# http://localhost:5000
 ```
 
 **Frontend:**
@@ -52,7 +56,7 @@ dotnet run --project src\Api\Api.csproj
 cd src\frontend
 npm install
 npm run dev
-# UI disponibil la http://localhost:5173
+# http://localhost:5173
 ```
 
 ### Docker Compose
@@ -62,11 +66,11 @@ cd src
 docker compose up --build
 ```
 
-> Variabilele de mediu sunt in `src/.env.example`. Copiaza-l in `src/.env` si completeaza valorile.
+Variabilele de mediu se configureaza in `src/.env` (copiat din `src/.env.example`).
 
 ## Autentificare
 
-Toate endpoint-urile (cu exceptia `/login`) cer un token JWT:
+Toate endpoint-urile, cu exceptia `POST /login`, necesita token JWT:
 
 ```
 Authorization: Bearer <token>
@@ -77,11 +81,13 @@ Authorization: Bearer <token>
 ## Endpoint-uri
 
 ### Auth
+
 | Metoda | Ruta | Descriere |
 |--------|------|-----------|
 | POST | `/login` | Obtine token JWT |
 
 ### Aeroporturi & Piste
+
 | Metoda | Ruta | Descriere |
 |--------|------|-----------|
 | POST | `/airport` | Creare aeroport |
@@ -93,6 +99,7 @@ Authorization: Bearer <token>
 | DELETE | `/runways/{id}` | Stergere pista |
 
 ### Scenarii
+
 | Metoda | Ruta | Descriere |
 |--------|------|-----------|
 | POST | `/scenarios/configs` | Creare configuratie |
@@ -107,22 +114,24 @@ Authorization: Bearer <token>
 | GET | `/aircrafts/{id}` | Listare aeronave |
 | POST | `/scenarios/{id}/random-events` | Adaugare eveniment aleatoriu |
 | GET | `/random-events/{id}` | Listare evenimente |
-| PUT | `/random-events/{eventId}` | Actualizare eveniment |
-| DELETE | `/random-events/{eventId}` | Stergere eveniment |
+| PUT | `/random-events/{id}` | Actualizare eveniment |
+| DELETE | `/random-events/{id}` | Stergere eveniment |
 
 ### Solver
+
 | Metoda | Ruta | Descriere |
 |--------|------|-----------|
 | GET | `/greedy/{id}` | Planificare greedy |
 | GET | `/genetic/{id}` | Planificare genetic + CP-SAT |
 | GET | `/compare/{id}` | Comparatie greedy vs genetic |
-| POST | `/api/solver/solve-from-payload` | Solver direct din JSON |
+| POST | `/solver/solve-from-payload` | Solver direct din JSON |
+| POST | `/solver/benchmark` | Benchmark parametri GA |
 
-## Import JSON (Solve from Payload)
+## Solve from Payload
 
-Poti rula solverul fara sa creezi un scenariu in baza de date. Trimite direct un JSON cu structura de mai jos — in UI gasesti butonul **Import JSON** in pagina Solver, cu doua exemple preincarcate.
+Poti rula solverul fara cont si fara baza de date. In UI gasesti butonul **Import JSON** in pagina Solver.
 
-**Exemplu minimal (5 zboruri):**
+**Structura minima:**
 ```json
 {
   "scenarioConfig": {
@@ -145,11 +154,14 @@ Poti rula solverul fara sa creezi un scenariu in baza de date. Trimite direct un
 ```
 
 **Valori enum:**
-- `runwayType`: `0` = Landing, `1` = Takeoff, `2` = Both
-- `flight.type`: `0` = Arrival, `1` = Departure, `2` = OnGround
-- `weatherSeverity`: `0` = Clear, `1` = Light, `2` = Moderate, `3` = Heavy, `4` = Severe, `5` = Storm
 
-Pentru un scenariu de stres cu 500 de zboruri vezi `scripts/scenario-500.json`.
+| Camp | Valori |
+|------|--------|
+| `runwayType` | `0` = Landing, `1` = Takeoff, `2` = Both |
+| `flight.type` | `0` = Arrival, `1` = Departure, `2` = OnGround |
+| `weatherSeverity` | `0` = Clear, `1` = Light, `2` = Moderate, `3` = Heavy, `4` = Severe, `5` = Storm |
+
+Pentru un scenariu cu 500 de zboruri vezi `scripts/scenario-500.json`.
 
 ## Teste
 
@@ -157,26 +169,18 @@ Pentru un scenariu de stres cu 500 de zboruri vezi `scripts/scenario-500.json`.
 dotnet test tests\RunwayScheduling.Tests\RunwayScheduling.Tests.csproj
 ```
 
-Cu coverage:
+Cu raport de coverage:
 ```bash
 scripts\coverage.bat
 ```
 
-## Benchmark & Tuning GA
-
-```bash
-dotnet run --project src\Modules.Solver.Benchmarks --configuration Release -- --output benchmark_results.csv
-```
-
-Parametrii GA sunt documentati in `PARAMETER_TUNING.md`.
-
 ## CI/CD
 
-- **CI** (`ci.yml`): Rulat la orice push/PR pe `main` sau `develop`. Build + test backend, lint + build frontend, build Docker.
-- **CD** (`cd.yml`): Trigger manual. Publica imaginile pe GitHub Container Registry (`ghcr.io`).
+- **CI** (`ci.yml`): la orice push/PR pe `main` sau `develop` — build + test backend, lint + build frontend, build Docker
+- **CD** (`cd.yml`): trigger manual — publica imaginile pe GitHub Container Registry
 
 ## Note
 
-- Migratiile EF sunt aplicate automat la startup.
-- Solverul genetic porneste populatia din solutia greedy.
-- CP-SAT rafineaza doar cei mai buni candidati din generatie, nu toata populatia.
+- Migratiile EF sunt aplicate automat la startup
+- Solverul genetic porneste populatia initiala din solutia greedy
+- CP-SAT rafineaza doar cei mai buni candidati din generatie, nu toata populatia

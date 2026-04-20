@@ -16,14 +16,6 @@ start "runway-api" cmd /k "dotnet run --project Api\Api.csproj --launch-profile 
 timeout /t 6 /nobreak >nul
 
 start "runway-frontend" cmd /k "cd frontend && npm run dev -- --host localhost"
-
-echo.
-echo Services started:
-echo - API: https://localhost:7286
-echo - Frontend: https://localhost:5173
-echo - PostgreSQL: localhost:5433
-echo.
-pause
 exit /b 0
 
 :kill_port

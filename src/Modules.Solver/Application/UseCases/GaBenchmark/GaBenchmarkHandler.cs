@@ -13,111 +13,97 @@ public sealed class GaBenchmarkHandler(
 {
     public async Task<GaBenchmarkResult> Handle(GaBenchmarkQuery request, CancellationToken cancellationToken)
     {
-        if (request.Runs < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(request.Runs), "Runs cannot be negative.");
-        }
+        if (request.ScenarioConfigIds.Count == 0)
+            throw new ArgumentException("At least one scenario must be provided.", nameof(request.ScenarioConfigIds));
 
-        var snapshot = await snapshotFactory.CreateAsync(request.ScenarioConfigId, cancellationToken);
-        var prepared = PreparedScenario.From(snapshot);
+        if (request.Configs.Count == 0)
+            throw new ArgumentException("At least one config must be provided.", nameof(request.Configs));
+
         var solver = new GeneticAlgorithmSolver(engine);
 
-        var entries = new List<GaBenchmarkEntry>(request.Runs);
+        // For each scenario, run all configs and sort results by fitness (best = lowest first).
+        var perScenario = new List<List<GaBenchmarkEntry>>(request.ScenarioConfigIds.Count);
 
-        for (var runIndex = 0; runIndex < request.Runs; runIndex++)
+        foreach (var scenarioId in request.ScenarioConfigIds)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var random = new Random(runIndex);
-            var config = new GaConfig
-            {
-                RandomSeed = runIndex,
-                PopulationSize = NextInt(random, request.PopulationSizeMin, request.PopulationSizeMax),
-                MaxGenerations = NextInt(random, request.MaxGenerationsMin, request.MaxGenerationsMax),
-                CrossoverRate = NextDouble(random, request.CrossoverRateMin, request.CrossoverRateMax),
-                MutationRateLocal = NextDouble(random, request.MutationRateLocalMin, request.MutationRateLocalMax),
-                MutationRateMemetic = NextDouble(random, request.MutationRateMemeticMin, request.MutationRateMemeticMax),
-                TournamentSize = NextInt(random, request.TournamentSizeMin, request.TournamentSizeMax),
-                EliteCount = NextInt(random, request.EliteCountMin, request.EliteCountMax),
-                NoImprovementGenerations = NextInt(random, request.NoImprovementGenerationsMin, request.NoImprovementGenerationsMax),
-                CpSatTimeLimitMsMicro = NextInt(random, request.CpSatTimeLimitMsMicroMin, request.CpSatTimeLimitMsMicroMax),
-                CpSatTimeLimitMsMacro = NextInt(random, request.CpSatTimeLimitMsMacroMin, request.CpSatTimeLimitMsMacroMax),
-                CpSatNeighborhoodSize = NextInt(random, request.CpSatNeighborhoodSizeMin, request.CpSatNeighborhoodSizeMax)
-            };
+            var snapshot = await snapshotFactory.CreateAsync(scenarioId, cancellationToken);
+            var prepared = PreparedScenario.From(snapshot);
 
-            var result = solver.Solve(prepared, config, request.ScenarioConfigId, out var solveTimeMs);
-            entries.Add(new GaBenchmarkEntry(config, result.Fitness, solveTimeMs, runIndex));
+            var scenarioEntries = new List<GaBenchmarkEntry>(request.Configs.Count);
+
+            for (var i = 0; i < request.Configs.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var p = request.Configs[i];
+                var config = new GaConfig
+                {
+                    RandomSeed                = i,
+                    PopulationSize            = p.PopulationSize,
+                    MaxGenerations            = p.MaxGenerations,
+                    CrossoverRate             = p.CrossoverRate,
+                    MutationRateLocal         = p.MutationRateLocal,
+                    MutationRateMemetic       = p.MutationRateMemetic,
+                    TournamentSize            = p.TournamentSize,
+                    EliteCount                = p.EliteCount,
+                    NoImprovementGenerations  = p.NoImprovementGenerations,
+                    CpSatTimeLimitMsMicro     = p.CpSatTimeLimitMsMicro,
+                    CpSatTimeLimitMsMacro     = p.CpSatTimeLimitMsMacro,
+                    CpSatNeighborhoodSize     = p.CpSatNeighborhoodSize
+                };
+
+                var result = solver.Solve(prepared, config, scenarioId, out var solveTimeMs);
+                scenarioEntries.Add(new GaBenchmarkEntry(scenarioId, i, config, result.Fitness, solveTimeMs));
+            }
+
+            perScenario.Add([.. scenarioEntries.OrderBy(e => e.Fitness)]);
         }
 
-        var orderedEntries = entries
-            .OrderBy(entry => entry.Fitness)
-            .ToList();
+        // Interleave: rank 0 of each scenario, then rank 1, etc.
+        var maxRank = perScenario.Max(s => s.Count);
+        var interleaved = new List<GaBenchmarkEntry>(perScenario.Sum(s => s.Count));
 
-        WriteCsv(orderedEntries);
-        return new GaBenchmarkResult(orderedEntries);
+        for (var rank = 0; rank < maxRank; rank++)
+            foreach (var scenarioEntries in perScenario)
+                if (rank < scenarioEntries.Count)
+                    interleaved.Add(scenarioEntries[rank]);
+
+        WriteCsv(interleaved);
+        return new GaBenchmarkResult(interleaved);
     }
 
     private static void WriteCsv(IReadOnlyList<GaBenchmarkEntry> entries)
     {
         var lines = new List<string>(entries.Count + 1)
         {
-            "RunIndex,Fitness,SolveTimeMs,PopulationSize,MaxGenerations,CrossoverRate,MutationRateLocal,MutationRateMemetic,TournamentSize,EliteCount,NoImprovementGenerations,CpSatTimeLimitMsMicro,CpSatTimeLimitMsMacro,CpSatNeighborhoodSize"
+            "ScenarioConfigId,ConfigIndex,Fitness,SolveTimeMs,PopulationSize,MaxGenerations,CrossoverRate," +
+            "MutationRateLocal,MutationRateMemetic,TournamentSize,EliteCount,NoImprovementGenerations," +
+            "CpSatTimeLimitMsMicro,CpSatTimeLimitMsMacro,CpSatNeighborhoodSize"
         };
 
-        foreach (var entry in entries)
+        foreach (var e in entries)
         {
-            lines.Add(
-                string.Join(
-                    ',',
-                    entry.RunIndex.ToString(CultureInfo.InvariantCulture),
-                    entry.Fitness.ToString(CultureInfo.InvariantCulture),
-                    entry.SolveTimeMs.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.PopulationSize.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.MaxGenerations.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.CrossoverRate.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.MutationRateLocal.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.MutationRateMemetic.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.TournamentSize.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.EliteCount.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.NoImprovementGenerations.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.CpSatTimeLimitMsMicro.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.CpSatTimeLimitMsMacro.ToString(CultureInfo.InvariantCulture),
-                    entry.Config.CpSatNeighborhoodSize.ToString(CultureInfo.InvariantCulture)));
+            lines.Add(string.Join(',',
+                e.ScenarioConfigId.ToString(),
+                e.ConfigIndex.ToString(CultureInfo.InvariantCulture),
+                e.Fitness.ToString(CultureInfo.InvariantCulture),
+                e.SolveTimeMs.ToString(CultureInfo.InvariantCulture),
+                e.Config.PopulationSize.ToString(CultureInfo.InvariantCulture),
+                e.Config.MaxGenerations.ToString(CultureInfo.InvariantCulture),
+                e.Config.CrossoverRate.ToString(CultureInfo.InvariantCulture),
+                e.Config.MutationRateLocal.ToString(CultureInfo.InvariantCulture),
+                e.Config.MutationRateMemetic.ToString(CultureInfo.InvariantCulture),
+                e.Config.TournamentSize.ToString(CultureInfo.InvariantCulture),
+                e.Config.EliteCount.ToString(CultureInfo.InvariantCulture),
+                e.Config.NoImprovementGenerations.ToString(CultureInfo.InvariantCulture),
+                e.Config.CpSatTimeLimitMsMicro.ToString(CultureInfo.InvariantCulture),
+                e.Config.CpSatTimeLimitMsMacro.ToString(CultureInfo.InvariantCulture),
+                e.Config.CpSatNeighborhoodSize.ToString(CultureInfo.InvariantCulture)));
         }
 
         var outputPath = Path.Combine(Environment.CurrentDirectory, "benchmark_results.csv");
         File.WriteAllLines(outputPath, lines);
-    }
-
-    private static int NextInt(Random random, int min, int max)
-    {
-        if (min > max)
-        {
-            throw new ArgumentException($"Invalid range: min ({min}) cannot be greater than max ({max}).");
-        }
-
-        if (min == max)
-        {
-            return min;
-        }
-
-        return max == int.MaxValue
-            ? (int)random.NextInt64(min, (long)max + 1)
-            : random.Next(min, max + 1);
-    }
-
-    private static double NextDouble(Random random, double min, double max)
-    {
-        if (min > max)
-        {
-            throw new ArgumentException($"Invalid range: min ({min}) cannot be greater than max ({max}).");
-        }
-
-        if (Math.Abs(max - min) < double.Epsilon)
-        {
-            return min;
-        }
-
-        return min + (random.NextDouble() * (max - min));
     }
 }
