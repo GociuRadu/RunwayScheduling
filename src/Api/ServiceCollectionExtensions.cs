@@ -16,6 +16,7 @@ using Modules.Login.Application;
 using Modules.Login.Application.UseCases.Login;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Application.UseCases.CreateScenarioConfig;
+using Modules.Solver.Application;
 using Modules.Solver.Application.Scheduling;
 using Modules.Solver.Application.Snapshot;
 using Modules.Solver.Application.UseCases.SolveGreedy;
@@ -133,6 +134,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IRandomEventStore, EfRandomEventStore>();
         services.AddScoped<IScenarioSnapshotFactory, ScenarioSnapshotFactory>();
+        services.AddScoped<IBenchmarkEntryStore, EfBenchmarkEntryStore>();
         services.AddSingleton<ISchedulingEngine, SchedulingEngine>();
     }
 

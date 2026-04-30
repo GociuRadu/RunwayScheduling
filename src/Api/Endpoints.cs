@@ -24,6 +24,7 @@ using Modules.Scenarios.Application.UseCases.UpdateRandomEvent;
 using Modules.Solver.Application.UseCases.SolveGenetic;
 using Modules.Solver.Application.UseCases.Compare;
 using Modules.Solver.Application.UseCases.SolveGreedy;
+using Modules.Solver.Application;
 using Modules.Solver.Application.UseCases.GaBenchmark;
 using Modules.Solver.Application.UseCases.SolveFromPayload;
 using Api.Validation;
@@ -283,6 +284,14 @@ public static class Endpoints
                 return Results.Ok(res);
             })
             .WithName("GaBenchmark");
+
+        secured.MapGet("/solver/benchmarks",
+            async (IBenchmarkEntryStore store, CancellationToken ct) =>
+            {
+                var entries = await store.GetAllAsync(ct);
+                return Results.Ok(entries);
+            })
+            .WithName("GetBenchmarkEntries");
 
         secured.MapPost("/solver/solve-from-payload",
             async (SolveFromPayloadQuery query, IMediator mediator, CancellationToken ct) =>

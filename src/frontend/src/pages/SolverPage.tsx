@@ -73,6 +73,74 @@ type ComparisonResultDto = {
   genetic: SolverResultDto;
 };
 
+type BenchmarkEntryDto = {
+  id: string;
+  scenarioConfigId: string;
+  algorithmType: string;
+  configIndex: number;
+  runTimestampUtc: string;
+  fitness: number;
+  solveTimeMs: number;
+  populationSize: number | null;
+  maxGenerations: number | null;
+  crossoverRate: number | null;
+  mutationRateLocal: number | null;
+  mutationRateMemetic: number | null;
+  tournamentSize: number | null;
+  eliteCount: number | null;
+  noImprovementGenerations: number | null;
+  randomSeed: number | null;
+};
+
+type GaBenchmarkConfigDto = {
+  populationSize: number;
+  maxGenerations: number;
+  crossoverRate: number;
+  mutationRateLocal: number;
+  mutationRateMemetic: number;
+  tournamentSize: number;
+  eliteCount: number;
+  noImprovementGenerations: number;
+  randomSeed: number;
+};
+
+type GaBenchmarkEntryDto = {
+  scenarioConfigId: string;
+  configIndex: number;
+  config: GaBenchmarkConfigDto;
+  fitness: number;
+  solveTimeMs: number;
+};
+
+type GaBenchmarkResultDto = {
+  entries: GaBenchmarkEntryDto[];
+};
+
+function getDefaultBenchmarkJson(sid: string) {
+  return JSON.stringify(
+    {
+      scenarioConfigIds: [sid || "00000000-0000-0000-0000-000000000000"],
+      configs: [
+        {
+          populationSize: 30,
+          maxGenerations: 50,
+          crossoverRate: 0.85,
+          mutationRateLocal: 0.05,
+          mutationRateMemetic: 0.0,
+          tournamentSize: 4,
+          eliteCount: 2,
+          noImprovementGenerations: 20,
+          cpSatTimeLimitMsMicro: 0,
+          cpSatTimeLimitMsMacro: 0,
+          cpSatNeighborhoodSize: 3,
+        },
+      ],
+    },
+    null,
+    2
+  );
+}
+
 function clampImpactPercent(value: number) {
   return Math.min(100, Math.max(0, value));
 }
@@ -222,6 +290,16 @@ export default function SolverPage() {
   const [importJson, setImportJson] = useState(EXAMPLE_SCENARIO);
   const [importError, setImportError] = useState<string | null>(null);
   const [solvingImport, setSolvingImport] = useState(false);
+
+  const [showBenchmarkModal, setShowBenchmarkModal] = useState(false);
+  const [benchmarkJson, setBenchmarkJson] = useState("");
+  const [benchmarkError, setBenchmarkError] = useState<string | null>(null);
+  const [benchmarkRunning, setBenchmarkRunning] = useState(false);
+  const [benchmarkResult, setBenchmarkResult] = useState<GaBenchmarkResultDto | null>(null);
+
+  const [showBenchmarksModal, setShowBenchmarksModal] = useState(false);
+  const [benchmarksLoading, setBenchmarksLoading] = useState(false);
+  const [benchmarksData, setBenchmarksData] = useState<BenchmarkEntryDto[] | null>(null);
 
   useEffect(() => {
     if (hasScenario) {
@@ -400,6 +478,58 @@ export default function SolverPage() {
     }
   }
 
+  function openBenchmarkModal() {
+    setBenchmarkResult(null);
+    setBenchmarkError(null);
+    setBenchmarkJson(getDefaultBenchmarkJson(scenarioId));
+    setShowBenchmarkModal(true);
+  }
+
+  async function runBenchmark() {
+    setBenchmarkError(null);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(benchmarkJson);
+    } catch (e) {
+      setBenchmarkError(e instanceof Error ? e.message : "Invalid JSON");
+      return;
+    }
+    try {
+      setBenchmarkRunning(true);
+      const res = await apiFetch("/api/solver/benchmark", {
+        method: "POST",
+        body: JSON.stringify(parsed),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Benchmark failed (${res.status}): ${text}`);
+      }
+      const data = (await res.json()) as GaBenchmarkResultDto;
+      setBenchmarkResult(data);
+      showToast("Benchmark complete", "success");
+    } catch (e) {
+      setBenchmarkError(e instanceof Error ? e.message : "Benchmark failed");
+    } finally {
+      setBenchmarkRunning(false);
+    }
+  }
+
+  async function loadBenchmarks() {
+    try {
+      setBenchmarksLoading(true);
+      setBenchmarksData(null);
+      const res = await apiFetch("/api/solver/benchmarks");
+      if (!res.ok) throw new Error(`Failed to load benchmarks (${res.status})`);
+      const data = (await res.json()) as BenchmarkEntryDto[];
+      setBenchmarksData(data);
+      setShowBenchmarksModal(true);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to load benchmarks", "error");
+    } finally {
+      setBenchmarksLoading(false);
+    }
+  }
+
   const cancellationBreakdown: { label: string; count: number }[] = solverResult
     ? [
         { label: "No Compatible Runway", count: solverResult.canceledNoCompatibleRunway },
@@ -541,6 +671,26 @@ export default function SolverPage() {
                 style={{ minWidth: "130px" }}
               >
                 Import JSON
+              </button>
+            </div>
+          </div>
+
+          <div className="glass-card" style={{ marginBottom: "16px", border: `1px solid ${C.border}` }}>
+            <div style={{ ...S.label, marginBottom: "8px" }}>GA Benchmark</div>
+            <div style={{ fontSize: "12px", color: C.textSub, marginBottom: "12px" }}>
+              Run multiple GA configurations on one or more scenarios and compare results.
+            </div>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <button onClick={openBenchmarkModal} className="glass-btn-primary" style={{ minWidth: "160px" }}>
+                Open Benchmark
+              </button>
+              <button
+                onClick={loadBenchmarks}
+                className="glass-btn-ghost"
+                disabled={benchmarksLoading}
+                style={{ opacity: benchmarksLoading ? 0.5 : 1, minWidth: "160px" }}
+              >
+                {benchmarksLoading ? "Loading…" : "Show Benchmarks"}
               </button>
             </div>
           </div>
@@ -938,6 +1088,165 @@ export default function SolverPage() {
                 {solvingImport ? "Solving..." : "Solve Genetic"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showBenchmarksModal && benchmarksData && (
+        <div className="glass-modal-backdrop" style={{ padding: "20px" }} onClick={() => setShowBenchmarksModal(false)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="glass-modal-panel"
+            style={{ width: "1300px", maxWidth: "95vw", maxHeight: "90vh", overflow: "hidden", padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: "16px" }}>
+                Benchmark History — {benchmarksData.length} entries
+              </div>
+              <button onClick={() => setShowBenchmarksModal(false)} className="glass-btn-ghost">Close</button>
+            </div>
+
+            {benchmarksData.length === 0 ? (
+              <div style={{ color: C.textSub, fontSize: "13px" }}>No benchmark entries yet.</div>
+            ) : (
+              <div style={{ minHeight: 0, flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+                {Object.entries(
+                  benchmarksData.reduce<Record<string, BenchmarkEntryDto[]>>((acc, e) => {
+                    (acc[e.scenarioConfigId] ??= []).push(e);
+                    return acc;
+                  }, {})
+                ).map(([sid, entries]) => {
+                  const sorted = [...entries].sort((a, b) => a.fitness - b.fitness);
+                  return (
+                    <div key={sid}>
+                      <div style={{ ...S.label, marginBottom: "8px" }}>
+                        Scenario: <span style={{ color: C.text, fontFamily: "monospace" }}>{sid}</span>
+                        <span style={{ color: C.textMuted, marginLeft: "10px" }}>({sorted.length} runs)</span>
+                      </div>
+                      <div style={{ border: `1px solid ${C.border}`, borderRadius: "6px", overflow: "auto", background: C.bgCard }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
+                          <thead>
+                            <tr>
+                              {["Rank", "#", "Fitness", "Time ms", "Timestamp", "Pop", "Max Gen", "Crossover", "Mut Local", "Tournament", "Elite", "No Imp", "Seed"].map((h) => (
+                                <th key={h} style={thStyle}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sorted.map((e, rank) => (
+                              <tr key={e.id}>
+                                <td style={{ ...tdStyle, fontWeight: 700, color: rank === 0 ? "#fbbf24" : C.textSub }}>{rank + 1}</td>
+                                <td style={{ ...tdStyle, color: C.textSub }}>{e.configIndex}</td>
+                                <td style={{ ...tdStyle, fontWeight: 700, color: "#a78bfa" }}>{e.fitness.toFixed(2)}</td>
+                                <td style={{ ...tdStyle, color: C.textSub }}>{e.solveTimeMs.toFixed(0)}</td>
+                                <td style={{ ...tdStyle, fontSize: "11px", color: C.textSub }}>{formatDate(e.runTimestampUtc)}</td>
+                                <td style={tdStyle}>{e.populationSize ?? "–"}</td>
+                                <td style={tdStyle}>{e.maxGenerations ?? "–"}</td>
+                                <td style={tdStyle}>{e.crossoverRate != null ? e.crossoverRate.toFixed(2) : "–"}</td>
+                                <td style={tdStyle}>{e.mutationRateLocal != null ? e.mutationRateLocal.toFixed(3) : "–"}</td>
+                                <td style={tdStyle}>{e.tournamentSize ?? "–"}</td>
+                                <td style={tdStyle}>{e.eliteCount ?? "–"}</td>
+                                <td style={tdStyle}>{e.noImprovementGenerations ?? "–"}</td>
+                                <td style={{ ...tdStyle, color: C.textSub }}>{e.randomSeed ?? "–"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showBenchmarkModal && (
+        <div className="glass-modal-backdrop" style={{ padding: "20px" }} onClick={() => setShowBenchmarkModal(false)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="glass-modal-panel"
+            style={{ width: "1300px", maxWidth: "95vw", maxHeight: "90vh", overflow: "hidden", padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: "16px" }}>GA Benchmark</div>
+              <button onClick={() => setShowBenchmarkModal(false)} className="glass-btn-ghost">Close</button>
+            </div>
+
+            <div style={{ fontSize: "12px", color: C.textSub }}>
+              Payload JSON with <code>scenarioConfigIds</code> and <code>configs</code> arrays. Results are saved to the database.
+            </div>
+
+            <textarea
+              value={benchmarkJson}
+              onChange={(e) => { setBenchmarkJson(e.target.value); setBenchmarkError(null); }}
+              className="glass-input"
+              spellCheck={false}
+              style={{
+                minHeight: "200px",
+                fontFamily: "monospace",
+                fontSize: "12px",
+                resize: "vertical",
+                lineHeight: 1.5,
+                whiteSpace: "pre",
+                overflowWrap: "normal",
+                overflowX: "auto",
+              }}
+            />
+
+            {benchmarkError && (
+              <div style={{ color: C.danger, fontSize: "12px", background: `${C.danger}11`, border: `1px solid ${C.borderAccentRed}`, borderRadius: "6px", padding: "8px 12px" }}>
+                {benchmarkError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button onClick={() => setShowBenchmarkModal(false)} className="glass-btn-ghost">Cancel</button>
+              <button
+                onClick={runBenchmark}
+                className="glass-btn-primary"
+                disabled={benchmarkRunning}
+                style={{ opacity: benchmarkRunning ? 0.5 : 1, minWidth: "140px" }}
+              >
+                {benchmarkRunning ? "Running…" : "Run Benchmark"}
+              </button>
+            </div>
+
+            {benchmarkResult && benchmarkResult.entries.length > 0 && (
+              <div style={{ minHeight: 0, flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ ...S.label }}>Results — {benchmarkResult.entries.length} entries</div>
+                <div style={{ flex: 1, overflow: "auto", border: `1px solid ${C.border}`, borderRadius: "6px", background: C.bgCard }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
+                    <thead>
+                      <tr>
+                        {["#", "Scenario", "Fitness", "Time ms", "Pop", "Max Gen", "Crossover", "Mut Local", "Mut Mem", "Tournament", "Elite", "No Imp"].map((h) => (
+                          <th key={h} style={thStyle}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {benchmarkResult.entries.map((entry, i) => (
+                        <tr key={i}>
+                          <td style={{ ...tdStyle, color: C.textSub }}>{entry.configIndex}</td>
+                          <td style={{ ...tdStyle, fontFamily: "monospace", fontSize: "11px", color: C.textSub }}>{entry.scenarioConfigId.slice(0, 8)}…</td>
+                          <td style={{ ...tdStyle, fontWeight: 700, color: "#a78bfa" }}>{entry.fitness.toFixed(2)}</td>
+                          <td style={{ ...tdStyle, color: C.textSub }}>{entry.solveTimeMs.toFixed(0)}</td>
+                          <td style={tdStyle}>{entry.config.populationSize}</td>
+                          <td style={tdStyle}>{entry.config.maxGenerations}</td>
+                          <td style={tdStyle}>{entry.config.crossoverRate.toFixed(2)}</td>
+                          <td style={tdStyle}>{entry.config.mutationRateLocal.toFixed(3)}</td>
+                          <td style={tdStyle}>{entry.config.mutationRateMemetic.toFixed(3)}</td>
+                          <td style={tdStyle}>{entry.config.tournamentSize}</td>
+                          <td style={tdStyle}>{entry.config.eliteCount}</td>
+                          <td style={tdStyle}>{entry.config.noImprovementGenerations}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

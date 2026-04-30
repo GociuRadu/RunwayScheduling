@@ -3,6 +3,7 @@ using Modules.Aircrafts.Domain;
 using Modules.Airports.Domain;
 using Modules.Login.Domain;
 using Modules.Scenarios.Domain;
+using Modules.Solver.Domain;
 
 namespace Api.DataBase;
 
@@ -18,6 +19,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Aircraft> Aircrafts => Set<Aircraft>();
     public DbSet<User> Users => Set<User>();
     public DbSet<RandomEvent> RandomEvents => Set<RandomEvent>();
+    public DbSet<BenchmarkEntry> BenchmarkEntries => Set<BenchmarkEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +31,7 @@ public sealed class AppDbContext : DbContext
         ConfigureWeatherInterval(modelBuilder);
         ConfigureRandomEvent(modelBuilder);
         ConfigureUser(modelBuilder);
+        ConfigureBenchmarkEntry(modelBuilder);
     }
 
     private static void ConfigureAirport(ModelBuilder modelBuilder)
@@ -221,6 +224,30 @@ public sealed class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             e.HasIndex(x => x.ScenarioConfigId);
+        });
+    }
+
+    private static void ConfigureBenchmarkEntry(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<BenchmarkEntry>(e =>
+        {
+            e.ToTable("benchmark_entries");
+            e.HasKey(x => x.Id);
+
+            e.Property(x => x.ScenarioConfigId).IsRequired();
+            e.Property(x => x.AlgorithmType).HasMaxLength(20).IsRequired();
+            e.Property(x => x.ConfigIndex).IsRequired();
+            e.Property(x => x.RunTimestampUtc).IsRequired();
+            e.Property(x => x.Fitness).IsRequired();
+            e.Property(x => x.SolveTimeMs).IsRequired();
+
+            e.HasOne<ScenarioConfig>()
+                .WithMany()
+                .HasForeignKey(x => x.ScenarioConfigId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(x => x.ScenarioConfigId);
+            e.HasIndex(x => new { x.ScenarioConfigId, x.AlgorithmType });
         });
     }
 

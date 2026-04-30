@@ -1,14 +1,15 @@
-using System.Globalization;
 using MediatR;
 using Modules.Solver.Application.Scheduling;
 using Modules.Solver.Application.Snapshot;
 using Modules.Solver.Application.UseCases.SolveGenetic;
+using Modules.Solver.Domain;
 
 namespace Modules.Solver.Application.UseCases.GaBenchmark;
 
 public sealed class GaBenchmarkHandler(
     IScenarioSnapshotFactory snapshotFactory,
-    ISchedulingEngine engine)
+    ISchedulingEngine engine,
+    IBenchmarkEntryStore benchmarkStore)
     : IRequestHandler<GaBenchmarkQuery, GaBenchmarkResult>
 {
     public async Task<GaBenchmarkResult> Handle(GaBenchmarkQuery request, CancellationToken cancellationToken)
@@ -20,9 +21,9 @@ public sealed class GaBenchmarkHandler(
             throw new ArgumentException("At least one config must be provided.", nameof(request.Configs));
 
         var solver = new GeneticAlgorithmSolver(engine);
-
-        // For each scenario, run all configs and sort results by fitness (best = lowest first).
+        var now = DateTime.UtcNow;
         var perScenario = new List<List<GaBenchmarkEntry>>(request.ScenarioConfigIds.Count);
+        var dbEntries = new List<BenchmarkEntry>();
 
         foreach (var scenarioId in request.ScenarioConfigIds)
         {
@@ -30,38 +31,24 @@ public sealed class GaBenchmarkHandler(
 
             var snapshot = await snapshotFactory.CreateAsync(scenarioId, cancellationToken);
             var prepared = PreparedScenario.From(snapshot);
-
             var scenarioEntries = new List<GaBenchmarkEntry>(request.Configs.Count);
 
             for (var i = 0; i < request.Configs.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var p = request.Configs[i];
-                var config = new GaConfig
-                {
-                    RandomSeed                = i,
-                    PopulationSize            = p.PopulationSize,
-                    MaxGenerations            = p.MaxGenerations,
-                    CrossoverRate             = p.CrossoverRate,
-                    MutationRateLocal         = p.MutationRateLocal,
-                    MutationRateMemetic       = p.MutationRateMemetic,
-                    TournamentSize            = p.TournamentSize,
-                    EliteCount                = p.EliteCount,
-                    NoImprovementGenerations  = p.NoImprovementGenerations,
-                    CpSatTimeLimitMsMicro     = p.CpSatTimeLimitMsMicro,
-                    CpSatTimeLimitMsMacro     = p.CpSatTimeLimitMsMacro,
-                    CpSatNeighborhoodSize     = p.CpSatNeighborhoodSize
-                };
-
+                var config = ToGaConfig(request.Configs[i], seed: i);
                 var result = solver.Solve(prepared, config, scenarioId, out var solveTimeMs);
+
                 scenarioEntries.Add(new GaBenchmarkEntry(scenarioId, i, config, result.Fitness, solveTimeMs));
+                dbEntries.Add(ToDbEntry(scenarioId, i, now, config, result.Fitness, solveTimeMs));
             }
 
             perScenario.Add([.. scenarioEntries.OrderBy(e => e.Fitness)]);
         }
 
-        // Interleave: rank 0 of each scenario, then rank 1, etc.
+        await benchmarkStore.AddRangeAsync(dbEntries, cancellationToken);
+
         var maxRank = perScenario.Max(s => s.Count);
         var interleaved = new List<GaBenchmarkEntry>(perScenario.Sum(s => s.Count));
 
@@ -70,40 +57,55 @@ public sealed class GaBenchmarkHandler(
                 if (rank < scenarioEntries.Count)
                     interleaved.Add(scenarioEntries[rank]);
 
-        WriteCsv(interleaved);
         return new GaBenchmarkResult(interleaved);
     }
 
-    private static void WriteCsv(IReadOnlyList<GaBenchmarkEntry> entries)
+    private static GaConfig ToGaConfig(GaConfigParams p, int seed) => new()
     {
-        var lines = new List<string>(entries.Count + 1)
-        {
-            "ScenarioConfigId,ConfigIndex,Fitness,SolveTimeMs,PopulationSize,MaxGenerations,CrossoverRate," +
-            "MutationRateLocal,MutationRateMemetic,TournamentSize,EliteCount,NoImprovementGenerations," +
-            "CpSatTimeLimitMsMicro,CpSatTimeLimitMsMacro,CpSatNeighborhoodSize"
-        };
+        RandomSeed               = seed,
+        PopulationSize           = p.PopulationSize,
+        MaxGenerations           = p.MaxGenerations,
+        CrossoverRate            = p.CrossoverRate,
+        MutationRateLocal        = p.MutationRateLocal,
+        MutationRateMemetic      = p.MutationRateMemetic,
+        TournamentSize           = p.TournamentSize,
+        EliteCount               = p.EliteCount,
+        NoImprovementGenerations = p.NoImprovementGenerations,
+        CpSatTimeLimitMsMicro    = p.CpSatTimeLimitMsMicro,
+        CpSatTimeLimitMsMacro    = p.CpSatTimeLimitMsMacro,
+        CpSatNeighborhoodSize    = p.CpSatNeighborhoodSize
+    };
 
-        foreach (var e in entries)
-        {
-            lines.Add(string.Join(',',
-                e.ScenarioConfigId.ToString(),
-                e.ConfigIndex.ToString(CultureInfo.InvariantCulture),
-                e.Fitness.ToString(CultureInfo.InvariantCulture),
-                e.SolveTimeMs.ToString(CultureInfo.InvariantCulture),
-                e.Config.PopulationSize.ToString(CultureInfo.InvariantCulture),
-                e.Config.MaxGenerations.ToString(CultureInfo.InvariantCulture),
-                e.Config.CrossoverRate.ToString(CultureInfo.InvariantCulture),
-                e.Config.MutationRateLocal.ToString(CultureInfo.InvariantCulture),
-                e.Config.MutationRateMemetic.ToString(CultureInfo.InvariantCulture),
-                e.Config.TournamentSize.ToString(CultureInfo.InvariantCulture),
-                e.Config.EliteCount.ToString(CultureInfo.InvariantCulture),
-                e.Config.NoImprovementGenerations.ToString(CultureInfo.InvariantCulture),
-                e.Config.CpSatTimeLimitMsMicro.ToString(CultureInfo.InvariantCulture),
-                e.Config.CpSatTimeLimitMsMacro.ToString(CultureInfo.InvariantCulture),
-                e.Config.CpSatNeighborhoodSize.ToString(CultureInfo.InvariantCulture)));
-        }
-
-        var outputPath = Path.Combine(Environment.CurrentDirectory, "benchmark_results.csv");
-        File.WriteAllLines(outputPath, lines);
-    }
+    private static BenchmarkEntry ToDbEntry(
+        Guid scenarioId, int configIndex, DateTime timestamp,
+        GaConfig config, double fitness, double solveTimeMs) => new()
+    {
+        Id                          = Guid.NewGuid(),
+        ScenarioConfigId            = scenarioId,
+        AlgorithmType               = "GA",
+        ConfigIndex                 = configIndex,
+        RunTimestampUtc             = timestamp,
+        Fitness                     = fitness,
+        SolveTimeMs                 = solveTimeMs,
+        PopulationSize              = config.PopulationSize,
+        MaxGenerations              = config.MaxGenerations,
+        CrossoverRate               = config.CrossoverRate,
+        MutationRateLocal           = config.MutationRateLocal,
+        MutationRateMemetic         = config.MutationRateMemetic,
+        TournamentSize              = config.TournamentSize,
+        EliteCount                  = config.EliteCount,
+        NoImprovementGenerations    = config.NoImprovementGenerations,
+        RandomSeed                  = config.RandomSeed,
+        EnableCpSatRefinement       = config.EnableCpSatRefinement,
+        CpSatMicroEnabled           = config.CpSatMicroEnabled,
+        CpSatMicroEveryNGenerations = config.CpSatMicroEveryNGenerations,
+        CpSatMacroEnabled           = config.CpSatMacroEnabled,
+        CpSatMacroEveryNGenerations = config.CpSatMacroEveryNGenerations,
+        CpSatEliteCount             = config.CpSatEliteCount,
+        CpSatRandomCount            = config.CpSatRandomCount,
+        CpSatMacroWindowCount       = config.CpSatMacroWindowCount,
+        CpSatTimeLimitMsMicro       = config.CpSatTimeLimitMsMicro,
+        CpSatTimeLimitMsMacro       = config.CpSatTimeLimitMsMacro,
+        CpSatNeighborhoodSize       = config.CpSatNeighborhoodSize
+    };
 }
