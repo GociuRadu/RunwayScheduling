@@ -7,8 +7,6 @@ public sealed class DeleteAirportHandler : IRequestHandler<DeleteAirportCommand,
 
     public DeleteAirportHandler(IAirportStore store) => _store = store;
 
-    public async Task<bool> Handle(DeleteAirportCommand request, CancellationToken ct)
-    {
-        return await _store.Delete(request.AirportId, ct);
-    }
+    public Task<bool> Handle(DeleteAirportCommand request, CancellationToken ct)
+        => _store.DeleteAsync(request.AirportId, ct);
 }

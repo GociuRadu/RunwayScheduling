@@ -12,14 +12,9 @@ public sealed class GetAirportsHandler : IRequestHandler<GetAirportsQuery, List<
         _store = store;
     }
 
-    public Task<List<AirportDto>> Handle(GetAirportsQuery request, CancellationToken ct)
+    public async Task<List<AirportDto>> Handle(GetAirportsQuery request, CancellationToken ct)
     {
-        var airports = _store.GetAll();
-
-        var res = airports
-            .Select(a => new AirportDto(a.Id, a.Name, a.StandCapacity, a.Latitude, a.Longitude))
-            .ToList();
-
-        return Task.FromResult(res);
+        var airports = await _store.GetAllAsync(ct);
+        return airports.Select(a => new AirportDto(a.Id, a.Name, a.StandCapacity, a.Latitude, a.Longitude)).ToList();
     }
 }

@@ -19,7 +19,7 @@ public sealed class CreateAirportHandlerTests
     public async Task Handle_ReturnsAirportWithCorrectProperties()
     {
         var command = new CreateAirportCommand("OTP", 30, 44.5, 26.1);
-        _store.Add(Arg.Any<Airport>()).Returns(x => x.Arg<Airport>());
+        _store.AddAsync(Arg.Any<Airport>(), Arg.Any<CancellationToken>()).Returns(x => x.Arg<Airport>());
 
         var result = await _sut.Handle(command, CancellationToken.None);
 
@@ -33,10 +33,10 @@ public sealed class CreateAirportHandlerTests
     public async Task Handle_CallsStoreAdd()
     {
         var command = new CreateAirportCommand("OTP", 20, 0, 0);
-        _store.Add(Arg.Any<Airport>()).Returns(x => x.Arg<Airport>());
+        _store.AddAsync(Arg.Any<Airport>(), Arg.Any<CancellationToken>()).Returns(x => x.Arg<Airport>());
 
         await _sut.Handle(command, CancellationToken.None);
 
-        _store.Received(1).Add(Arg.Is<Airport>(a => a.Name == "OTP"));
+        await _store.Received(1).AddAsync(Arg.Is<Airport>(a => a.Name == "OTP"), Arg.Any<CancellationToken>());
     }
 }

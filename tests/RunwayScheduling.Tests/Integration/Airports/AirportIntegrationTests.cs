@@ -17,23 +17,19 @@ public sealed class AirportIntegrationTests : IClassFixture<InMemoryDbFixture>
     }
 
     [Fact]
-    public void Add_PersistsToDatabase()
+    public async Task Add_PersistsToDatabase()
     {
         var airport = new AirportBuilder().WithName("LROP").Build();
-
-        _store.Add(airport);
-
+        await _store.AddAsync(airport, CancellationToken.None);
         Assert.Contains(_db.Airports, a => a.Name == "LROP");
     }
 
     [Fact]
-    public void GetAll_ReturnsAllPersistedAirports()
+    public async Task GetAll_ReturnsAllPersistedAirports()
     {
-        _store.Add(new AirportBuilder().WithName("EGLL").Build());
-        _store.Add(new AirportBuilder().WithName("LFPG").Build());
-
-        var airports = _store.GetAll();
-
+        await _store.AddAsync(new AirportBuilder().WithName("EGLL").Build(), CancellationToken.None);
+        await _store.AddAsync(new AirportBuilder().WithName("LFPG").Build(), CancellationToken.None);
+        var airports = await _store.GetAllAsync(CancellationToken.None);
         Assert.Contains(airports, a => a.Name == "EGLL");
         Assert.Contains(airports, a => a.Name == "LFPG");
     }
@@ -42,10 +38,8 @@ public sealed class AirportIntegrationTests : IClassFixture<InMemoryDbFixture>
     public async Task Delete_RemovesAirportFromDatabase()
     {
         var airport = new AirportBuilder().WithName("KJFK").Build();
-        _store.Add(airport);
-
-        var result = await _store.Delete(airport.Id, CancellationToken.None);
-
+        await _store.AddAsync(airport, CancellationToken.None);
+        var result = await _store.DeleteAsync(airport.Id, CancellationToken.None);
         Assert.True(result);
         Assert.DoesNotContain(_db.Airports, a => a.Id == airport.Id);
     }
@@ -53,8 +47,7 @@ public sealed class AirportIntegrationTests : IClassFixture<InMemoryDbFixture>
     [Fact]
     public async Task Delete_NonExistentId_ReturnsFalse()
     {
-        var result = await _store.Delete(Guid.NewGuid(), CancellationToken.None);
-
+        var result = await _store.DeleteAsync(Guid.NewGuid(), CancellationToken.None);
         Assert.False(result);
     }
 }

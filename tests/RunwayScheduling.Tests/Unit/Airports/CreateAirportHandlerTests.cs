@@ -21,13 +21,13 @@ public sealed class CreateAirportHandlerTests
         // Arrange
         var command = new CreateAirportCommand("LROP", 30, 44.57, 26.09);
         var airport = new Airport { Name = command.Name, StandCapacity = command.StandCapacity, Latitude = command.Latitude, Longitude = command.Longitude };
-        _store.Add(Arg.Any<Airport>()).Returns(airport);
+        _store.AddAsync(Arg.Any<Airport>(), Arg.Any<CancellationToken>()).Returns(airport);
 
         // Act
         await _sut.Handle(command, CancellationToken.None);
 
         // Assert
-        _store.Received(1).Add(Arg.Any<Airport>());
+        await _store.Received(1).AddAsync(Arg.Any<Airport>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public sealed class CreateAirportHandlerTests
         // Arrange
         var command = new CreateAirportCommand("LROP", 30, 44.57, 26.09);
         var expected = new Airport { Name = "LROP", StandCapacity = 30, Latitude = 44.57, Longitude = 26.09 };
-        _store.Add(Arg.Any<Airport>()).Returns(expected);
+        _store.AddAsync(Arg.Any<Airport>(), Arg.Any<CancellationToken>()).Returns(expected);
 
         // Act
         var result = await _sut.Handle(command, CancellationToken.None);

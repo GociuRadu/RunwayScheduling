@@ -21,7 +21,6 @@ public sealed class CreateAirportHandler : IRequestHandler<CreateAirportCommand,
             Latitude = request.Latitude,
             Longitude = request.Longitude
         };
-        var saved = _store.Add(airport);
-        return Task.FromResult(saved);
+        return _store.AddAsync(airport, ct);
     }
 }

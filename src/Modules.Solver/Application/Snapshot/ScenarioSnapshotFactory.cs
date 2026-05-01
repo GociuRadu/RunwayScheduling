@@ -32,7 +32,8 @@ public sealed class ScenarioSnapshotFactory : IScenarioSnapshotFactory
         var scenarioConfig = await _scenarioConfigStore.GetById(scenarioConfigId, ct)
             ?? throw new InvalidOperationException($"ScenarioConfig {scenarioConfigId} not found.");
 
-        var airport = _airportStore.GetAll().FirstOrDefault(x => x.Id == scenarioConfig.AirportId)
+        var allAirports = await _airportStore.GetAllAsync(ct);
+        var airport = allAirports.FirstOrDefault(x => x.Id == scenarioConfig.AirportId)
             ?? throw new InvalidOperationException($"Airport {scenarioConfig.AirportId} not found.");
 
         var flightDtos = await _sender.Send(new FlightQuery(scenarioConfigId), ct);

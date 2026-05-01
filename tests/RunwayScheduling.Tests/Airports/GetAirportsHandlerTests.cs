@@ -18,7 +18,7 @@ public sealed class GetAirportsHandlerTests
     [Fact]
     public async Task Handle_ReturnsEmptyList_WhenNoAirports()
     {
-        _store.GetAll().Returns([]);
+        _store.GetAllAsync(Arg.Any<CancellationToken>()).Returns([]);
 
         var result = await _sut.Handle(new GetAirportsQuery(), CancellationToken.None);
 
@@ -29,7 +29,7 @@ public sealed class GetAirportsHandlerTests
     public async Task Handle_ReturnsMappedDtos()
     {
         var airport = new Airport { Name = "OTP", StandCapacity = 25, Latitude = 44.5, Longitude = 26.1 };
-        _store.GetAll().Returns([airport]);
+        _store.GetAllAsync(Arg.Any<CancellationToken>()).Returns([airport]);
 
         var result = await _sut.Handle(new GetAirportsQuery(), CancellationToken.None);
 
@@ -42,7 +42,7 @@ public sealed class GetAirportsHandlerTests
     [Fact]
     public async Task Handle_ReturnsAllAirports()
     {
-        _store.GetAll().Returns([
+        _store.GetAllAsync(Arg.Any<CancellationToken>()).Returns([
             new Airport { Name = "OTP" },
             new Airport { Name = "CLJ" },
             new Airport { Name = "TSR" }

@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using Modules.Airports.Domain;
 
 namespace Modules.Airports.Application;
 
 public interface IAirportStore
 {
-    Airport Add(Airport airport);
-    List<Airport> GetAll();
-    Task<bool> Delete(Guid airportId, CancellationToken ct);
+    Task<Airport> AddAsync(Airport airport, CancellationToken ct);
+    Task<List<Airport>> GetAllAsync(CancellationToken ct);
+    Task<bool> DeleteAsync(Guid airportId, CancellationToken ct);
 }
