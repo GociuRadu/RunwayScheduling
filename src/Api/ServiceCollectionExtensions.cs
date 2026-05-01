@@ -3,6 +3,8 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Api.DataBase;
 using Api.Errors;
+using Api.Validation;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,7 @@ using Modules.Login.Application;
 using Modules.Login.Application.UseCases.Login;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Application.UseCases.CreateScenarioConfig;
+using Modules.Scenarios.Application.UseCases.CreateFlights;
 using Modules.Solver.Application;
 using Modules.Solver.Application.Scheduling;
 using Modules.Solver.Application.Snapshot;
@@ -148,7 +151,11 @@ public static class ServiceCollectionExtensions
                 typeof(CreateScenarioConfigHandler).Assembly,
                 typeof(LoginHandler).Assembly,
                 typeof(SolveGreedyHandler).Assembly);
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
+
+        services.AddValidatorsFromAssemblyContaining<CreateFlightsCommandValidator>();
+        services.AddValidatorsFromAssemblyContaining<CreateAirportCommandValidator>();
     }
 
     private static void AddApiPolicies(this IServiceCollection services)
