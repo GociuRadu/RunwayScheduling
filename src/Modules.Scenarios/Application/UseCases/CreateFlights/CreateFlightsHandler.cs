@@ -3,6 +3,7 @@ using Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft;
 using Modules.Aircrafts.Domain;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Domain;
+using Modules.Scenarios.Domain.Exceptions;
 
 namespace Modules.Scenarios.Application.UseCases.CreateFlights;
 
@@ -26,9 +27,8 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
 
     public async Task<List<Flight>> Handle(CreateFlightsCommand request, CancellationToken ct)
     {
-        var cfg = await _configStore.GetById(request.ScenarioConfigId, ct);
-        if (cfg is null)
-            throw new Exception("Scenario config not found");
+        var cfg = await _configStore.GetById(request.ScenarioConfigId, ct)
+            ?? throw new ScenarioConfigNotFoundException(request.ScenarioConfigId);
 
         ValidateConfig(cfg);
 
@@ -37,7 +37,7 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
             ct);
 
         if (aircrafts.Count < cfg.AircraftCount)
-            throw new Exception("Generated aircraft count must be >= ScenarioConfig.AircraftCount");
+            throw new InvalidScenarioConfigException("Generated aircraft count must be >= ScenarioConfig.AircraftCount");
 
         var flights = GenerateFlightsFromAircrafts(aircrafts, cfg);
 
@@ -50,14 +50,14 @@ public sealed class CreateFlightsHandler : IRequestHandler<CreateFlightsCommand,
     private static void ValidateConfig(ScenarioConfig cfg)
     {
         if (cfg.OnGroundAircraftCount + cfg.InboundAircraftCount != cfg.AircraftCount)
-            throw new Exception("Invalid config: OnGroundAircraftCount + InboundAircraftCount must equal AircraftCount");
+            throw new InvalidScenarioConfigException("OnGroundAircraftCount + InboundAircraftCount must equal AircraftCount");
 
         if (cfg.RemainingOnGroundAircraftCount < 0 || cfg.RemainingOnGroundAircraftCount > cfg.AircraftCount)
-            throw new Exception("Invalid config: RemainingOnGroundAircraftCount must be in [0..AircraftCount]");
+            throw new InvalidScenarioConfigException("RemainingOnGroundAircraftCount must be in [0..AircraftCount]");
 
         var duration = cfg.EndTime - cfg.StartTime;
         if (duration.TotalMinutes < 10)
-            throw new Exception("Invalid config: Scenario interval must be at least 10 minutes (EndTime - StartTime >= 10).");
+            throw new InvalidScenarioConfigException("Scenario interval must be at least 10 minutes.");
     }
 
     private static List<Flight> GenerateFlightsFromAircrafts(List<Aircraft> aircrafts, ScenarioConfig cfg)

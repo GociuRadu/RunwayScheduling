@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using Modules.Airports.Domain.Exceptions;
+using Modules.Scenarios.Domain.Exceptions;
 
 namespace Api.Errors;
 
@@ -24,32 +26,24 @@ public sealed class GlobalExceptionHandlingMiddleware(
     {
         var problemDetails = exception switch
         {
-            UnauthorizedAccessException => ProblemDetailsDefaults.Create(
-                StatusCodes.Status401Unauthorized,
-                "Authentication failed."),
+            ScenarioConfigNotFoundException e => ProblemDetailsDefaults.Create(StatusCodes.Status404NotFound, e.Message),
+            InvalidScenarioConfigException e => ProblemDetailsDefaults.Create(StatusCodes.Status422UnprocessableEntity, e.Message),
+            AirportNotFoundException e => ProblemDetailsDefaults.Create(StatusCodes.Status404NotFound, e.Message),
+            RunwayNotFoundException e => ProblemDetailsDefaults.Create(StatusCodes.Status404NotFound, e.Message),
+            UnauthorizedAccessException => ProblemDetailsDefaults.Create(StatusCodes.Status401Unauthorized, "Authentication failed."),
             ValidationException validationException => ProblemDetailsDefaults.Create(
                 StatusCodes.Status400BadRequest,
                 validationException.ValidationResult?.ErrorMessage ?? validationException.Message),
-            KeyNotFoundException keyNotFoundException => ProblemDetailsDefaults.Create(
-                StatusCodes.Status404NotFound,
-                keyNotFoundException.Message),
-            ArgumentException argumentException => ProblemDetailsDefaults.Create(
-                StatusCodes.Status400BadRequest,
-                argumentException.Message),
-            InvalidOperationException invalidOperationException => ProblemDetailsDefaults.Create(
-                StatusCodes.Status400BadRequest,
-                invalidOperationException.Message),
+            KeyNotFoundException keyNotFoundException => ProblemDetailsDefaults.Create(StatusCodes.Status404NotFound, keyNotFoundException.Message),
+            ArgumentException argumentException => ProblemDetailsDefaults.Create(StatusCodes.Status400BadRequest, argumentException.Message),
+            InvalidOperationException invalidOperationException => ProblemDetailsDefaults.Create(StatusCodes.Status400BadRequest, invalidOperationException.Message),
             _ => ProblemDetailsDefaults.Create(StatusCodes.Status500InternalServerError)
         };
 
         if (problemDetails.Status >= StatusCodes.Status500InternalServerError)
-        {
             logger.LogError(exception, "Unhandled exception for {Method} {Path}", context.Request.Method, context.Request.Path);
-        }
         else
-        {
             logger.LogWarning(exception, "Request failed with {StatusCode} for {Method} {Path}", problemDetails.Status, context.Request.Method, context.Request.Path);
-        }
 
         context.Response.Clear();
         context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;

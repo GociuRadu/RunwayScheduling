@@ -4,6 +4,7 @@ using Modules.Aircrafts.Domain;
 using Modules.Scenarios.Application;
 using Modules.Scenarios.Application.UseCases.CreateFlights;
 using Modules.Scenarios.Domain;
+using Modules.Scenarios.Domain.Exceptions;
 
 namespace RunwayScheduling.Tests.Scenarios;
 
@@ -42,7 +43,7 @@ public sealed class CreateFlightsHandlerTests
         _scenarioConfigStore.GetById(scenarioConfigId, Arg.Any<CancellationToken>()).Returns(config);
         _mediator.Send(Arg.Any<GenerateRandomAircraftCommand>(), Arg.Any<CancellationToken>()).Returns(CreateAircraft(config, 3));
 
-        var exception = await Assert.ThrowsAsync<Exception>(() => sut.Handle(new CreateFlightsCommand(scenarioConfigId), CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<InvalidScenarioConfigException>(() => sut.Handle(new CreateFlightsCommand(scenarioConfigId), CancellationToken.None));
         Assert.Equal("Generated aircraft count must be >= ScenarioConfig.AircraftCount", exception.Message);
     }
 
@@ -56,7 +57,7 @@ public sealed class CreateFlightsHandlerTests
 
         _scenarioConfigStore.GetById(scenarioConfigId, Arg.Any<CancellationToken>()).Returns(config);
 
-        var exception = await Assert.ThrowsAsync<Exception>(() => sut.Handle(new CreateFlightsCommand(scenarioConfigId), CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<InvalidScenarioConfigException>(() => sut.Handle(new CreateFlightsCommand(scenarioConfigId), CancellationToken.None));
         Assert.Contains("must equal AircraftCount", exception.Message);
     }
 
