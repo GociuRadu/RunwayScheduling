@@ -118,3 +118,49 @@ function flattenValidationErrors(errors?: Record<string, string[]>): string | nu
 
   return messages.length > 0 ? messages[0] : null;
 }
+
+export type AirportDto = {
+  id: string;
+  name: string;
+  standCapacity: number;
+  latitude: number;
+  longitude: number;
+};
+
+export type RunwayDto = {
+  id: string;
+  airportId: string;
+  name: string;
+  isActive: boolean;
+  runwayType: number;
+};
+
+export type ScenarioConfigDto = {
+  id: string;
+  airportId: string;
+  name: string;
+  difficulty: number;
+  startTime: string;
+  endTime: string;
+  seed: number;
+  aircraftCount: number;
+  aircraftDifficulty: number;
+  onGroundAircraftCount: number;
+  inboundAircraftCount: number;
+  remainingOnGroundAircraftCount: number;
+  baseSeparationSeconds: number;
+  wakePercent: number;
+  weatherPercent: number;
+};
+
+export type SolverResultDto = {
+  fitness: number;
+  solveTimeMs: number;
+  assignments: AssignmentDto[];
+};
+
+export type AssignmentDto = {
+  flightId: string;
+  runwayId: string;
+  assignedTime: string;
+};
