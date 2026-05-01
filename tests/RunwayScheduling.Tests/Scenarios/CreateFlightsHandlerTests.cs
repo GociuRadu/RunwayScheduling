@@ -2,6 +2,7 @@ using MediatR;
 using Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft;
 using Modules.Aircrafts.Domain;
 using Modules.Scenarios.Application;
+using Modules.Scenarios.Application.Services;
 using Modules.Scenarios.Application.UseCases.CreateFlights;
 using Modules.Scenarios.Domain;
 using Modules.Scenarios.Domain.Exceptions;
@@ -20,7 +21,7 @@ public sealed class CreateFlightsHandlerTests
         var scenarioConfigId = Guid.NewGuid();
         var config = CreateScenarioConfig(scenarioConfigId);
         var aircraft = CreateAircraft(config, 4);
-        var sut = new CreateFlightsHandler(_mediator, _scenarioConfigStore, _flightStore);
+        var sut = new CreateFlightsHandler(_mediator, _scenarioConfigStore, _flightStore, new FlightScheduler());
 
         _scenarioConfigStore.GetById(scenarioConfigId, Arg.Any<CancellationToken>()).Returns(config);
         _mediator.Send(Arg.Any<GenerateRandomAircraftCommand>(), Arg.Any<CancellationToken>()).Returns(aircraft);
@@ -38,7 +39,7 @@ public sealed class CreateFlightsHandlerTests
     {
         var scenarioConfigId = Guid.NewGuid();
         var config = CreateScenarioConfig(scenarioConfigId);
-        var sut = new CreateFlightsHandler(_mediator, _scenarioConfigStore, _flightStore);
+        var sut = new CreateFlightsHandler(_mediator, _scenarioConfigStore, _flightStore, new FlightScheduler());
 
         _scenarioConfigStore.GetById(scenarioConfigId, Arg.Any<CancellationToken>()).Returns(config);
         _mediator.Send(Arg.Any<GenerateRandomAircraftCommand>(), Arg.Any<CancellationToken>()).Returns(CreateAircraft(config, 3));
@@ -53,7 +54,7 @@ public sealed class CreateFlightsHandlerTests
         var scenarioConfigId = Guid.NewGuid();
         var config = CreateScenarioConfig(scenarioConfigId);
         config.InboundAircraftCount = 1;
-        var sut = new CreateFlightsHandler(_mediator, _scenarioConfigStore, _flightStore);
+        var sut = new CreateFlightsHandler(_mediator, _scenarioConfigStore, _flightStore, new FlightScheduler());
 
         _scenarioConfigStore.GetById(scenarioConfigId, Arg.Any<CancellationToken>()).Returns(config);
 

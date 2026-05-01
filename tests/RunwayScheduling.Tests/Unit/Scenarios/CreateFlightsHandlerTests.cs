@@ -2,6 +2,7 @@ using MediatR;
 using Modules.Aircrafts.Application.UseCases.GenerateRandomAircraft;
 using Modules.Aircrafts.Domain;
 using Modules.Scenarios.Application;
+using Modules.Scenarios.Application.Services;
 using Modules.Scenarios.Application.UseCases.CreateFlights;
 using NSubstitute;
 using RunwayScheduling.Tests.Helpers.Builders;
@@ -17,7 +18,7 @@ public sealed class CreateFlightsHandlerTests
 
     public CreateFlightsHandlerTests()
     {
-        _sut = new CreateFlightsHandler(_mediator, _configStore, _flightStore);
+        _sut = new CreateFlightsHandler(_mediator, _configStore, _flightStore, new FlightScheduler());
     }
 
     [Fact]

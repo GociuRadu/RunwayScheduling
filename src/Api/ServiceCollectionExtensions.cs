@@ -17,6 +17,7 @@ using Modules.Airports.Application.UseCases.CreateAirport;
 using Modules.Login.Application;
 using Modules.Login.Application.UseCases.Login;
 using Modules.Scenarios.Application;
+using Modules.Scenarios.Application.Services;
 using Modules.Scenarios.Application.UseCases.CreateScenarioConfig;
 using Modules.Scenarios.Application.UseCases.CreateFlights;
 using Modules.Solver.Application;
@@ -139,6 +140,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IScenarioSnapshotFactory, ScenarioSnapshotFactory>();
         services.AddScoped<IBenchmarkEntryStore, EfBenchmarkEntryStore>();
         services.AddSingleton<ISchedulingEngine, SchedulingEngine>();
+        services.AddScoped<FlightScheduler>();
     }
 
     private static void AddMediatorHandlers(this IServiceCollection services)
