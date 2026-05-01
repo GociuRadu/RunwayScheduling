@@ -1,28 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { apiFetch } from "../lib/api";
 import { C, S } from "../styles/tokens";
 import { Modal } from "../components/Modal";
 import { SkeletonCard } from "../components/Skeleton";
 import { useToast } from "../hooks/useToast";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { NumberInput } from "../components/NumberInput";
-
-type AirportDto = {
-  id: string;
-  name: string;
-  standCapacity: number;
-  latitude: number;
-  longitude: number;
-};
-
-type RunwayDto = {
-  id: string;
-  airportId: string;
-  name: string;
-  isActive: boolean;
-  runwayType: number;
-};
+import { useAirports, useCreateAirport, useDeleteAirport, useRunways, useCreateRunway, useDeleteRunway, useUpdateRunway } from '../hooks/useAirports';
+import type { AirportDto, RunwayDto } from '../lib/api';
 
 const STORAGE_AIRPORT_ID = "selectedAirportId";
 const STORAGE_AIRPORT_NAME = "selectedAirportName";
@@ -41,10 +26,9 @@ export default function AirportsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
 
-  const [airports, setAirports] = useState<AirportDto[]>([]);
-  const [runways, setRunways] = useState<RunwayDto[]>([]);
-  const [loadingAirports, setLoadingAirports] = useState(false);
-  const [loadingRunways, setLoadingRunways] = useState(false);
+  const { data: airports, isLoading: loadingAirports, refetch: refetchAirports } = useAirports();
+  const { mutate: createAirportMutate } = useCreateAirport();
+  const { mutate: deleteAirportMutate } = useDeleteAirport();
 
   const [selectedAirportId, setSelectedAirportId] = useState<string | null>(
     searchParams.get("airportId") || localStorage.getItem(STORAGE_AIRPORT_ID),
@@ -52,6 +36,11 @@ export default function AirportsPage() {
   const [selectedAirportName, setSelectedAirportName] = useState<string>(
     localStorage.getItem(STORAGE_AIRPORT_NAME) || "",
   );
+
+  const { data: runways, isLoading: loadingRunways, refetch: refetchRunways } = useRunways(selectedAirportId);
+  const { mutate: createRunwayMutate } = useCreateRunway();
+  const { mutate: deleteRunwayMutate } = useDeleteRunway();
+  const { mutate: updateRunwayMutate } = useUpdateRunway();
 
   const [showNewAirport, setShowNewAirport] = useState(false);
   const [creatingAirport, setCreatingAirport] = useState(false);
@@ -95,66 +84,15 @@ export default function AirportsPage() {
     localStorage.setItem(STORAGE_AIRPORT_NAME, name);
   }, [selectedAirport]);
 
-  // Auto-load airports on mount
-  useEffect(() => {
-    fetchAirports();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Auto-load runways when airport selected
-  useEffect(() => {
-    if (selectedAirportId) {
-      fetchRunways(selectedAirportId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAirportId]);
-
   function clearSelectedAirport() {
     setSelectedAirportId(null);
     setSelectedAirportName("");
-    setRunways([]);
     setEditingRunwayId(null);
     localStorage.removeItem(STORAGE_AIRPORT_ID);
     localStorage.removeItem(STORAGE_AIRPORT_NAME);
     const params = new URLSearchParams(searchParams);
     params.delete("airportId");
     setSearchParams(params, { replace: true });
-  }
-
-  async function fetchAirports() {
-    try {
-      setLoadingAirports(true);
-      const res = await apiFetch("/api/airports");
-      if (!res.ok) throw new Error(`Failed to load airports (${res.status})`);
-      const data = (await res.json()) as AirportDto[];
-      setAirports(data);
-      if (selectedAirportId) {
-        const matched = data.find((a) => a.id === selectedAirportId);
-        if (matched) {
-          setSelectedAirportName(matched.name);
-          localStorage.setItem(STORAGE_AIRPORT_NAME, matched.name);
-        }
-      }
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to load airports", "error");
-    } finally {
-      setLoadingAirports(false);
-    }
-  }
-
-  async function fetchRunways(airportId: string) {
-    try {
-      setLoadingRunways(true);
-      setEditingRunwayId(null);
-      const res = await apiFetch(`/api/airports/${airportId}/runways`);
-      if (!res.ok) throw new Error(`Failed to load runways (${res.status})`);
-      const data = (await res.json()) as RunwayDto[];
-      setRunways(data);
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to load runways", "error");
-    } finally {
-      setLoadingRunways(false);
-    }
   }
 
   function selectAirport(airport: AirportDto) {
@@ -166,31 +104,25 @@ export default function AirportsPage() {
     setSelectedAirportName(airport.name);
     localStorage.setItem(STORAGE_AIRPORT_ID, airport.id);
     localStorage.setItem(STORAGE_AIRPORT_NAME, airport.name);
-    setRunways([]);
     setEditingRunwayId(null);
   }
 
   async function createAirport() {
     try {
       setCreatingAirport(true);
-      const res = await apiFetch("/api/airport", {
-        method: "POST",
-        body: JSON.stringify({
-          name: newAirportName.trim(),
-          standCapacity: newAirportStandCapacity,
-          latitude: newAirportLatitude,
-          longitude: newAirportLongitude,
-        }),
+      const created = await createAirportMutate({
+        name: newAirportName.trim(),
+        standCapacity: newAirportStandCapacity,
+        latitude: newAirportLatitude,
+        longitude: newAirportLongitude,
       });
-      if (!res.ok) throw new Error(`Failed to create airport (${res.status})`);
-      const created = (await res.json()) as AirportDto;
-      setAirports((prev) => [created, ...prev]);
       selectAirport(created);
       setShowNewAirport(false);
       setNewAirportName("");
       setNewAirportStandCapacity(20);
       setNewAirportLatitude(0);
       setNewAirportLongitude(0);
+      refetchAirports();
       showToast("Airport created", "success");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to create airport", "error");
@@ -203,21 +135,16 @@ export default function AirportsPage() {
     if (!selectedAirportId) return;
     try {
       setCreatingRunway(true);
-      const res = await apiFetch(`/api/airports/${selectedAirportId}/runways`, {
-        method: "POST",
-        body: JSON.stringify({
-          airportId: selectedAirportId,
-          name: newRunwayName.trim(),
-          isActive: newRunwayIsActive,
-          runwayType: newRunwayType,
-        }),
+      await createRunwayMutate(selectedAirportId, {
+        name: newRunwayName.trim(),
+        isActive: newRunwayIsActive,
+        runwayType: newRunwayType,
       });
-      if (!res.ok) throw new Error(`Failed to create runway (${res.status})`);
       setShowNewRunway(false);
       setNewRunwayName("");
       setNewRunwayIsActive(true);
       setNewRunwayType(2);
-      await fetchRunways(selectedAirportId);
+      refetchRunways();
       showToast("Runway created", "success");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to create runway", "error");
@@ -228,10 +155,9 @@ export default function AirportsPage() {
 
   async function deleteAirport(airportId: string) {
     try {
-      const res = await apiFetch(`/api/airports/${airportId}`, { method: "DELETE" });
-      if (!res.ok && res.status !== 204) throw new Error(`Failed to delete airport (${res.status})`);
-      setAirports((prev) => prev.filter((a) => a.id !== airportId));
+      await deleteAirportMutate(airportId);
       if (selectedAirportId === airportId) clearSelectedAirport();
+      refetchAirports();
       showToast("Airport deleted", "success");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to delete airport", "error");
@@ -240,10 +166,9 @@ export default function AirportsPage() {
 
   async function deleteRunway(runwayId: string) {
     try {
-      const res = await apiFetch(`/api/runways/${runwayId}`, { method: "DELETE" });
-      if (!res.ok && res.status !== 204) throw new Error(`Failed to delete runway (${res.status})`);
-      setRunways((prev) => prev.filter((r) => r.id !== runwayId));
+      await deleteRunwayMutate(runwayId);
       if (editingRunwayId === runwayId) setEditingRunwayId(null);
+      refetchRunways();
       showToast("Runway deleted", "success");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to delete runway", "error");
@@ -267,22 +192,14 @@ export default function AirportsPage() {
   async function saveRunway(runwayId: string) {
     if (!selectedAirportId) return;
     try {
-      const res = await apiFetch(`/api/runways/${runwayId}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          airportId: selectedAirportId,
-          name: editName.trim(),
-          isActive: editIsActive,
-          runwayType: editRunwayType,
-        }),
+      await updateRunwayMutate(runwayId, {
+        airportId: selectedAirportId,
+        name: editName.trim(),
+        isActive: editIsActive,
+        runwayType: editRunwayType,
       });
-      if (!res.ok && res.status !== 204) throw new Error(`Failed to update runway (${res.status})`);
-      setRunways((prev) =>
-        prev.map((r) =>
-          r.id === runwayId ? { ...r, name: editName.trim(), isActive: editIsActive, runwayType: editRunwayType } : r,
-        ),
-      );
       setEditingRunwayId(null);
+      refetchRunways();
       showToast("Runway updated", "success");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to update runway", "error");
