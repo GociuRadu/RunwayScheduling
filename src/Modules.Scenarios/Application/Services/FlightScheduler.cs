@@ -88,7 +88,7 @@ public sealed class FlightScheduler
         return flights;
     }
 
-    internal static (DateTime safeStart, DateTime safeEnd) GetSafeWindow(DateTime start, DateTime end, int preferredMarginMinutes)
+    public static (DateTime safeStart, DateTime safeEnd) GetSafeWindow(DateTime start, DateTime end, int preferredMarginMinutes)
     {
         if (end < start) end = start;
         var totalMinutes = (end - start).TotalMinutes;
