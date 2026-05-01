@@ -12,6 +12,7 @@ public sealed class ScenarioConfigBuilder
     private DateTime _start = DateTime.UtcNow.Date.AddHours(8);
     private DateTime _end = DateTime.UtcNow.Date.AddHours(10);
     private int _seed = 42;
+    private Guid _airportId = Guid.NewGuid();
 
     public ScenarioConfigBuilder WithAircraftCount(int total, int onGround, int inbound)
     {
@@ -22,10 +23,11 @@ public sealed class ScenarioConfigBuilder
     public ScenarioConfigBuilder WithDifficulty(int d) { _difficulty = d; return this; }
     public ScenarioConfigBuilder WithTimeWindow(DateTime start, DateTime end) { _start = start; _end = end; return this; }
     public ScenarioConfigBuilder WithSeed(int seed) { _seed = seed; return this; }
+    public ScenarioConfigBuilder WithAirportId(Guid airportId) { _airportId = airportId; return this; }
 
     public ScenarioConfig Build() => new()
     {
-        AirportId = Guid.NewGuid(),
+        AirportId = _airportId,
         Name = "Test Scenario",
         Difficulty = _difficulty,
         AircraftCount = _aircraftCount,

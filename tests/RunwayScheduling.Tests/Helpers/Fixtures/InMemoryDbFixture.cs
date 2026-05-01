@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace RunwayScheduling.Tests.Helpers.Fixtures;
 
-public sealed class InMemoryDbFixture : IDisposable
+public sealed class InMemoryDbFixture : IAsyncDisposable
 {
     public AppDbContext DbContext { get; }
 
@@ -16,5 +16,5 @@ public sealed class InMemoryDbFixture : IDisposable
         DbContext.Database.EnsureCreated();
     }
 
-    public void Dispose() => DbContext.Dispose();
+    public async ValueTask DisposeAsync() => await DbContext.DisposeAsync();
 }
