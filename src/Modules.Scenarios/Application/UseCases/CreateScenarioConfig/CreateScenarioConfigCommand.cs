@@ -42,42 +42,4 @@ public sealed record CreateScenarioConfigCommand(
     int? MinWeatherIntervalMinutes,
     [property: Range(1, 5)]
     int? WeatherDifficulty
-) : IRequest<ScenarioConfigEntity>, IValidatableObject
-{
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        if (StartTime is null)
-        {
-            yield return new ValidationResult("Start time is required.", [nameof(StartTime)]);
-        }
-
-        if (EndTime is null)
-        {
-            yield return new ValidationResult("End time is required.", [nameof(EndTime)]);
-        }
-
-        if (StartTime is not null && EndTime is not null && EndTime <= StartTime)
-        {
-            yield return new ValidationResult("End time must be after start time.", [nameof(EndTime)]);
-        }
-
-        if (OnGroundAircraftCount is not null
-            && RemainingOnGroundAircraftCount is not null
-            && RemainingOnGroundAircraftCount > OnGroundAircraftCount)
-        {
-            yield return new ValidationResult(
-                "Remaining on ground aircraft cannot exceed on ground aircraft.",
-                [nameof(RemainingOnGroundAircraftCount)]);
-        }
-
-        if (AircraftCount is not null
-            && OnGroundAircraftCount is not null
-            && InboundAircraftCount is not null
-            && AircraftCount != OnGroundAircraftCount + InboundAircraftCount)
-        {
-            yield return new ValidationResult(
-                "Aircraft count must equal on ground plus inbound aircraft.",
-                [nameof(AircraftCount)]);
-        }
-    }
-}
+) : IRequest<ScenarioConfigEntity>;

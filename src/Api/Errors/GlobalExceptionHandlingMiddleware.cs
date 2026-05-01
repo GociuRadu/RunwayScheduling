@@ -31,6 +31,9 @@ public sealed class GlobalExceptionHandlingMiddleware(
             AirportNotFoundException e => ProblemDetailsDefaults.Create(StatusCodes.Status404NotFound, e.Message),
             RunwayNotFoundException e => ProblemDetailsDefaults.Create(StatusCodes.Status404NotFound, e.Message),
             UnauthorizedAccessException => ProblemDetailsDefaults.Create(StatusCodes.Status401Unauthorized, "Authentication failed."),
+            FluentValidation.ValidationException fve => ProblemDetailsDefaults.Create(
+                StatusCodes.Status400BadRequest,
+                string.Join(" ", fve.Errors.Select(e => e.ErrorMessage))),
             ValidationException validationException => ProblemDetailsDefaults.Create(
                 StatusCodes.Status400BadRequest,
                 validationException.ValidationResult?.ErrorMessage ?? validationException.Message),
