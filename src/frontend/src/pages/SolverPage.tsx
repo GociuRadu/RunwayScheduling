@@ -707,7 +707,7 @@ export default function SolverPage() {
                 disabled={!hasScenario || comparing || solving}
                 style={{ opacity: !hasScenario || comparing || solving ? 0.5 : 1, minWidth: "160px" }}
               >
-                {comparing ? "Comparingâ€¦" : "Compare Greedy vs Genetic"}
+                {comparing ? "Comparing..." : "Compare Greedy vs Genetic"}
               </button>
               {comparisonResult && (
                 <button
