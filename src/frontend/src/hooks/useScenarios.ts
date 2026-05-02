@@ -11,12 +11,19 @@ export function useScenarios(airportId: string | null) {
   useEffect(() => {
     if (!airportId) return;
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    apiFetchJson<ScenarioConfigDto[]>(`/api/scenario-configs?airportId=${airportId}`)
-      .then(d => { if (!cancelled) setData(d); })
-      .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load scenarios'); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const d = await apiFetchJson<ScenarioConfigDto[]>(`/api/scenario-configs?airportId=${airportId}`);
+        if (!cancelled) setData(d);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load scenarios');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    load();
     return () => { cancelled = true; };
   }, [airportId, fetchCount]);
 

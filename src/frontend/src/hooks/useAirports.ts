@@ -10,12 +10,19 @@ export function useAirports() {
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    apiFetchJson<AirportDto[]>('/api/airports')
-      .then(d => { if (!cancelled) setData(d); })
-      .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load airports'); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const d = await apiFetchJson<AirportDto[]>('/api/airports');
+        if (!cancelled) setData(d);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load airports');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    load();
     return () => { cancelled = true; };
   }, [fetchCount]);
 
@@ -75,19 +82,26 @@ export function useRunways(airportId: string | null) {
   const [fetchCount, setFetchCount] = useState(0);
 
   useEffect(() => {
-    if (!airportId) { setData([]); return; }
+    if (!airportId) return;
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    apiFetchJson<RunwayDto[]>(`/api/airports/${airportId}/runways`)
-      .then(d => { if (!cancelled) setData(d); })
-      .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load runways'); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const d = await apiFetchJson<RunwayDto[]>(`/api/airports/${airportId}/runways`);
+        if (!cancelled) setData(d);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load runways');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    load();
     return () => { cancelled = true; };
   }, [airportId, fetchCount]);
 
   const refetch = useCallback(() => setFetchCount(c => c + 1), []);
-  return { data, isLoading, error, refetch };
+  return { data: airportId ? data : [], isLoading, error, refetch };
 }
 
 export function useCreateRunway() {
