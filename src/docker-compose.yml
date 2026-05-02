@@ -3,10 +3,7 @@ services:
     image: postgres:17
     container_name: runway_db
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file: .env
     ports:
       - "5433:5432"
     volumes:
@@ -16,6 +13,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - runway_net
 
   api:
     build:
@@ -23,17 +22,21 @@ services:
       dockerfile: Api/Dockerfile
     container_name: runway_api
     restart: unless-stopped
-    environment:
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-      ConnectionStrings__Default: ${CONNECTION_STRING}
-      JWT__KEY: ${JWT__KEY}
-      JWT__ISSUER: ${JWT__ISSUER}
-      JWT__AUDIENCE: ${JWT__AUDIENCE}
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    env_file: .env
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "5186:8080"
+    networks:
+      - runway_net
 
   frontend:
     build:
@@ -41,10 +44,18 @@ services:
       dockerfile: Dockerfile
     container_name: runway_frontend
     restart: unless-stopped
+    env_file: .env
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     ports:
       - "3000:80"
+    networks:
+      - runway_net
+
+networks:
+  runway_net:
+    driver: bridge
 
 volumes:
   runway_db_data:

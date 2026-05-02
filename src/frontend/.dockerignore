@@ -1,5 +1,5 @@
-node_modules
-dist
-.git
-.gitignore
-Dockerfile
+﻿node_modules/
+dist/
+.env
+.env.*
+*.local

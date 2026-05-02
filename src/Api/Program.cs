@@ -8,6 +8,7 @@ var app = builder.Build();
 
 app.UseApiPipeline();
 Api.Endpoints.MapAll(app);
+app.MapHealthChecks("/health").AllowAnonymous();
 app.ApplyDatabaseMigrations();
 
 app.Run();

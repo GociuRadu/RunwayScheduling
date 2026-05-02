@@ -38,6 +38,7 @@ public static class ServiceCollectionExtensions
         services.AddApplicationServices();
         services.AddMediatorHandlers();
         services.AddApiPolicies();
+        services.AddHealthChecks();
 
         return services;
     }

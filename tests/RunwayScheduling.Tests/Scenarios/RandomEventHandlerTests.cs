@@ -41,7 +41,11 @@ public sealed class RandomEventHandlerTests
         var expected = new RandomEvent { Name = request.Name, ImpactPercent = request.ImpactPercent };
         var sut = new UpdateRandomEventHandler(_randomEventStore, _scenarioConfigStore);
 
-        _scenarioConfigStore.GetById(scenarioConfigId, Arg.Any<CancellationToken>()).Returns(new ScenarioConfig());
+        _scenarioConfigStore.GetById(scenarioConfigId, Arg.Any<CancellationToken>()).Returns(new ScenarioConfig
+        {
+            StartTime = request.StartTime.AddHours(-1),
+            EndTime = request.EndTime.AddHours(1)
+        });
         _randomEventStore.Update(
             request.Id,
             request.ScenarioConfigId,
