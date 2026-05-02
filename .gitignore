@@ -104,6 +104,9 @@ benchmark_results.html
 .dotnet/
 src/.qodo/
 
+# Git worktrees
+.worktrees/
+
 # Claude & Codex generated
 .claude/
 .superpowers/
