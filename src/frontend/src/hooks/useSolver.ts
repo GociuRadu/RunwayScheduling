@@ -26,6 +26,7 @@ export function useSolveGreedy() {
   return { data, mutate, isLoading, error };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function useSolverResult(_scenarioConfigId: string | null) {
   const [data] = useState<SolverResultDto | null>(null);
   const [isLoading] = useState(false);

@@ -9,7 +9,7 @@ export function useScenarios(airportId: string | null) {
   const [fetchCount, setFetchCount] = useState(0);
 
   useEffect(() => {
-    if (!airportId) { setData([]); return; }
+    if (!airportId) return;
     let cancelled = false;
     setIsLoading(true);
     setError(null);
@@ -21,7 +21,7 @@ export function useScenarios(airportId: string | null) {
   }, [airportId, fetchCount]);
 
   const refetch = useCallback(() => setFetchCount(c => c + 1), []);
-  return { data, isLoading, error, refetch };
+  return { data: airportId ? data : [], isLoading, error, refetch };
 }
 
 export function useCreateScenario() {
