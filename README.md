@@ -1,45 +1,46 @@
 # RunwayScheduling
 
-Aplicație full-stack pentru simularea și compararea algoritmilor de planificare a zborurilor pe pistele unui aeroport. Implementează un solver greedy și un solver hibrid Genetic Algorithm + CP-SAT, cu UI interactiv pentru configurare și vizualizare rezultate.
+Full-stack application for simulating and comparing runway scheduling algorithms. Implements a greedy solver and a hybrid Genetic Algorithm + CP-SAT solver, with an interactive UI for scenario configuration and result visualization.
 
 ## Stack
 
-| Strat | Tehnologie |
+| Layer | Technology |
 |---|---|
 | Backend | ASP.NET Core Minimal API (.NET 10), MediatR (CQRS), EF Core, PostgreSQL |
 | Frontend | React 19, TypeScript, Vite |
 | Auth | JWT Bearer, BCrypt |
 | Solver | Greedy + Genetic Algorithm + CP-SAT (Google OR-Tools) |
 | Infra | Docker Compose, GitHub Actions CI/CD |
-| Teste | xUnit, Coverlet |
+| Tests | xUnit, Coverlet |
 
-## Structura proiectului
+## Project Structure
 
 ```
 src/
   Api/                   Composition root — DI, HTTP pipeline, auth, EF migrations
-  Modules.Aircrafts/     Generare și listare aeronave (wake turbulence category)
-  Modules.Airports/      Aeroporturi și piste (tip pistă, stare activă)
-  Modules.Login/         Autentificare, emitere JWT
-  Modules.Scenarios/     Configurații scenarii, zboruri, meteo, evenimente aleatorii
-  Modules.Solver/        Solvere (Greedy, Genetic+CP-SAT), comparare, benchmark
-  frontend/              SPA React (Vite)
+  Modules.Aircrafts/     Aircraft generation and listing (wake turbulence category)
+  Modules.Airports/      Airports and runways (type, active state)
+  Modules.Login/         Authentication, JWT issuance
+  Modules.Scenarios/     Scenario configs, flights, weather, random events
+  Modules.Solver/        Solvers (Greedy, Genetic+CP-SAT), compare, benchmark
+  frontend/              React SPA (Vite)
 
 tests/
   RunwayScheduling.Tests/  Unit + Integration (xUnit, EF InMemory)
 
 scripts/
-  start-dev.bat            Pornește backend + frontend în paralel
-  coverage.bat             Teste cu raport HTML coverage
-  generate-scenario.mjs    Generează scenario-500.json
+  start-dev.bat            Start backend + frontend in parallel
+  coverage.bat             Run tests with HTML coverage report
+  generate-scenario.mjs    Generate scenario-500.json
 
 docs/
-  DB.png                   Schema baza de date
+  DB.png                   Database schema diagram
+  SYSTEM.md                Full technical documentation
 ```
 
-## Cum rulezi local
+## Running Locally
 
-### Rapid (Windows)
+### Quick start (Windows)
 
 ```bat
 scripts\start-dev.bat
@@ -47,7 +48,7 @@ scripts\start-dev.bat
 
 ### Manual
 
-**Backend** — necesită PostgreSQL pe `localhost:5433`:
+**Backend** — requires PostgreSQL on `localhost:5433`:
 ```bash
 dotnet restore RunwayScheduling.slnx
 dotnet run --project src\Api\Api.csproj
@@ -62,76 +63,76 @@ npm run dev
 # http://localhost:5173
 ```
 
-### Docker Compose (recomandat)
+### Docker Compose (recommended)
 
 ```bash
 cd src
-cp .env.example .env    # completează valorile
+cp .env.example .env    # fill in values
 docker compose up --build
 # API: :5186  |  Frontend: :3000  |  DB: :5433
 ```
 
-## Autentificare
+## Authentication
 
-Toate endpoint-urile necesită token JWT, cu excepția `POST /login`:
+All endpoints require a JWT token except `POST /login`:
 
 ```
 Authorization: Bearer <token>
 ```
 
-`POST /login` este rate-limited la 5 cereri/minut.
+`POST /login` is rate-limited to 5 requests/minute.
 
-## Endpoint-uri API
+## API Endpoints
 
 ### Auth
-| Metodă | Rută | Descriere |
-|--------|------|-----------|
-| POST | `/login` | Obține token JWT |
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/login` | Obtain JWT token |
 
-### Aeroporturi & Piste
-| Metodă | Rută | Descriere |
-|--------|------|-----------|
-| POST | `/airport` | Creare aeroport |
-| GET | `/airports` | Listare aeroporturi |
-| DELETE | `/airports/{id}` | Ștergere aeroport |
-| POST | `/airports/{id}/runways` | Adăugare pistă |
-| GET | `/airports/{id}/runways` | Listare piste |
-| PUT | `/runways/{id}` | Actualizare pistă |
-| DELETE | `/runways/{id}` | Ștergere pistă |
+### Airports & Runways
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/airport` | Create airport |
+| GET | `/airports` | List airports |
+| DELETE | `/airports/{id}` | Delete airport |
+| POST | `/airports/{id}/runways` | Add runway |
+| GET | `/airports/{id}/runways` | List runways |
+| PUT | `/runways/{id}` | Update runway |
+| DELETE | `/runways/{id}` | Delete runway |
 
-### Scenarii
-| Metodă | Rută | Descriere |
-|--------|------|-----------|
-| POST | `/scenarios/configs` | Creare configurație scenariu |
-| GET | `/scenarios/configs` | Listare configurații |
-| GET | `/scenarios/configs/{id}` | Date complete scenariu |
-| DELETE | `/scenarios/configs/{id}` | Ștergere scenariu |
-| POST | `/flights/generate/{id}` | Generare zboruri |
-| GET | `/flights/{id}` | Listare zboruri |
-| POST | `/weatherintervals/generate/{id}` | Generare intervale meteo |
-| GET | `/weatherintervals/{id}` | Listare intervale meteo |
-| POST | `/aircrafts/generate/{id}` | Generare aeronave |
-| GET | `/aircrafts/{id}` | Listare aeronave |
-| POST | `/scenarios/{id}/random-events` | Adăugare eveniment aleatoriu |
-| GET | `/random-events/{id}` | Listare evenimente |
-| PUT | `/random-events/{id}` | Actualizare eveniment |
-| DELETE | `/random-events/{id}` | Ștergere eveniment |
+### Scenarios
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/scenarios/configs` | Create scenario config |
+| GET | `/scenarios/configs` | List configs |
+| GET | `/scenarios/configs/{id}` | Full scenario data |
+| DELETE | `/scenarios/configs/{id}` | Delete scenario |
+| POST | `/flights/generate/{id}` | Generate flights |
+| GET | `/flights/{id}` | List flights |
+| POST | `/weatherintervals/generate/{id}` | Generate weather intervals |
+| GET | `/weatherintervals/{id}` | List weather intervals |
+| POST | `/aircrafts/generate/{id}` | Generate aircraft |
+| GET | `/aircrafts/{id}` | List aircraft |
+| POST | `/scenarios/{id}/random-events` | Add random event |
+| GET | `/random-events/{id}` | List random events |
+| PUT | `/random-events/{id}` | Update random event |
+| DELETE | `/random-events/{id}` | Delete random event |
 
 ### Solver
-| Metodă | Rută | Descriere |
-|--------|------|-----------|
-| GET | `/greedy/{id}` | Planificare greedy |
-| GET | `/genetic/{id}` | Planificare Genetic + CP-SAT |
-| GET | `/compare/{id}` | Comparație Greedy vs Genetic |
-| POST | `/solver/solve-from-payload` | Solver direct din JSON (fără cont) |
-| POST | `/solver/benchmark` | Benchmark parametri GA pe mai multe configurații |
-| GET | `/solver/benchmarks` | Listare rezultate benchmark salvate |
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/greedy/{id}` | Greedy scheduling |
+| GET | `/genetic/{id}` | Genetic + CP-SAT scheduling |
+| GET | `/compare/{id}` | Compare Greedy vs Genetic |
+| POST | `/solver/solve-from-payload` | Solve directly from JSON body (no account needed) |
+| POST | `/solver/benchmark` | Benchmark GA across multiple parameter configs |
+| GET | `/solver/benchmarks` | List saved benchmark results |
 
 ## Solve from Payload
 
-Poți rula solverul fără cont și fără bază de date. În UI folosești butonul **Import JSON** din pagina Solver.
+Run the solver without an account or database. Use the **Import JSON** button on the Solver page in the UI.
 
-**Structură minimă:**
+**Minimal structure:**
 ```json
 {
   "scenarioConfig": {
@@ -153,35 +154,35 @@ Poți rula solverul fără cont și fără bază de date. În UI folosești buto
 }
 ```
 
-**Valori enum:**
+**Enum values:**
 
-| Câmp | Valori |
-|------|--------|
+| Field | Values |
+|-------|--------|
 | `runwayType` | `0` Landing, `1` Takeoff, `2` Both |
 | `flight.type` | `0` Arrival, `1` Departure, `2` OnGround |
 | `weatherSeverity` | `0` Clear, `1` Light, `2` Moderate, `3` Heavy, `4` Severe, `5` Storm |
 
-Scenariu cu 500 de zboruri: `scripts/scenario-500.json`.
+A 500-flight scenario is available at `scripts/scenario-500.json`.
 
-## Teste
+## Tests
 
 ```bash
 dotnet test tests\RunwayScheduling.Tests\RunwayScheduling.Tests.csproj
 ```
 
-Cu raport coverage HTML:
+With HTML coverage report:
 ```bash
 scripts\coverage.bat
 ```
 
 ## CI/CD
 
-- **CI** (`ci.yml`): push/PR pe `main` sau `develop` → build + test backend, lint + build frontend, build Docker
-- **CD** (`cd.yml`): trigger manual → publică imaginile pe GitHub Container Registry
+- **CI** (`ci.yml`): triggered on push/PR to `main` or `develop` — build + test backend, lint + build frontend, Docker build
+- **CD** (`cd.yml`): manual trigger — publishes Docker images to GitHub Container Registry
 
-## Note
+## Notes
 
-- Migrarile EF se aplică automat la startup
-- Solverul genetic inițializează jumătate din populație din soluția greedy
-- CP-SAT rafinează ferestrele de timp ale elitelor în fiecare generație
-- Fitness = penalitate (mai mic = mai bun): anulare → 180×, întârziere → minute×, devans → minute×0.5, totul ponderat cu `1.2^(priority-1)`
+- EF migrations are applied automatically on startup
+- The genetic solver seeds half the initial population from the greedy solution
+- CP-SAT refines time windows of elite chromosomes every generation
+- Fitness = penalty (lower is better): cancellation → 180×, delay → minutes×, early → minutes×0.5, all weighted by `1.2^(priority-1)`

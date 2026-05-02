@@ -1,22 +1,22 @@
-# RunwayScheduling — Documentație tehnică
+# RunwayScheduling — Technical Documentation
 
-## Cuprins
+## Table of Contents
 
-1. [Arhitectură](#arhitectură)
-2. [Module backend](#module-backend)
-3. [Modele de date](#modele-de-date)
-4. [Algoritmi solver](#algoritmi-solver)
-5. [API complet](#api-complet)
+1. [Architecture](#architecture)
+2. [Backend Modules](#backend-modules)
+3. [Data Models](#data-models)
+4. [Solver Algorithms](#solver-algorithms)
+5. [Full API Reference](#full-api-reference)
 6. [Frontend](#frontend)
-7. [Baza de date](#baza-de-date)
-8. [Autentificare](#autentificare)
-9. [Configurare și mediu](#configurare-și-mediu)
+7. [Database](#database)
+8. [Authentication](#authentication)
+9. [Configuration & Environment](#configuration--environment)
 
 ---
 
-## Arhitectură
+## Architecture
 
-**Monolith modular** cu Clean Architecture per modul. Toate modulele compilează într-un singur proces; nu există comunicare prin rețea între ele.
+**Modular monolith** with Clean Architecture per module. All modules compile into a single process — no network communication between them.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -38,20 +38,19 @@
 └─────────────────────────────────────────────────────┘
 ```
 
-**Dependențe între module** (doar acestea sunt permise):
+**Allowed cross-module dependencies** (all others are forbidden):
 - `Scenarios` → `Aircrafts`, `Airports`
 - `Solver` → `Scenarios`, `Airports`, `Aircrafts`
-- Orice alt cross-module reference este interzis
 
-**Pattern CQRS**: fiecare use-case are `<Name>Command/Query.cs` + `<Name>Handler.cs`. Handlere înregistrate în `Program.cs` din assembly-ul fiecărui modul.
+**CQRS pattern**: every use-case has a `<Name>Command/Query.cs` + `<Name>Handler.cs`. Handlers are registered in `Program.cs` from each module's assembly.
 
 ---
 
-## Module backend
+## Backend Modules
 
 ### Modules.Airports
 
-Gestionează aeroporturi și piste.
+Manages airports and runways.
 
 **Domain:**
 - `Airport` — id, name
@@ -59,25 +58,25 @@ Gestionează aeroporturi și piste.
 - `RunwayType` enum: `Landing=0`, `Takeoff=1`, `Both=2`
 
 **Use cases:**
-- `CreateAirport` — creare aeroport (validat: name nenul)
-- `GetAirports` — listare toate
-- `DeleteAirport` — ștergere cu cascade (piste + zboruri)
-- `CreateRunway` — adăugare pistă la aeroport
-- `GetRunwaysByAirportId` — listare piste per aeroport
-- `UpdateRunway` — modificare tip/stare pistă
-- `DeleteRunway` — ștergere pistă
+- `CreateAirport` — create airport (validated: name required)
+- `GetAirports` — list all
+- `DeleteAirport` — delete with cascade (runways + flights)
+- `CreateRunway` — add runway to airport
+- `GetRunwaysByAirportId` — list runways per airport
+- `UpdateRunway` — modify runway type/active state
+- `DeleteRunway` — delete runway
 
 ### Modules.Aircrafts
 
-Generează aeronave cu categorie de turbulență de sillaj.
+Generates aircraft with wake turbulence category.
 
 **Domain:**
 - `Aircraft` — id, tailNumber, wakeCategory, scenarioConfigId
 - `WakeTurbulenceCategory` enum: `Light`, `Medium`, `Heavy`, `Super`
 
 **Use cases:**
-- `GenerateRandomAircraft` — generează N aeronave cu tail number și categorie random
-- `GetAircrafts` — listare per scenariu
+- `GenerateRandomAircraft` — generate N aircraft with random tail numbers and categories
+- `GetAircrafts` — list by scenario
 
 ### Modules.Login
 
@@ -85,11 +84,11 @@ Generează aeronave cu categorie de turbulență de sillaj.
 - `User` — id, username, passwordHash
 
 **Use cases:**
-- `Login` — validează credențiale (BCrypt), emite JWT access token
+- `Login` — validates credentials (BCrypt), issues JWT access token
 
 ### Modules.Scenarios
 
-Gestionează tot ce definește un scenariu de simulare.
+Manages everything that defines a simulation scenario.
 
 **Domain:**
 - `ScenarioConfig` — id, name, startTime, endTime, baseSeparationSeconds, airportId
@@ -100,55 +99,55 @@ Gestionează tot ce definește un scenariu de simulare.
 - `RandomEvent` — id, startTime, endTime, affectedRunwayId, description, scenarioConfigId
 
 **Use cases:**
-- `CreateScenarioConfig` — creare configurație
-- `GetScenarioConfigs` — listare
-- `GetAllDataScenarioConfig` — tot scenariul într-un singur response (config + zboruri + meteo + events + aeronave)
-- `DeleteScenario` — ștergere cu tot ce ține de el
-- `CreateFlights` — generare zboruri random în fereastra scenariului
-- `GetFlights` — listare zboruri per scenariu
-- `CreateWeatherIntervals` — generare intervale meteo random
-- `GetWeatherIntervals` — listare
+- `CreateScenarioConfig` — create configuration
+- `GetScenarioConfigs` — list all
+- `GetAllDataScenarioConfig` — returns full scenario in one response (config + flights + weather + events + aircraft)
+- `DeleteScenario` — delete with all associated data
+- `CreateFlights` — generate random flights within the scenario time window
+- `GetFlights` — list flights per scenario
+- `CreateWeatherIntervals` — generate random weather intervals
+- `GetWeatherIntervals` — list
 - `CreateRandomEvent` / `UpdateRandomEvent` / `DeleteRandomEvent` / `GetRandomEventsByScenarioConfigId`
 
-**FlightScheduler** (service intern): distribuie zborurile uniform în fereastra scenariului, respectând separarea minimă și proporțiile arrival/departure.
+**FlightScheduler** (internal service): distributes flights evenly across the scenario window, respecting minimum separation and arrival/departure ratios.
 
 ### Modules.Solver
 
-Conține logica de optimizare.
+Contains all optimization logic.
 
-**Componente cheie:**
-- `IScenarioSnapshotFactory` → `ScenarioSnapshotFactory` — asamblează toate datele scenariului într-un `ScenarioSnapshot` imutabil
-- `ScenarioSnapshot` — toate datele: config, airport, runways, flights, weatherIntervals, randomEvents
-- `PreparedScenario` — snapshot procesat: zboruri sortate, piste indexate pe tip, weather/events sortate
-- `ISchedulingEngine` → `SchedulingEngine` — evaluează o permutare de zboruri și produce `SchedulingEvaluation`
-- `SchedulingEvaluation` — lista de `SolvedFlight` + fitness total
-- `SolverResult` — rezultat final: fitness, counts, algorithmName, solveTimeMs, lista SolvedFlight
+**Key components:**
+- `IScenarioSnapshotFactory` → `ScenarioSnapshotFactory` — assembles all scenario data into an immutable `ScenarioSnapshot`
+- `ScenarioSnapshot` — complete data: config, airport, runways, flights, weatherIntervals, randomEvents
+- `PreparedScenario` — processed snapshot: sorted flights, runways indexed by type, sorted weather/events
+- `ISchedulingEngine` → `SchedulingEngine` — evaluates a flight permutation and produces a `SchedulingEvaluation`
+- `SchedulingEvaluation` — list of `SolvedFlight` + total fitness
+- `SolverResult` — final result: fitness, counts, algorithmName, solveTimeMs, SolvedFlight list
 
 **Use cases:**
-- `SolveGreedy` — solver greedy
-- `SolveGenetic` — solver hibrid GA + CP-SAT
-- `Compare` — rulează ambii solveri și returnează rezultatele side-by-side
-- `SolveFromPayload` — acceptă tot scenariul ca JSON body, rulează ambii solveri
-- `GaBenchmark` — rulează GA cu mai multe configurații de parametri, salvează rezultatele
-- `GetBenchmarkEntries` — listare benchmark-uri salvate
+- `SolveGreedy` — greedy solver
+- `SolveGenetic` — hybrid GA + CP-SAT solver
+- `Compare` — runs both solvers and returns results side-by-side
+- `SolveFromPayload` — accepts full scenario as JSON body, runs both solvers
+- `GaBenchmark` — runs GA with multiple parameter configurations, saves results
+- `GetBenchmarkEntries` — list saved benchmark results
 
 ---
 
-## Modele de date
+## Data Models
 
 ### SolvedFlight
 
 ```
-FlightId         Guid
-ScenarioConfigId Guid
-Callsign         string
-Type             FlightType
-Priority         int
-ScheduledTime    DateTime
-AssignedTime     DateTime?
-DelayMinutes     double
-EarlyMinutes     double
-Status           FlightStatus
+FlightId           Guid
+ScenarioConfigId   Guid
+Callsign           string
+Type               FlightType
+Priority           int
+ScheduledTime      DateTime
+AssignedTime       DateTime?
+DelayMinutes       double
+EarlyMinutes       double
+Status             FlightStatus
 CancellationReason CancellationReason
 ```
 
@@ -159,106 +158,106 @@ CancellationReason CancellationReason
 ### SolverResult
 
 ```
-AlgorithmName    string
-Fitness          double        (penalitate totală, mai mic = mai bun)
-TotalFlights     int
-TotalScheduled   int
-TotalCanceled    int
-TotalDelayed     int
-SolveTimeMs      double
-Flights          IReadOnlyList<SolvedFlight>
+AlgorithmName   string
+Fitness         double         (total penalty — lower is better)
+TotalFlights    int
+TotalScheduled  int
+TotalCanceled   int
+TotalDelayed    int
+SolveTimeMs     double
+Flights         IReadOnlyList<SolvedFlight>
 ```
 
 ### BenchmarkEntry
 
-Înregistrează un rulaj GA cu parametrii și rezultatele sale. Persiste în DB.
+Records a GA run with its parameters and results. Persisted to DB.
 
 ---
 
-## Algoritmi solver
+## Solver Algorithms
 
 ### Greedy
 
-1. Sortează zborurile după `ScheduledTime`
-2. Pentru fiecare zbor, găsește prima pistă compatibilă:
-   - Tip pistă compatibil cu tipul zborului (Arrival→Landing/Both, Departure→Takeoff/Both)
-   - Pistă activă și fără eveniment aleatoriu activ în momentul respectiv
-   - Respectă separarea minimă față de ultimul zbor pe pistă (`BaseSeparationSeconds`)
-   - Respectă constrângerile meteo (severitate mare = separare suplimentară)
-3. Dacă nicio pistă nu e disponibilă în `[scheduledTime - maxEarly, scheduledTime + maxDelay]`: zborul e anulat
-4. Fitness = suma penalităților (vezi formula mai jos)
+1. Sort flights by `ScheduledTime`
+2. For each flight, find the first compatible runway:
+   - Runway type matches flight type (Arrival → Landing/Both, Departure → Takeoff/Both)
+   - Runway is active and has no active random event at the assigned time
+   - Respects minimum separation from the last flight on that runway (`BaseSeparationSeconds`)
+   - Respects weather constraints (higher severity = additional separation)
+3. If no runway is available within `[scheduledTime - maxEarly, scheduledTime + maxDelay]`: flight is canceled
+4. Fitness = sum of all penalties (see formula below)
 
 ### Genetic Algorithm + CP-SAT
 
-**Codificare**: permutare de indici — `chromosome[i]` = indexul zborului care se procesează pe poziția `i`. SchedulingEngine evaluează permutarea = soluție candidat.
+**Encoding**: permutation of indices — `chromosome[i]` = index of the flight processed at position `i`. The SchedulingEngine evaluates the permutation as a candidate solution.
 
-**Inițializare** (PopulationSize cromozomi):
-- 50%: ordine naturală (sortată după scheduledTime) cu ~10% swap-uri adiacente
-- 50%: shuffle complet Fisher-Yates
+**Initialization** (PopulationSize chromosomes):
+- 50%: natural order (sorted by scheduledTime) with ~10% adjacent swaps
+- 50%: full Fisher-Yates shuffle
 
-**Selecție**: Tournament selection (TournamentSize candidați aleatori, câștigă cel cu fitness minim)
+**Selection**: Tournament selection (TournamentSize random candidates, winner has lowest fitness)
 
-**Crossover OX1** (Order Crossover): se aplică cu probabilitate CrossoverRate
-- Copiază un segment din parent1, completează din parent2 în ordinea apariției
+**OX1 Crossover** (Order Crossover): applied with probability `CrossoverRate`
+- Copies a segment from parent1, fills remaining slots in order from parent2
 
-**Mutație tip A — Local Window-Aware Swap**:
-- Pentru fiecare poziție: cu probabilitate `MutationRateLocal`, swap cu o poziție din aceeași fereastră de timp `[scheduledTime - maxEarly, scheduledTime + maxDelay]`
+**Mutation type A — Local Window-Aware Swap**:
+- For each position: with probability `MutationRateLocal`, swap with another position in the same time window `[scheduledTime - maxEarly, scheduledTime + maxDelay]`
 
-**Mutație tip B — Memetic Destroy-and-Repair**:
-- Cu probabilitate `MutationRateMemetic`
-- Selectează fereastra cu cea mai mare penalitate (roulette wheel)
-- Identifică zborurile cu cel mai mare cost (anulate + întârziate)
-- Reintroduce aceste zboruri mai devreme în permutare (să fie procesate primele)
-- Aplică mutația doar dacă îmbunătățește fitness-ul
+**Mutation type B — Memetic Destroy-and-Repair**:
+- Applied with probability `MutationRateMemetic`
+- Selects the time window with the highest penalty (roulette wheel)
+- Identifies flights with the highest cost (canceled + delayed)
+- Reinserts those flights earlier in the permutation (processed first by greedy, more likely to be scheduled)
+- Only applies the mutation if it improves fitness
 
 **CP-SAT Window Refiner**:
-- La fiecare generație, elitele trec prin `CpSatWindowRefiner`
-- Împarte scenariul în ferestre de timp (`TimeWindowSize`)
-- Pentru fiecare fereastră, optimizează local cu Google OR-Tools CP-SAT
-- Limitat de `CpSatTimeLimitMsMicro` (per fereastră mică) și `CpSatTimeLimitMsMacro` (per fereastră mare)
-- Rafinamentul modifică ordinea relativă a zborurilor în fereastră
+- Each generation, elite chromosomes pass through `CpSatWindowRefiner`
+- Splits the scenario into time windows (`TimeWindowSize`)
+- Optimizes each window locally using Google OR-Tools CP-SAT
+- Bounded by `CpSatTimeLimitMsMicro` (per small window) and `CpSatTimeLimitMsMacro` (per large window)
+- Refinement adjusts the relative order of flights within the window
 
-**Elitism**: `EliteCount` cromozomi cu fitness minim supraviețuiesc nemodificați
+**Elitism**: `EliteCount` chromosomes with lowest fitness survive unmodified
 
-**Oprire**: după `MaxGenerations` generații sau `NoImprovementGenerations` generații fără îmbunătățire
+**Stopping criteria**: after `MaxGenerations` generations or `NoImprovementGenerations` generations without improvement
 
-### Formula fitness (penalitate)
+### Fitness Formula (penalty)
 
 ```
 priority_multiplier = 1.2 ^ (priority - 1)
 
 penalty(flight) =
-  dacă Canceled:   180 × priority_multiplier
-  dacă Delayed:    delayMinutes × priority_multiplier
-  dacă Early:      earlyMinutes × 0.5 × priority_multiplier
+  if Canceled:  180 × priority_multiplier
+  if Delayed:   delayMinutes × priority_multiplier
+  if Early:     earlyMinutes × 0.5 × priority_multiplier
 
-Fitness = Σ penalty(flight) pentru toate zborurile
+Fitness = Σ penalty(flight) for all flights
 ```
 
-Lower = better. O anulare echivalează cu ~180 minute de întârziere.
+Lower is better. A cancellation is treated as ~180 minutes of delay at the same priority.
 
-### Parametri GA (GaConfig)
+### GA Parameters (GaConfig)
 
-| Parametru | Default | Descriere |
-|-----------|---------|-----------|
-| `PopulationSize` | 80 | Număr cromozomi per generație |
-| `MaxGenerations` | 200 | Generații maxime |
-| `CrossoverRate` | 0.85 | Probabilitate crossover OX |
-| `MutationRateLocal` | 0.15 | Probabilitate mutație swap per genă |
-| `MutationRateMemetic` | 0.20 | Probabilitate mutație destroy-and-repair per cromozom |
-| `TournamentSize` | 3 | Candidați per selecție tournament |
-| `EliteCount` | 2 | Cromozomi elită păstrați nemodificați |
-| `NoImprovementGenerations` | 40 | Oprire early dacă nu există progres |
-| `CpSatTimeLimitMsMicro` | 60 | Time limit CP-SAT per fereastră mică (ms) |
-| `CpSatTimeLimitMsMacro` | 150 | Time limit CP-SAT per fereastră mare (ms) |
-| `CpSatNeighborhoodSize` | 8 | Zboruri considerate per fereastră CP-SAT |
-| `RandomSeed` | 42 | Seed pentru reproducibilitate |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `PopulationSize` | 80 | Chromosomes per generation |
+| `MaxGenerations` | 200 | Maximum generations |
+| `CrossoverRate` | 0.85 | OX crossover probability |
+| `MutationRateLocal` | 0.15 | Per-gene swap mutation probability |
+| `MutationRateMemetic` | 0.20 | Destroy-and-repair mutation probability per chromosome |
+| `TournamentSize` | 3 | Candidates per tournament selection |
+| `EliteCount` | 2 | Elite chromosomes preserved unchanged |
+| `NoImprovementGenerations` | 40 | Early stop if no progress |
+| `CpSatTimeLimitMsMicro` | 60 | CP-SAT time limit per small window (ms) |
+| `CpSatTimeLimitMsMacro` | 150 | CP-SAT time limit per large window (ms) |
+| `CpSatNeighborhoodSize` | 8 | Flights considered per CP-SAT window |
+| `RandomSeed` | 42 | Seed for reproducibility |
 
 ---
 
-## API complet
+## Full API Reference
 
-Toate endpoint-urile necesită `Authorization: Bearer <token>`, cu excepția `/login`.
+All endpoints require `Authorization: Bearer <token>` except `/login`.
 
 ### POST /login
 ```json
@@ -268,7 +267,7 @@ Response: { "token": "string" }
 
 ### POST /airport
 ```json
-Request:  { "name": "Henri Coandă" }
+Request:  { "name": "Henri Coanda" }
 Response: { "id": "guid", "name": "string" }
 ```
 
@@ -278,7 +277,7 @@ Response: [{ "id": "guid", "name": "string" }]
 ```
 
 ### DELETE /airports/{id}
-`204 No Content` sau `404`
+`204 No Content` or `404`
 
 ### POST /airports/{id}/runways
 ```json
@@ -298,12 +297,12 @@ Response: 204 No Content
 ```
 
 ### DELETE /runways/{id}
-`204 No Content` sau `404`
+`204 No Content` or `404`
 
 ### POST /scenarios/configs
 ```json
 Request: {
-  "name": "Scenariu test",
+  "name": "Test Scenario",
   "startTime": "2026-06-15T06:00:00Z",
   "endTime": "2026-06-15T14:00:00Z",
   "baseSeparationSeconds": 45,
@@ -317,21 +316,21 @@ Response: [{ "id": "guid", "name": "string", "startTime": "...", "endTime": "...
 ```
 
 ### GET /scenarios/configs/{id}
-Returnează toate datele scenariului: config + flights + weatherIntervals + randomEvents + aircrafts.
+Returns complete scenario data: config + flights + weatherIntervals + randomEvents + aircraft.
 
 ### DELETE /scenarios/configs/{id}
-`204 No Content` sau `404`
+`204 No Content` or `404`
 
 ### POST /flights/generate/{scenarioConfigId}
-Generează zboruri random în fereastra scenariului. Nu are body.
+Generates random flights within the scenario window. No request body.
 
 ### GET /flights/{scenarioConfigId}
 ```json
-Response: [{ "id": "guid", "callsign": "string", "type": 0, "scheduledTime": "...", ... }]
+Response: [{ "id": "guid", "callsign": "string", "type": 0, "scheduledTime": "...", "maxDelayMinutes": 20, "maxEarlyMinutes": 0, "priority": 1 }]
 ```
 
 ### POST /weatherintervals/generate/{scenarioConfigId}
-Generează intervale meteo random. Nu are body.
+Generates random weather intervals. No request body.
 
 ### GET /weatherintervals/{scenarioConfigId}
 
@@ -345,7 +344,7 @@ Request:  { "count": 10 }
 ### POST /scenarios/{scenarioConfigId}/random-events
 ```json
 Request: {
-  "description": "Incident pistă",
+  "description": "Runway incident",
   "startTime": "2026-06-15T08:00:00Z",
   "endTime": "2026-06-15T09:00:00Z",
   "affectedRunwayId": "guid"
@@ -359,21 +358,21 @@ Request: {
 ### DELETE /random-events/{id}
 
 ### GET /greedy/{scenarioConfigId}
-Returnează `SolverResult` cu `algorithmName: "Greedy"`.
+Returns `SolverResult` with `algorithmName: "Greedy"`.
 
 ### GET /genetic/{scenarioConfigId}
-Returnează `SolverResult` cu `algorithmName: "Genetic Algorithm"`.
+Returns `SolverResult` with `algorithmName: "Genetic Algorithm"`.
 
 ### GET /compare/{scenarioConfigId}
 ```json
 Response: {
-  "greedy": { ...SolverResult },
+  "greedy":  { ...SolverResult },
   "genetic": { ...SolverResult }
 }
 ```
 
 ### POST /solver/solve-from-payload
-Rulează ambii solveri pe un scenariu definit complet în body. Nu necesită date în DB.
+Runs both solvers on a scenario defined entirely in the request body. No DB required.
 ```json
 Request: {
   "scenarioConfig": { "name": "...", "startTime": "...", "endTime": "...", "baseSeparationSeconds": 45 },
@@ -383,89 +382,89 @@ Request: {
   "randomEvents": []
 }
 Response: {
-  "greedy": { ...SolverResult },
+  "greedy":  { ...SolverResult },
   "genetic": { ...SolverResult }
 }
 ```
 
 ### POST /solver/benchmark
-Rulează GA cu mai multe seturi de parametri pe un scenariu și salvează rezultatele.
+Runs GA with multiple parameter sets on a scenario and saves results.
 ```json
 Request: {
   "scenarioConfigId": "guid",
   "configs": [
-    { "populationSize": 80, "maxGenerations": 200, ... }
+    { "populationSize": 80, "maxGenerations": 200, "crossoverRate": 0.85, ... }
   ]
 }
 ```
 
 ### GET /solver/benchmarks
-Returnează toate rulajele de benchmark salvate în DB.
+Returns all saved benchmark runs from the DB.
 
 ---
 
 ## Frontend
 
-SPA React 19 + TypeScript + Vite. Proxy Vite în dev → `/api` la `localhost:5000`.
+React 19 + TypeScript + Vite SPA. Vite proxy in dev routes `/api` to `localhost:5000`.
 
-### Pagini
-- **HomePage** — dashboard principal, buton Compare
-- **AirportsPage** — CRUD aeroporturi și piste
-- **ScenarioConfigPage** — creare/ștergere scenarii, generare date (zboruri, meteo, aeronave, events)
-- **SolverPage** — rulare solveri, Import JSON, vizualizare rezultate comparative
-- **ContactPage** — informații contact
+### Pages
+- **HomePage** — main dashboard, Compare button
+- **AirportsPage** — CRUD airports and runways
+- **ScenarioConfigPage** — create/delete scenarios, generate data (flights, weather, aircraft, events)
+- **SolverPage** — run solvers, Import JSON, visualize comparative results
+- **ContactPage** — contact information
 
 ### Hooks
-- `useAirports` — CRUD airports + runways cu invalidare cache
-- `useScenarios` — CRUD scenarios + toate sub-resursele
+- `useAirports` — airports + runways CRUD with cache invalidation
+- `useScenarios` — scenarios + all sub-resources CRUD
 - `useSolver` — greedy, genetic, compare, solve-from-payload
 - `useAuthSession` — login, logout, token storage
 
-### Componente refolosibile
+### Reusable Components
 `Modal`, `ConfirmDialog`, `Toast`, `Skeleton`, `NumberInput`, `SearchBar`
 
 ---
 
-## Baza de date
+## Database
 
-PostgreSQL. Schema vizuală: `docs/DB.png`.
+PostgreSQL. Visual schema: `docs/DB.png`.
 
-**Tabele principale:**
+**Main tables:**
 - `airports`, `runways`
 - `scenario_configs`, `flights`, `weather_intervals`, `random_events`
 - `aircrafts`
 - `users`
 - `benchmark_entries`
 
-Migrări EF Core în `src/Api/Data/Migrations/` (set curent) și `src/Api/DataBase/Migrations/` (legacy, păstrate pentru compatibilitate).
+EF Core migrations are in `src/Api/Data/Migrations/` (current) and `src/Api/DataBase/Migrations/` (legacy, kept for compatibility).
 
-Migrările se aplică **automat la startup** în `Program.cs`.
+Migrations are **applied automatically on startup** in `Program.cs`.
 
-**Reset migrații (dev):**
+**Reset migrations (dev):**
 ```bash
 cd src/Api
 dotnet ef database drop --force
-dotnet ef migrations remove  # repetă până golești
+dotnet ef migrations remove   # repeat until empty
 dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
 ---
 
-## Autentificare
+## Authentication
 
-- JWT Bearer tokens, emise de `JwtTokenService`
-- Chei de configurare: `Jwt__Key`, `Jwt__Issuer`, `Jwt__Audience`
-- Userii sunt seed-uiți la prima migrare
-- Parolele sunt hash-uite BCrypt
+- JWT Bearer tokens issued by `JwtTokenService`
+- Config keys: `Jwt__Key`, `Jwt__Issuer`, `Jwt__Audience`
+- Users are seeded on first migration
+- Passwords are BCrypt hashed
 
 ---
 
-## Configurare și mediu
+## Configuration & Environment
 
-### Variabile de mediu (Docker)
+### Environment Variables (Docker)
 
-Copiat din `src/.env.example`:
+Copy from `src/.env.example`:
 
 ```env
 POSTGRES_USER=postgres
@@ -476,22 +475,22 @@ JWT__ISSUER=RunwayScheduling
 JWT__AUDIENCE=RunwayScheduling
 ```
 
-### Dev local
+### Local Development
 
-`src/Api/appsettings.Development.json` — suprascrie connection string și JWT pentru dev.
+`src/Api/appsettings.Development.json` — overrides connection string and JWT for local dev.
 
-Port-uri implicite:
+Default ports:
 - Backend dev: `http://localhost:5000`
 - Frontend dev: `http://localhost:5173`
 - Docker API: `:5186`, Frontend: `:3000`, DB: `:5433`
 
 ### CI/CD
 
-- **ci.yml** — declanșat la push/PR pe `main`/`develop`:
+- **ci.yml** — triggered on push/PR to `main`/`develop`:
   1. `dotnet build` + `dotnet test`
   2. `npm run lint` + `npm run build`
-  3. `docker build` (smoke test)
+  3. `docker build` smoke test
 
-- **cd.yml** — trigger manual:
-  1. Build imagini Docker
-  2. Push pe GitHub Container Registry (`ghcr.io`)
+- **cd.yml** — manual trigger:
+  1. Build Docker images
+  2. Push to GitHub Container Registry (`ghcr.io`)
