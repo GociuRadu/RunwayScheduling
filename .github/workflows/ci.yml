@@ -86,7 +86,7 @@ jobs:
         if: always()
         with:
           name: .NET Tests
-          path: tests/RunwayScheduling.Tests/TestResults/results.trx
+          path: tests/RunwayScheduling.Tests/TestResults/**/*.trx
           reporter: dotnet-trx
 
       - name: Upload coverage
