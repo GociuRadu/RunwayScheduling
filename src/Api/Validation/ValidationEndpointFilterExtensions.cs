@@ -13,6 +13,7 @@ public static class ValidationEndpointFilterExtensions
     {
         builder.AddEndpointFilterFactory((factoryContext, next) =>
         {
+            // finds which parameters of the endpoint method need validation
             var validationIndexes = factoryContext.MethodInfo
                 .GetParameters()
                 .Select((parameter, index) => new { parameter, index })
@@ -20,6 +21,7 @@ public static class ValidationEndpointFilterExtensions
                 .Select(item => item.index)
                 .ToArray();
 
+            // if no parameters need validation, skip the filter entirely
             if (validationIndexes.Length == 0)
             {
                 return next;
@@ -29,6 +31,7 @@ public static class ValidationEndpointFilterExtensions
             {
                 Dictionary<string, string[]>? errors = null;
 
+                // validates each relevant argument and collects errors
                 foreach (var index in validationIndexes)
                 {
                     var argument = invocationContext.Arguments[index];
@@ -41,6 +44,7 @@ public static class ValidationEndpointFilterExtensions
                     ValidateObjectGraph(argument, errors);
                 }
 
+                // if there are errors, return 400 before reaching the handler
                 if (errors is { Count: > 0 })
                 {
                     return TypedResults.ValidationProblem(errors);
@@ -57,11 +61,13 @@ public static class ValidationEndpointFilterExtensions
     {
         type = Nullable.GetUnderlyingType(type) ?? type;
 
+        // skip primitives, abstract types and strings — nothing to validate there
         if (!type.IsClass || type.IsAbstract || type == typeof(string))
         {
             return false;
         }
 
+        // skip framework/infrastructure types injected by asp.net — not user input
         if (typeof(IMediator).IsAssignableFrom(type)
             || typeof(HttpContext).IsAssignableFrom(type)
             || typeof(HttpRequest).IsAssignableFrom(type)
@@ -76,6 +82,7 @@ public static class ValidationEndpointFilterExtensions
 
     private static void ValidateObjectGraph(object root, IDictionary<string, string[]> errors)
     {
+        // bfs through the object and all its nested properties to validate everything
         var queue = new Queue<(object Value, string Prefix)>();
         var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
         var collected = new List<(string Key, string Message)>();

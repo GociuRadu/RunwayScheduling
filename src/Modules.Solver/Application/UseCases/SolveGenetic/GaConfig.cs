@@ -5,7 +5,7 @@ public sealed class GaConfig
     public int PopulationSize { get; set; } = 80;
     public int MaxGenerations { get; set; } = 600;
     public double CrossoverRate { get; set; } = 0.97;
-    public double MutationRateLocal { get; set; } = 0.005;
+    public double MutationRateLocal { get; set; } = 0.005;//0.5%
     public double MutationRateMemetic { get; set; } = 0.01;
     public int TournamentSize { get; set; } = 3;
     public int EliteCount { get; set; } = 6;

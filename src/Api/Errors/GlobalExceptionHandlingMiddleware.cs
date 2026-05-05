@@ -14,16 +14,19 @@ public sealed class GlobalExceptionHandlingMiddleware(
     {
         try
         {
+            // passes the request to the next middleware/endpoint
             await next(context);
         }
         catch (Exception exception) when (!context.Response.HasStarted)
         {
+            // only handle if we haven't started writing the response yet
             await HandleExceptionAsync(context, exception);
         }
     }
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        // maps each exception type to the correct http status code and message
         var problemDetails = exception switch
         {
             ScenarioConfigNotFoundException e => ProblemDetailsDefaults.Create(StatusCodes.Status404NotFound, e.Message),
@@ -43,6 +46,7 @@ public sealed class GlobalExceptionHandlingMiddleware(
             _ => ProblemDetailsDefaults.Create(StatusCodes.Status500InternalServerError)
         };
 
+        // 5xx = something broke on our side, log as error; 4xx = bad request, log as warning
         if (problemDetails.Status >= StatusCodes.Status500InternalServerError)
             logger.LogError(exception, "Unhandled exception for {Method} {Path}", context.Request.Method, context.Request.Path);
         else
@@ -51,6 +55,7 @@ public sealed class GlobalExceptionHandlingMiddleware(
         context.Response.Clear();
         context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
 
+        // writes the problem details json to the response
         await problemDetailsService.WriteAsync(new ProblemDetailsContext
         {
             HttpContext = context,

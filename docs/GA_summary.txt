@@ -1,0 +1,102 @@
+
+--- CROMOZOM ---
+- Un cromozom = o permutare de indici de zboruri [0..N-1]
+- Ordinea din cromozom = ordinea în care SchedulingEngine procesează zborurile
+- SchedulingEngine calculează timpii reali; GA doar optimizează ordinea
+
+--- POPULATIE INITIALA ---
+- chromosome[0]       = ordinea greedy (earliest first, priority descending)
+- chromosome[1..N/2]  = greedy + 10% adjacent swaps (variatie mica)
+- chromosome[N/2..N]  = Fisher-Yates shuffle complet random
+
+--- SELECTIE ---
+- Tournament Selection: alege K cromozomi random, câstigă cel cu fitness minim
+- K = TournamentSize (ex: 3-5)
+
+--- INCRUCISARE (OX — Order Crossover) ---
+- Probabilitate: CrossoverRate (ex: 0.9)
+- Copiaza un segment random din parent1
+- Restul pozitiilor se umplu in ordinea din parent2, sarand duplicatele
+- Garanteaza ca fiecare zbor apare exact o data
+
+--- MUTATII ---
+1. MutateLocalSwap (probabilitate per gena: MutationRateLocal, ex: 0.005)
+   - Swap intre zborul curent si un alt zbor cu scheduledTime in aceeasi fereastra de timp
+
+2. MutateMemetic (probabilitate per cromozom: MutationRateMemetic, ex: 0.01)
+   - Evalueaza cromozomul
+   - Imparte scenariul in TimeWindows (ferestre fixe de timp)
+   - Roulette wheel: alege fereastra cu probleme (penalitate mare = sanse mari)
+   - ResolveIntensity: top 5% → ia 3 zboruri, top 10% → 2, altfel → 1
+   - Pool = cele mai penalizate zboruri din fereastra + toate canceled din intreg cromozomul
+   - Sorteaza pool dupa ReschedulingPriority (vezi formula jos)
+   - Pool-ul merge primul in cromozomul nou → SchedulingEngine le asigneaza primele
+   - Accepta schimbarea doar daca fitness-ul se imbunatateste
+
+--- ELITISM ---
+- Top EliteCount cromozomi trec direct in generatia urmatoare (neschiimbati)
+- Garanteaza ca cel mai bun rezultat nu se pierde niciodata
+
+--- EARLY STOPPING ---
+- Daca generationsWithoutImprovement >= NoImprovementGenerations → oprire anticipata
+- Se pastreaza mereu cel mai bun cromozom vazut vreodata
+
+--- CP-SAT MICRO (rafinare exacta, frecventa) ---
+- La fiecare CpSatMicroEveryNGenerations generatii
+- Pe top CpSatEliteCount cromozomi + CpSatRandomCount cromozomi random
+- 1 fereastra, CpSatNeighborhoodSize zboruri, 60ms limita de timp
+- CP-SAT gaseste ordinea optima exacta in acel neighborhood mic
+
+--- CP-SAT MACRO (rafinare exacta, mai rara) ---
+- La fiecare CpSatMacroEveryNGenerations generatii
+- Doar pe cel mai bun cromozom
+- CpSatMacroWindowCount ferestre, 2x neighborhood size, 150ms limita
+
+====================================================
+
+--- FITNESS (penalitate totala, mai mic = mai bun) ---
+  fitness = SUM peste toate zborurile de:
+    - canceled:  180 * 1.2^(priority-1)
+    - delayed:   delayMinutes * 1.2^(priority-1)
+    - early:     earlyMinutes * 0.5 * 1.2^(priority-1)
+
+--- PRIORITY MULTIPLIER ---
+  multiplier = 1.2^(priority-1)
+  priority 1 → 1.0x
+  priority 2 → 1.2x
+  priority 3 → 1.44x
+
+--- RESCHEDULING PRIORITY (sorteaza pool-ul in MutateMemetic) ---
+  priority = Alpha * penalty + Beta * (1 / (maxDelay + 1)) - Gamma * (maxEarly + maxDelay)
+  Alpha = 1.0   (penalitate curenta)
+  Beta  = 100.0 (urgenta: zbor cu maxDelay mic = mai urgent)
+  Gamma = 0.01  (flexibilitate: fereastra mare = usor mai putin urgent)
+
+--- SLOT SCORE (alege cea mai buna pista pentru un zbor in SchedulingEngine) ---
+  early:   (1.0 + earlyMinutes * 0.5) * multiplier
+  delayed: delayMinutes * multiplier
+
+--- SEPARARE INTRE ZBORURI ---
+  BaseSeparationSeconds * weatherMultiplier * eventMultiplier
+  Weather:  Clear=1.0, Cloud=1.2, Rain=1.3, Snow=1.5, Fog=1.75, Storm=2.1
+  Event partial (impact%): multiplier = 1 / (1 - impact/100)
+  Event total (100%):      blocheaza pista complet — zborul e impins dupa eveniment
+
+--- CP-SAT: FORMULA MATEMATICA ---
+  Minimize:
+    SUM pentru fiecare zbor i din neighborhood:
+      delay_i * 2 * round(1.2^(priority_i - 1) * 100)
+    + early_i * 1 * round(1.2^(priority_i - 1) * 100)
+    + cancel_penalty_i
+
+  unde:
+    delay_i          = max(0, assignedTime_i - scheduledTime_i)   [secunde]
+    early_i          = max(0, scheduledTime_i - assignedTime_i)   [secunde]
+    cancel_penalty_i = 180 * 60 * 2 * round(1.2^(priority_i-1) * 100)  daca cancelat, altfel 0
+
+  Subject to:
+    assignedTime_i in [scheduledTime_i - maxEarly_i, scheduledTime_i + maxDelay_i]
+    assignedTime_i + separationSec <= assignedTime_j   (i si j pe aceeasi pista, i inaintea lui j)
+    assignedTime_i >= lastRunwayTime_runway + separationSec  (fata de zborurile fixe dinainte)
+    exact o pista compatibila per zbor scheduled
+

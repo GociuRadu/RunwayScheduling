@@ -87,16 +87,19 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
             var earliestSec     = Math.Max(0L, (long)(flight.ScheduledTime.AddMinutes(-flight.MaxEarlyMinutes) - originTime).TotalSeconds);
             var latestSec       = Math.Min(scenarioEndSec, (long)(flight.ScheduledTime.AddMinutes(flight.MaxDelayMinutes) - originTime).TotalSeconds);
 
+            // 1 = flight is assigned to a runway; 0 = canceled — CP-SAT decides which
             isScheduledVars[i]  = model.NewBoolVar($"sched_{i}");
             presencePerFlight[i] = [];
 
             if (compatibleRwys.Count == 0 || earliestSec > latestSec)
             {
+                // no valid runway or time window — force canceled, dummy startVar required by CP-SAT
                 model.Add(isScheduledVars[i] == 0);
                 startVars[i] = model.NewIntVar(0, scenarioEndSec, $"s_{i}");
                 continue;
             }
 
+            // when CP-SAT assigns this flight, it must pick a time within [earliestSec, latestSec]
             startVars[i] = model.NewIntVar(earliestSec, latestSec, $"s_{i}");
 
             for (var r = 0; r < compatibleRwys.Count; r++)
@@ -105,11 +108,13 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
                 var presence = model.NewBoolVar($"p_{i}_{r}");
                 presencePerFlight[i].Add((presence, rw.Name));
 
+                // when the runway is free again = start + separation
                 var endVar = model.NewIntVar(
                     earliestSec + separationSec,
                     latestSec   + separationSec,
                     $"end_{i}_{r}");
 
+                // interval [start, start+separation] on this runway — only active if presence=1
                 var interval = model.NewOptionalIntervalVar(
                     startVars[i], separationSec, endVar, presence, $"iv_{i}_{r}");
 
@@ -152,10 +157,14 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
             var cancelScaled  = (long)(CancellationBase * 60 * 2 * pMult100);
             var maxSec        = scenarioEndSec;
 
+            // how many seconds the flight is after/before its scheduled time
             var delaySec  = model.NewIntVar(0, maxSec, $"dl_{i}");
             var earlySec  = model.NewIntVar(0, maxSec, $"er_{i}");
+            // inverse of isScheduled — easier to use in the cancel penalty constraint
             var cancelVar = model.NewBoolVar($"can_{i}");
 
+            // if scheduled: delay/early = difference from scheduledTime (minimizer drives them to exact value)
+            // if canceled: both are 0 — penalty comes from cancelPenaltyVar instead
             model.Add(delaySec >= startVars[i] - scheduledSec).OnlyEnforceIf(isScheduledVars[i]);
             model.Add(earlySec >= scheduledSec - startVars[i]).OnlyEnforceIf(isScheduledVars[i]);
             model.Add(delaySec == 0).OnlyEnforceIf(isScheduledVars[i].Not());
@@ -164,6 +173,7 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
             model.Add(cancelVar == 1).OnlyEnforceIf(isScheduledVars[i].Not());
             model.Add(cancelVar == 0).OnlyEnforceIf(isScheduledVars[i]);
 
+            // flat cancel penalty scaled to integers; 0 if the flight is assigned
             var cancelPenaltyVar = model.NewIntVar(0, cancelScaled, $"cp_{i}");
             model.Add(cancelPenaltyVar == cancelScaled).OnlyEnforceIf(cancelVar);
             model.Add(cancelPenaltyVar == 0).OnlyEnforceIf(cancelVar.Not());
@@ -173,6 +183,7 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
             objVars.Add(cancelPenaltyVar); objCoeffs.Add(1L);
         }
 
+        // minimize: delay*2*priorityMultiplier + early*priorityMultiplier + cancelPenalty (delay weighted 2x vs early, consistent with SchedulingEngine)
         model.Minimize(LinearExpr.WeightedSum(objVars.ToArray(), objCoeffs.ToArray()));
 
         var solver = new CpSolver();
@@ -207,6 +218,7 @@ internal sealed class CpSatWindowRefiner(ISchedulingEngine engine)
         return true;
     }
 
+    // how long the runway must stay free after the previous flight, given the worst weather/event in [from, to]
     private static int ComputeMaxSeparationSeconds(
         DateTime from, DateTime to,
         PreparedScenario prepared,

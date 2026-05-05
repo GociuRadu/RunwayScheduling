@@ -27,14 +27,13 @@ public sealed class JwtTokenService : ITokenService
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Name, user.Username),
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(JwtRegisteredClaimNames.Name, user.Username)
         };
 
+        // converts the string key from config into a cryptographic key object
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
+        // pairs the key with the signing algorithm — used when building the token
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(

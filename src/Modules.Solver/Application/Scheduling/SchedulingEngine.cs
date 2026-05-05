@@ -16,6 +16,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
         [WeatherCondition.Storm] = 2.1
     };
 
+    // assigns each flight to the best available runway in the given order; returns all solved flights + fitness score
     public SchedulingEvaluation Evaluate(
         IReadOnlyList<(Flight Flight, Guid SourceId)> orderedFlights,
         PreparedScenario prepared)
@@ -85,7 +86,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
         var windowEnd   = Min(latestAllowed,  scenario.EndTime);
         if (windowStart > windowEnd) return null;
 
-        // ── Attempt 1: on-time or delayed ────────────────────────────────────────
+        // Attempt 1: on-time or delayed
         var onTimeSlot = TryBuildSlot(
             flight, sourceId, order, runway,
             start: Max(windowStart, flight.ScheduledTime),
@@ -96,7 +97,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
         if (onTimeSlot?.Status == FlightStatus.Scheduled)
             return onTimeSlot;
 
-        // ── Attempt 2: early fallback ─────────────────────────────────────────────
+        // Attempt 2: early fallback
         SolvedFlight? earlySlot = null;
         if (windowStart < flight.ScheduledTime)
         {
@@ -190,6 +191,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
         return SlotScore(a) <= SlotScore(b) ? a : b;
     }
 
+    // scales BaseSeparationSeconds by weather and partial-impact event multipliers
     private static int GetSeparationSeconds(DateTime time, PreparedScenario prepared, ScenarioConfig scenario)
     {
         double multiplier = 1.0;
@@ -299,6 +301,7 @@ public sealed class SchedulingEngine : ISchedulingEngine
         return penalty;
     }
 
+    // takes the evaluation result and computes final statistics (on-time, delayed, canceled, avg delay, throughput, etc.)
     public SolverResult CreateResult(
         SchedulingEvaluation evaluation,
         Guid scenarioConfigId,

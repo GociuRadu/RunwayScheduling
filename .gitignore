@@ -100,6 +100,19 @@ Desktop.ini
 benchmark_results.csv
 benchmark_results.html
 
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
 # Tooling
 .dotnet/
 src/.qodo/

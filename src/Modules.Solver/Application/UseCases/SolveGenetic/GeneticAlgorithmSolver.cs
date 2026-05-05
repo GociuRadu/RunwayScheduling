@@ -10,9 +10,9 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
     private const string AlgorithmName = "Genetic Algorithm";
     private const double CancellationBase = 180.0;
 
-    private const double Alpha = 1.0;
-    private const double Beta = 100.0;
-    private const double Gamma = 0.01;
+    private const double Alpha = 1.0;   // weight for current penalty (delay/cancel cost)
+    private const double Beta = 100.0;  // weight for time urgency — flights with small maxDelay get higher priority
+    private const double Gamma = 0.01;  // weight for flexibility — flights with large total window get slightly lower priority
 
     private readonly ISchedulingEngine _engine = engine;
     private readonly CpSatWindowRefiner _refiner = new(engine);
@@ -72,6 +72,8 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             if (fitness[i] < fitness[bestFitnessIdx]) bestFitnessIdx = i;
 
         var bestFitness = fitness[bestFitnessIdx];
+        //best chromosome ever safe and saved
+
         var bestChromosome = CloneChromosome(population[bestFitnessIdx]);
         var generationsWithoutImprovement = 0;
 
@@ -91,23 +93,27 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
             Parallel.For(0, populationSize, i =>
             {
-                var rng = threadRandom.Value!;
+                var rng = threadRandom.Value!; // thread-local Random — avoids contention across threads
+
+                // select two parents via tournament selection
                 var parent1 = population[TournamentSelect(fitness, tournamentSize, rng)];
                 var parent2 = population[TournamentSelect(fitness, tournamentSize, rng)];
 
+                // 90+% chance: combine both parents via OX crossover; otherwise clone parent1
                 var child = rng.NextDouble() < crossoverRate
                     ? OrderCrossover(parent1, parent2, rng)
                     : CloneChromosome(parent1);
 
+                // 0.5% per gene: swap it with a random flight whose scheduled time overlaps its time window
                 MutateLocalSwap(child, prepared, mutationRateLocal, rng);
+
+                // 1% per chromosome: re-order flights from the worst time window by penalty
                 MutateMemetic(
-                    child,
-                    prepared,
+                    child, prepared,
                     timeWindows,
                     flightWindowIndices,
                     sourceIdToFlightIndex,
-                    mutationRateMemetic,
-                    rng);
+                    mutationRateMemetic, rng);
 
                 nextPopulation[i] = child;
             });
@@ -120,6 +126,8 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             population = nextPopulation;
             fitness = EvaluatePopulation(population, prepared);
 
+            // CP-SAT Micro: every N generations, take the top CpSatEliteCount chromosomes and let CP-SAT
+            // optimize a small neighborhood (1 window, CpSatNeighborhoodSize flights, 60ms limit)
             if (config.EnableCpSatRefinement && config.CpSatMicroEnabled
                 && generation % Math.Max(1, config.CpSatMicroEveryNGenerations) == 0)
             {
@@ -140,6 +148,8 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
                         fitness[ci] = EvaluateChromosome(population[ci], prepared).Fitness;
                 }
 
+
+                // also apply CP-SAT micro on CpSatRandomCount random chromosomes — avoids over-optimizing only the elites
                 for (var ri = 0; ri < config.CpSatRandomCount; ri++)
                 {
                     var ci = random.Next(populationSize);
@@ -153,6 +163,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
                 }
             }
 
+            // CP-SAT Macro: less frequent, best chromosome only, double neighborhood size across multiple windows (150ms limit)
             if (config.EnableCpSatRefinement && config.CpSatMacroEnabled
                 && generation % Math.Max(1, config.CpSatMacroEveryNGenerations) == 0)
             {
@@ -170,6 +181,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
                     fitness[bestIdx2] = EvaluateChromosome(population[bestIdx2], prepared).Fitness;
             }
 
+            // track the best chromosome ever seen; if no improvement for noImprovementLimit generations → early stop
             var generationBestFitness = fitness.Min();
             if (generationBestFitness < bestFitness)
             {
@@ -191,6 +203,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             }
         }
 
+        // evaluate the best chromosome found across all generations and build the final result with statistics
         var bestEvaluation = EvaluateChromosome(bestChromosome, prepared);
 
         sw.Stop();
@@ -198,6 +211,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return _engine.CreateResult(bestEvaluation, scenarioConfigId, AlgorithmName, solveTimeMs);
     }
 
+    // runs SchedulingEngine on every chromosome in parallel and returns their fitness scores
     private double[] EvaluatePopulation(int[][] population, PreparedScenario prepared)
     {
         var fitness = new double[population.Length];
@@ -206,6 +220,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return fitness;
     }
 
+    // reorders SortedFlights according to the chromosome and sends them to SchedulingEngine
     private SchedulingEvaluation EvaluateChromosome(int[] chromosome, PreparedScenario prepared)
     {
         var permuted = new List<(Flight Flight, Guid SourceId)>(chromosome.Length);
@@ -218,6 +233,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return _engine.Evaluate(permuted, prepared);
     }
 
+    // first chromosome = greedy order; half = lightly shuffled (10% swaps); rest = fully random
     private static int[][] InitializePopulation(int chromosomeLength, int populationSize, Random random)
     {
         var population = new int[populationSize][];
@@ -246,6 +262,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return population;
     }
 
+    // returns [0, 1, 2, ..., length-1] — the greedy order from PreparedScenario
     private static int[] CreateNaturalOrder(int length)
     {
         var chromosome = new int[length];
@@ -257,6 +274,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return chromosome;
     }
 
+    // swaps ~10% of adjacent pairs — produces a near-greedy chromosome with small local variations
     private static void ApplyPartialAdjacentShuffle(int[] chromosome, Random random)
     {
         if (chromosome.Length < 2)
@@ -272,6 +290,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         }
     }
 
+    // full random shuffle — every permutation equally likely
     private static void FisherYatesShuffle(int[] chromosome, Random random)
     {
         for (var i = chromosome.Length - 1; i > 0; i--)
@@ -281,6 +300,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         }
     }
 
+    // picks tournamentSize random chromosomes and returns the index of the one with lowest fitness
     private static int TournamentSelect(double[] fitness, int tournamentSize, Random random)
     {
         var bestIndex = random.Next(fitness.Length);
@@ -307,6 +327,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         var child = Enumerable.Repeat(-1, parent1.Length).ToArray();
         var used = new bool[parent1.Length];
 
+        // pick a random segment [cut1..cut2] and copy it from parent1 into the child at the same positions
         var cut1 = random.Next(parent1.Length);
         var cut2 = random.Next(parent1.Length);
         if (cut1 > cut2)
@@ -325,6 +346,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             used[parent1[i]] = true;
         }
 
+        // fill remaining positions in order from parent2, skipping flights already copied from parent1
         var insertIndex = (cut2 + 1) % parent1.Length;
         for (var offset = 0; offset < parent2.Length; offset++)
         {
@@ -342,6 +364,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return child;
     }
 
+    // for each gene, with mutationRateLocal probability: swap it with another flight that shares a similar time window
     private static void MutateLocalSwap(int[] chromosome, PreparedScenario prepared, double mutationRateLocal, Random random)
     {
         if (chromosome.Length < 2 || mutationRateLocal <= 0)
@@ -385,6 +408,8 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         }
     }
 
+    // with mutationRateMemetic probability: find the worst time window, move its most penalized flights to the front
+    // of the chromosome so SchedulingEngine processes them first — only keeps the change if fitness improves
     private void MutateMemetic(
         int[] chromosome,
         PreparedScenario prepared,
@@ -400,6 +425,8 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         }
 
         var evaluation = EvaluateChromosome(chromosome, prepared);
+
+        // accumulate penalty per time window to know which window has the most problems
         var windowFitness = new double[timeWindows.Count];
 
         foreach (var solvedFlight in evaluation.Flights)
@@ -413,6 +440,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             windowFitness[windowIndex] += ComputePenalty(solvedFlight);
         }
 
+        // roulette wheel: higher penalty window = higher chance of being selected as target
         var targetWindowIndex = SelectWindowByRoulette(windowFitness, random);
         if (targetWindowIndex < 0)
         {
@@ -433,7 +461,9 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             return;
         }
 
+        // intensity = how many flights to pull from the window (scales with how bad it is)
         var intensity = ResolveIntensity(windowFitness, targetWindowIndex);
+        // take the top `intensity` most penalized flights from the target window
         var destroyEntries = targetPositions
             .Select(position => new DestroyCandidate(
                 position,
@@ -456,6 +486,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             pool[entry.FlightIndex] = CreatePoolEntry(entry.FlightIndex, entry.Flight, entry.CancelCost);
         }
 
+        // also add any canceled flights from the entire chromosome to the pool
         for (var position = 0; position < chromosome.Length; position++)
         {
             var solvedFlight = evaluation.Flights[position];
@@ -475,11 +506,13 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             return;
         }
 
+        // sort pool by ReschedulingPriority (penalty + urgency - flexibility) — highest priority goes first
         var prioritizedPool = pool.Values
             .OrderByDescending(entry => entry.ReschedulingPriority)
             .Select(entry => entry.FlightIndex)
             .ToList();
 
+        // collect flights not in the pool — they keep their relative order
         var remaining = new List<int>(chromosome.Length - prioritizedPool.Count);
         for (var i = 0; i < chromosome.Length; i++)
         {
@@ -489,6 +522,8 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             }
         }
 
+        // pool flights go first: SchedulingEngine processes them before anyone occupies the runways,
+        // giving them the best chance of being assigned on time with minimal separation
         var candidateChromosome = new int[chromosome.Length];
         var writeIndex = 0;
 
@@ -502,6 +537,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             candidateChromosome[writeIndex++] = flightIndex;
         }
 
+        // only accept the new order if it actually improves fitness
         var candidateEvaluation = EvaluateChromosome(candidateChromosome, prepared);
         if (candidateEvaluation.Fitness < evaluation.Fitness)
         {
@@ -511,6 +547,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
     private static PoolEntry CreatePoolEntry(int flightIndex, Flight flight, double cancelCost)
     {
+        // higher penalty → higher priority; small maxDelay → more urgent (can't wait); large window → slightly less urgent
         var reschedulingPriority = Alpha * cancelCost
             + Beta * (1.0 / (flight.MaxDelayMinutes + 1))
             - Gamma * (flight.MaxEarlyMinutes + flight.MaxDelayMinutes);
@@ -576,6 +613,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
             }
         }
 
+        // rank the window among all windows by penalty; top 5% → pull 3 flights, top 10% → 2, else → 1
         var percentile = rank / (double)rankedWindows.Count * 100.0;
         if (percentile >= 95.0)
         {
@@ -592,7 +630,9 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
     private static double ComputePenalty(SolvedFlight flight)
     {
+        // priority multiplier: 1.2^(priority-1) — priority 3 flight costs 44% more than priority 1
         var multiplier = PriorityMultiplier(flight.Priority);
+        // canceled → flat 180-min penalty; delayed/early → actual minutes * priority weight (early costs half as much)
         return flight.Status == FlightStatus.Canceled
             ? CancellationBase * multiplier
             : flight.DelaySeconds / 60.0 * multiplier + flight.EarlySeconds / 60.0 * 0.5 * multiplier;
@@ -600,6 +640,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
 
     private static double PriorityMultiplier(int priority) => Math.Pow(1.2, priority - 1);
 
+    // splits the scenario into fixed-size time buckets and assigns each flight to its bucket by scheduledTime
     private static List<TimeWindow> BuildTimeWindows(PreparedScenario prepared, TimeSpan timeWindowSize)
     {
         var scenario = prepared.Snapshot.ScenarioConfig;
@@ -642,6 +683,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return windows;
     }
 
+    // returns which window index a given scheduledTime falls into
     private static int ResolveWindowIndex(
         DateTime scheduledTime,
         IReadOnlyList<TimeWindow> windows,
@@ -663,6 +705,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return Math.Clamp(windowIndex, 0, windows.Count - 1);
     }
 
+    // builds a reverse lookup: flightIndex → windowIndex, used by MutateMemetic and CP-SAT refinement
     private static int[] BuildFlightWindowLookup(IReadOnlyList<TimeWindow> timeWindows, int flightsCount)
     {
         var flightWindowIndices = new int[flightsCount];
@@ -678,6 +721,7 @@ public sealed class GeneticAlgorithmSolver(ISchedulingEngine engine)
         return flightWindowIndices;
     }
 
+    // builds a map from flight SourceId (Guid) to its index in SortedFlights — used to match SolvedFlight back to flightIndex
     private static Dictionary<Guid, int> BuildSourceIdLookup(PreparedScenario prepared)
     {
         var map = new Dictionary<Guid, int>(prepared.SortedFlights.Count);
