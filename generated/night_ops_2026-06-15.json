@@ -1,0 +1,206 @@
+{
+  "algorithm": "greedy",
+  "scenarioConfig": {
+    "name": "Night Ops - 2026-06-15",
+    "startTime": "2026-06-15T22:00:00Z",
+    "endTime": "2026-06-16T04:00:00Z",
+    "baseSeparationSeconds": 120
+  },
+  "runways": [
+    {
+      "name": "08L",
+      "runwayType": 2,
+      "isActive": true
+    }
+  ],
+  "flights": [
+    {
+      "callsign": "SWR4947",
+      "type": 1,
+      "scheduledTime": "2026-06-16T01:46:00Z",
+      "maxDelayMinutes": 42,
+      "maxEarlyMinutes": 2,
+      "priority": 1
+    },
+    {
+      "callsign": "EZY2050",
+      "type": 1,
+      "scheduledTime": "2026-06-16T02:43:11Z",
+      "maxDelayMinutes": 44,
+      "maxEarlyMinutes": 11,
+      "priority": 2
+    },
+    {
+      "callsign": "CSA248",
+      "type": 1,
+      "scheduledTime": "2026-06-16T03:39:39Z",
+      "maxDelayMinutes": 17,
+      "maxEarlyMinutes": 5,
+      "priority": 2
+    },
+    {
+      "callsign": "LOT2819",
+      "type": 1,
+      "scheduledTime": "2026-06-16T02:15:47Z",
+      "maxDelayMinutes": 31,
+      "maxEarlyMinutes": 2,
+      "priority": 1
+    },
+    {
+      "callsign": "CSA4185",
+      "type": 0,
+      "scheduledTime": "2026-06-16T01:39:34Z",
+      "maxDelayMinutes": 28,
+      "maxEarlyMinutes": 13,
+      "priority": 1
+    },
+    {
+      "callsign": "SWR5114",
+      "type": 1,
+      "scheduledTime": "2026-06-16T03:47:16Z",
+      "maxDelayMinutes": 59,
+      "maxEarlyMinutes": 10,
+      "priority": 1
+    },
+    {
+      "callsign": "UAE1608",
+      "type": 2,
+      "scheduledTime": "2026-06-16T03:01:19Z",
+      "maxDelayMinutes": 58,
+      "maxEarlyMinutes": 10,
+      "priority": 1
+    },
+    {
+      "callsign": "TRA4285",
+      "type": 0,
+      "scheduledTime": "2026-06-16T03:13:54Z",
+      "maxDelayMinutes": 59,
+      "maxEarlyMinutes": 20,
+      "priority": 3
+    },
+    {
+      "callsign": "DLH2539",
+      "type": 2,
+      "scheduledTime": "2026-06-16T03:00:27Z",
+      "maxDelayMinutes": 45,
+      "maxEarlyMinutes": 5,
+      "priority": 2
+    },
+    {
+      "callsign": "KLM2827",
+      "type": 0,
+      "scheduledTime": "2026-06-16T02:54:59Z",
+      "maxDelayMinutes": 35,
+      "maxEarlyMinutes": 6,
+      "priority": 2
+    },
+    {
+      "callsign": "TAP4210",
+      "type": 1,
+      "scheduledTime": "2026-06-16T03:42:23Z",
+      "maxDelayMinutes": 21,
+      "maxEarlyMinutes": 18,
+      "priority": 2
+    },
+    {
+      "callsign": "AUA2714",
+      "type": 0,
+      "scheduledTime": "2026-06-16T01:55:38Z",
+      "maxDelayMinutes": 23,
+      "maxEarlyMinutes": 19,
+      "priority": 2
+    },
+    {
+      "callsign": "AFR2266",
+      "type": 0,
+      "scheduledTime": "2026-06-16T01:36:29Z",
+      "maxDelayMinutes": 15,
+      "maxEarlyMinutes": 6,
+      "priority": 2
+    },
+    {
+      "callsign": "TRA9703",
+      "type": 1,
+      "scheduledTime": "2026-06-16T01:36:55Z",
+      "maxDelayMinutes": 53,
+      "maxEarlyMinutes": 10,
+      "priority": 1
+    },
+    {
+      "callsign": "SAS2985",
+      "type": 1,
+      "scheduledTime": "2026-06-16T01:51:33Z",
+      "maxDelayMinutes": 31,
+      "maxEarlyMinutes": 0,
+      "priority": 3
+    },
+    {
+      "callsign": "EZY3076",
+      "type": 0,
+      "scheduledTime": "2026-06-16T02:29:45Z",
+      "maxDelayMinutes": 39,
+      "maxEarlyMinutes": 9,
+      "priority": 1
+    },
+    {
+      "callsign": "ROT7728",
+      "type": 0,
+      "scheduledTime": "2026-06-16T02:44:00Z",
+      "maxDelayMinutes": 56,
+      "maxEarlyMinutes": 1,
+      "priority": 3
+    },
+    {
+      "callsign": "SWR6723",
+      "type": 1,
+      "scheduledTime": "2026-06-16T01:40:56Z",
+      "maxDelayMinutes": 50,
+      "maxEarlyMinutes": 13,
+      "priority": 1
+    },
+    {
+      "callsign": "TAP6041",
+      "type": 2,
+      "scheduledTime": "2026-06-16T02:16:28Z",
+      "maxDelayMinutes": 36,
+      "maxEarlyMinutes": 8,
+      "priority": 3
+    },
+    {
+      "callsign": "BAW6191",
+      "type": 0,
+      "scheduledTime": "2026-06-16T03:44:05Z",
+      "maxDelayMinutes": 30,
+      "maxEarlyMinutes": 12,
+      "priority": 2
+    }
+  ],
+  "weatherIntervals": [
+    {
+      "startTime": "2026-06-15T23:37:54Z",
+      "endTime": "2026-06-16T01:31:54Z",
+      "weatherType": 4
+    },
+    {
+      "startTime": "2026-06-16T00:58:02Z",
+      "endTime": "2026-06-16T02:52:02Z",
+      "weatherType": 0
+    }
+  ],
+  "randomEvents": [
+    {
+      "name": "Late Cargo Operations",
+      "description": "Cargo terminal running behind schedule.",
+      "startTime": "2026-06-16T02:49:28Z",
+      "endTime": "2026-06-16T03:49:28Z",
+      "impactPercent": 10
+    },
+    {
+      "name": "Reduced Lighting",
+      "description": "Taxiway lighting failure reported.",
+      "startTime": "2026-06-16T00:16:00Z",
+      "endTime": "2026-06-16T01:30:00Z",
+      "impactPercent": 16
+    }
+  ]
+}

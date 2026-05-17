@@ -2,7 +2,7 @@ namespace Modules.Solver.Domain;
 
 public enum FlightStatus
 {
-    Pending    = 0,   // not used by engine; aligns frontend enum
+    Pending    = 0,  
     Scheduled  = 1,
     Delayed    = 2,
     Canceled   = 3,

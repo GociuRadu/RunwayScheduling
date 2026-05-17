@@ -1,0 +1,286 @@
+{
+  "algorithm": "greedy",
+  "scenarioConfig": {
+    "name": "Vip Event - 2026-06-15",
+    "startTime": "2026-06-15T05:00:00Z",
+    "endTime": "2026-06-15T21:00:00Z",
+    "baseSeparationSeconds": 120
+  },
+  "runways": [
+    {
+      "name": "08L",
+      "runwayType": 0,
+      "isActive": true
+    },
+    {
+      "name": "08R",
+      "runwayType": 1,
+      "isActive": true
+    }
+  ],
+  "flights": [
+    {
+      "callsign": "LOT6902",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:48:16Z",
+      "maxDelayMinutes": 24,
+      "maxEarlyMinutes": 6,
+      "priority": 2
+    },
+    {
+      "callsign": "AUA7094",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:37:32Z",
+      "maxDelayMinutes": 19,
+      "maxEarlyMinutes": 9,
+      "priority": 3
+    },
+    {
+      "callsign": "EZY9412",
+      "type": 2,
+      "scheduledTime": "2026-06-15T06:01:26Z",
+      "maxDelayMinutes": 30,
+      "maxEarlyMinutes": 8,
+      "priority": 1
+    },
+    {
+      "callsign": "AFR8671",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:04:08Z",
+      "maxDelayMinutes": 26,
+      "maxEarlyMinutes": 7,
+      "priority": 1
+    },
+    {
+      "callsign": "TAP6427",
+      "type": 1,
+      "scheduledTime": "2026-06-15T15:50:36Z",
+      "maxDelayMinutes": 26,
+      "maxEarlyMinutes": 8,
+      "priority": 3
+    },
+    {
+      "callsign": "IBE7000",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:45:22Z",
+      "maxDelayMinutes": 23,
+      "maxEarlyMinutes": 16,
+      "priority": 3
+    },
+    {
+      "callsign": "DLH315",
+      "type": 0,
+      "scheduledTime": "2026-06-15T13:32:31Z",
+      "maxDelayMinutes": 13,
+      "maxEarlyMinutes": 12,
+      "priority": 1
+    },
+    {
+      "callsign": "ROT9756",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:05:48Z",
+      "maxDelayMinutes": 16,
+      "maxEarlyMinutes": 13,
+      "priority": 3
+    },
+    {
+      "callsign": "TUI9809",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:41:01Z",
+      "maxDelayMinutes": 24,
+      "maxEarlyMinutes": 20,
+      "priority": 3
+    },
+    {
+      "callsign": "LOT4877",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:50:36Z",
+      "maxDelayMinutes": 27,
+      "maxEarlyMinutes": 6,
+      "priority": 3
+    },
+    {
+      "callsign": "SWR9858",
+      "type": 1,
+      "scheduledTime": "2026-06-15T06:42:59Z",
+      "maxDelayMinutes": 8,
+      "maxEarlyMinutes": 5,
+      "priority": 3
+    },
+    {
+      "callsign": "TUI7283",
+      "type": 1,
+      "scheduledTime": "2026-06-15T08:04:54Z",
+      "maxDelayMinutes": 7,
+      "maxEarlyMinutes": 15,
+      "priority": 3
+    },
+    {
+      "callsign": "VLG7739",
+      "type": 1,
+      "scheduledTime": "2026-06-15T06:36:16Z",
+      "maxDelayMinutes": 24,
+      "maxEarlyMinutes": 13,
+      "priority": 3
+    },
+    {
+      "callsign": "BAW687",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:59:15Z",
+      "maxDelayMinutes": 13,
+      "maxEarlyMinutes": 18,
+      "priority": 3
+    },
+    {
+      "callsign": "EZY5263",
+      "type": 2,
+      "scheduledTime": "2026-06-15T20:15:50Z",
+      "maxDelayMinutes": 23,
+      "maxEarlyMinutes": 10,
+      "priority": 3
+    },
+    {
+      "callsign": "IBE9810",
+      "type": 1,
+      "scheduledTime": "2026-06-15T08:13:47Z",
+      "maxDelayMinutes": 16,
+      "maxEarlyMinutes": 10,
+      "priority": 2
+    },
+    {
+      "callsign": "IBE218",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:43:46Z",
+      "maxDelayMinutes": 22,
+      "maxEarlyMinutes": 6,
+      "priority": 3
+    },
+    {
+      "callsign": "LOT9672",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:31:57Z",
+      "maxDelayMinutes": 26,
+      "maxEarlyMinutes": 5,
+      "priority": 3
+    },
+    {
+      "callsign": "VLG5241",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:37:46Z",
+      "maxDelayMinutes": 17,
+      "maxEarlyMinutes": 17,
+      "priority": 2
+    },
+    {
+      "callsign": "TRA2772",
+      "type": 0,
+      "scheduledTime": "2026-06-15T10:56:30Z",
+      "maxDelayMinutes": 22,
+      "maxEarlyMinutes": 8,
+      "priority": 3
+    },
+    {
+      "callsign": "CSA5522",
+      "type": 1,
+      "scheduledTime": "2026-06-15T10:04:49Z",
+      "maxDelayMinutes": 21,
+      "maxEarlyMinutes": 12,
+      "priority": 3
+    },
+    {
+      "callsign": "CSA801",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:08:28Z",
+      "maxDelayMinutes": 13,
+      "maxEarlyMinutes": 20,
+      "priority": 3
+    },
+    {
+      "callsign": "TAP4544",
+      "type": 1,
+      "scheduledTime": "2026-06-15T06:04:53Z",
+      "maxDelayMinutes": 14,
+      "maxEarlyMinutes": 18,
+      "priority": 3
+    },
+    {
+      "callsign": "SAS1550",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:18:11Z",
+      "maxDelayMinutes": 18,
+      "maxEarlyMinutes": 9,
+      "priority": 1
+    },
+    {
+      "callsign": "TAP5064",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:03:07Z",
+      "maxDelayMinutes": 30,
+      "maxEarlyMinutes": 18,
+      "priority": 3
+    },
+    {
+      "callsign": "SAS8963",
+      "type": 0,
+      "scheduledTime": "2026-06-15T13:40:18Z",
+      "maxDelayMinutes": 17,
+      "maxEarlyMinutes": 9,
+      "priority": 2
+    },
+    {
+      "callsign": "VLG428",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:40:53Z",
+      "maxDelayMinutes": 25,
+      "maxEarlyMinutes": 9,
+      "priority": 1
+    },
+    {
+      "callsign": "KLM7230",
+      "type": 1,
+      "scheduledTime": "2026-06-15T06:45:58Z",
+      "maxDelayMinutes": 8,
+      "maxEarlyMinutes": 15,
+      "priority": 3
+    },
+    {
+      "callsign": "AFR5179",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:58:30Z",
+      "maxDelayMinutes": 30,
+      "maxEarlyMinutes": 13,
+      "priority": 2
+    },
+    {
+      "callsign": "EZY9496",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:33:58Z",
+      "maxDelayMinutes": 7,
+      "maxEarlyMinutes": 20,
+      "priority": 3
+    }
+  ],
+  "weatherIntervals": [
+    {
+      "startTime": "2026-06-15T07:22:27Z",
+      "endTime": "2026-06-15T08:51:27Z",
+      "weatherType": 0
+    }
+  ],
+  "randomEvents": [
+    {
+      "name": "State Aircraft Arrival",
+      "description": "Head of state flight requires full security sweep.",
+      "startTime": "2026-06-15T15:59:38Z",
+      "endTime": "2026-06-15T17:01:38Z",
+      "impactPercent": 35
+    },
+    {
+      "name": "VIP Departure Hold",
+      "description": "VIP escort causing departure delays.",
+      "startTime": "2026-06-15T06:11:34Z",
+      "endTime": "2026-06-15T07:40:34Z",
+      "impactPercent": 34
+    }
+  ]
+}

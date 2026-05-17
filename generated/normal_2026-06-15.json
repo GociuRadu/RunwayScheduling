@@ -1,0 +1,444 @@
+{
+  "algorithm": "greedy",
+  "scenarioConfig": {
+    "name": "Normal - 2026-06-15",
+    "startTime": "2026-06-15T05:00:00Z",
+    "endTime": "2026-06-15T21:00:00Z",
+    "baseSeparationSeconds": 120
+  },
+  "runways": [
+    {
+      "name": "08L",
+      "runwayType": 0,
+      "isActive": true
+    },
+    {
+      "name": "08R",
+      "runwayType": 1,
+      "isActive": true
+    }
+  ],
+  "flights": [
+    {
+      "callsign": "RYR8457",
+      "type": 0,
+      "scheduledTime": "2026-06-15T16:01:31Z",
+      "maxDelayMinutes": 42,
+      "maxEarlyMinutes": 0,
+      "priority": 1
+    },
+    {
+      "callsign": "SAS5252",
+      "type": 2,
+      "scheduledTime": "2026-06-15T07:58:03Z",
+      "maxDelayMinutes": 35,
+      "maxEarlyMinutes": 1,
+      "priority": 1
+    },
+    {
+      "callsign": "TUI9372",
+      "type": 1,
+      "scheduledTime": "2026-06-15T06:12:50Z",
+      "maxDelayMinutes": 38,
+      "maxEarlyMinutes": 9,
+      "priority": 2
+    },
+    {
+      "callsign": "EZY4466",
+      "type": 1,
+      "scheduledTime": "2026-06-15T20:14:59Z",
+      "maxDelayMinutes": 39,
+      "maxEarlyMinutes": 17,
+      "priority": 1
+    },
+    {
+      "callsign": "AFR9425",
+      "type": 0,
+      "scheduledTime": "2026-06-15T18:54:14Z",
+      "maxDelayMinutes": 19,
+      "maxEarlyMinutes": 8,
+      "priority": 1
+    },
+    {
+      "callsign": "TUI3684",
+      "type": 0,
+      "scheduledTime": "2026-06-15T10:16:31Z",
+      "maxDelayMinutes": 16,
+      "maxEarlyMinutes": 13,
+      "priority": 2
+    },
+    {
+      "callsign": "TUI9995",
+      "type": 1,
+      "scheduledTime": "2026-06-15T18:01:05Z",
+      "maxDelayMinutes": 46,
+      "maxEarlyMinutes": 4,
+      "priority": 2
+    },
+    {
+      "callsign": "BAW7228",
+      "type": 2,
+      "scheduledTime": "2026-06-15T11:53:10Z",
+      "maxDelayMinutes": 49,
+      "maxEarlyMinutes": 9,
+      "priority": 2
+    },
+    {
+      "callsign": "SAS6075",
+      "type": 0,
+      "scheduledTime": "2026-06-15T08:38:16Z",
+      "maxDelayMinutes": 47,
+      "maxEarlyMinutes": 13,
+      "priority": 1
+    },
+    {
+      "callsign": "BAW5354",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:19:59Z",
+      "maxDelayMinutes": 39,
+      "maxEarlyMinutes": 4,
+      "priority": 2
+    },
+    {
+      "callsign": "TUI9785",
+      "type": 0,
+      "scheduledTime": "2026-06-15T10:46:43Z",
+      "maxDelayMinutes": 16,
+      "maxEarlyMinutes": 0,
+      "priority": 1
+    },
+    {
+      "callsign": "UAE250",
+      "type": 0,
+      "scheduledTime": "2026-06-15T11:56:22Z",
+      "maxDelayMinutes": 58,
+      "maxEarlyMinutes": 6,
+      "priority": 3
+    },
+    {
+      "callsign": "CSA7650",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:50:06Z",
+      "maxDelayMinutes": 47,
+      "maxEarlyMinutes": 1,
+      "priority": 1
+    },
+    {
+      "callsign": "IBE396",
+      "type": 1,
+      "scheduledTime": "2026-06-15T06:29:29Z",
+      "maxDelayMinutes": 51,
+      "maxEarlyMinutes": 4,
+      "priority": 1
+    },
+    {
+      "callsign": "SWR1722",
+      "type": 1,
+      "scheduledTime": "2026-06-15T06:58:13Z",
+      "maxDelayMinutes": 52,
+      "maxEarlyMinutes": 6,
+      "priority": 1
+    },
+    {
+      "callsign": "AFR238",
+      "type": 1,
+      "scheduledTime": "2026-06-15T20:29:00Z",
+      "maxDelayMinutes": 17,
+      "maxEarlyMinutes": 18,
+      "priority": 2
+    },
+    {
+      "callsign": "DLH1463",
+      "type": 0,
+      "scheduledTime": "2026-06-15T13:14:47Z",
+      "maxDelayMinutes": 15,
+      "maxEarlyMinutes": 8,
+      "priority": 1
+    },
+    {
+      "callsign": "FIN7837",
+      "type": 0,
+      "scheduledTime": "2026-06-15T19:21:29Z",
+      "maxDelayMinutes": 28,
+      "maxEarlyMinutes": 3,
+      "priority": 1
+    },
+    {
+      "callsign": "SAS8378",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:09:25Z",
+      "maxDelayMinutes": 45,
+      "maxEarlyMinutes": 7,
+      "priority": 2
+    },
+    {
+      "callsign": "UAE8038",
+      "type": 1,
+      "scheduledTime": "2026-06-15T14:41:39Z",
+      "maxDelayMinutes": 30,
+      "maxEarlyMinutes": 2,
+      "priority": 2
+    },
+    {
+      "callsign": "CSA6997",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:03:07Z",
+      "maxDelayMinutes": 25,
+      "maxEarlyMinutes": 7,
+      "priority": 1
+    },
+    {
+      "callsign": "AUA6888",
+      "type": 0,
+      "scheduledTime": "2026-06-15T11:40:59Z",
+      "maxDelayMinutes": 50,
+      "maxEarlyMinutes": 11,
+      "priority": 1
+    },
+    {
+      "callsign": "UAE3714",
+      "type": 1,
+      "scheduledTime": "2026-06-15T16:28:58Z",
+      "maxDelayMinutes": 59,
+      "maxEarlyMinutes": 16,
+      "priority": 1
+    },
+    {
+      "callsign": "SWR6889",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:27:02Z",
+      "maxDelayMinutes": 49,
+      "maxEarlyMinutes": 19,
+      "priority": 2
+    },
+    {
+      "callsign": "IBE9874",
+      "type": 2,
+      "scheduledTime": "2026-06-15T06:46:50Z",
+      "maxDelayMinutes": 35,
+      "maxEarlyMinutes": 12,
+      "priority": 1
+    },
+    {
+      "callsign": "TAP602",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:37:14Z",
+      "maxDelayMinutes": 35,
+      "maxEarlyMinutes": 20,
+      "priority": 1
+    },
+    {
+      "callsign": "UAE3903",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:33:53Z",
+      "maxDelayMinutes": 51,
+      "maxEarlyMinutes": 11,
+      "priority": 1
+    },
+    {
+      "callsign": "BAW487",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:33:45Z",
+      "maxDelayMinutes": 41,
+      "maxEarlyMinutes": 6,
+      "priority": 1
+    },
+    {
+      "callsign": "AUA7190",
+      "type": 0,
+      "scheduledTime": "2026-06-15T18:57:56Z",
+      "maxDelayMinutes": 15,
+      "maxEarlyMinutes": 14,
+      "priority": 1
+    },
+    {
+      "callsign": "TAP7015",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:51:50Z",
+      "maxDelayMinutes": 34,
+      "maxEarlyMinutes": 9,
+      "priority": 2
+    },
+    {
+      "callsign": "AUA2499",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:43:45Z",
+      "maxDelayMinutes": 43,
+      "maxEarlyMinutes": 16,
+      "priority": 2
+    },
+    {
+      "callsign": "ROT8744",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:59:34Z",
+      "maxDelayMinutes": 46,
+      "maxEarlyMinutes": 17,
+      "priority": 1
+    },
+    {
+      "callsign": "KLM4571",
+      "type": 0,
+      "scheduledTime": "2026-06-15T10:21:39Z",
+      "maxDelayMinutes": 44,
+      "maxEarlyMinutes": 10,
+      "priority": 1
+    },
+    {
+      "callsign": "RYR9078",
+      "type": 0,
+      "scheduledTime": "2026-06-15T18:16:41Z",
+      "maxDelayMinutes": 15,
+      "maxEarlyMinutes": 12,
+      "priority": 2
+    },
+    {
+      "callsign": "ROT7789",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:47:53Z",
+      "maxDelayMinutes": 52,
+      "maxEarlyMinutes": 18,
+      "priority": 1
+    },
+    {
+      "callsign": "VLG7606",
+      "type": 0,
+      "scheduledTime": "2026-06-15T19:38:48Z",
+      "maxDelayMinutes": 29,
+      "maxEarlyMinutes": 20,
+      "priority": 1
+    },
+    {
+      "callsign": "BAW7600",
+      "type": 1,
+      "scheduledTime": "2026-06-15T06:57:40Z",
+      "maxDelayMinutes": 17,
+      "maxEarlyMinutes": 9,
+      "priority": 1
+    },
+    {
+      "callsign": "VLG1979",
+      "type": 1,
+      "scheduledTime": "2026-06-15T19:14:02Z",
+      "maxDelayMinutes": 39,
+      "maxEarlyMinutes": 2,
+      "priority": 2
+    },
+    {
+      "callsign": "TAP1868",
+      "type": 0,
+      "scheduledTime": "2026-06-15T14:29:00Z",
+      "maxDelayMinutes": 40,
+      "maxEarlyMinutes": 11,
+      "priority": 1
+    },
+    {
+      "callsign": "ROT1602",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:10:55Z",
+      "maxDelayMinutes": 27,
+      "maxEarlyMinutes": 7,
+      "priority": 2
+    },
+    {
+      "callsign": "BAW3124",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:18:58Z",
+      "maxDelayMinutes": 25,
+      "maxEarlyMinutes": 5,
+      "priority": 1
+    },
+    {
+      "callsign": "DLH5184",
+      "type": 1,
+      "scheduledTime": "2026-06-15T10:25:21Z",
+      "maxDelayMinutes": 25,
+      "maxEarlyMinutes": 13,
+      "priority": 2
+    },
+    {
+      "callsign": "AUA4950",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:04:41Z",
+      "maxDelayMinutes": 35,
+      "maxEarlyMinutes": 19,
+      "priority": 3
+    },
+    {
+      "callsign": "TRA8388",
+      "type": 1,
+      "scheduledTime": "2026-06-15T11:42:04Z",
+      "maxDelayMinutes": 36,
+      "maxEarlyMinutes": 10,
+      "priority": 1
+    },
+    {
+      "callsign": "KLM2862",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:03:21Z",
+      "maxDelayMinutes": 27,
+      "maxEarlyMinutes": 17,
+      "priority": 3
+    },
+    {
+      "callsign": "TAP2217",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:33:17Z",
+      "maxDelayMinutes": 28,
+      "maxEarlyMinutes": 13,
+      "priority": 3
+    },
+    {
+      "callsign": "UAE1738",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:20:56Z",
+      "maxDelayMinutes": 22,
+      "maxEarlyMinutes": 10,
+      "priority": 3
+    },
+    {
+      "callsign": "IBE2159",
+      "type": 1,
+      "scheduledTime": "2026-06-15T20:56:19Z",
+      "maxDelayMinutes": 18,
+      "maxEarlyMinutes": 9,
+      "priority": 1
+    },
+    {
+      "callsign": "DLH2279",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:26:58Z",
+      "maxDelayMinutes": 28,
+      "maxEarlyMinutes": 8,
+      "priority": 2
+    },
+    {
+      "callsign": "CSA3061",
+      "type": 0,
+      "scheduledTime": "2026-06-15T19:32:06Z",
+      "maxDelayMinutes": 50,
+      "maxEarlyMinutes": 8,
+      "priority": 1
+    }
+  ],
+  "weatherIntervals": [
+    {
+      "startTime": "2026-06-15T06:08:55Z",
+      "endTime": "2026-06-15T08:05:55Z",
+      "weatherType": 0
+    },
+    {
+      "startTime": "2026-06-15T18:51:10Z",
+      "endTime": "2026-06-15T20:14:10Z",
+      "weatherType": 0
+    }
+  ],
+  "randomEvents": [
+    {
+      "name": "Runway Maintenance",
+      "description": "Scheduled maintenance requires partial runway closure.",
+      "startTime": "2026-06-15T18:54:14Z",
+      "endTime": "2026-06-15T20:21:14Z",
+      "impactPercent": 12
+    }
+  ]
+}

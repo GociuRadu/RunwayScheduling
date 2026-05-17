@@ -1,0 +1,345 @@
+{
+  "algorithm": "greedy",
+  "scenarioConfig": {
+    "name": "Emergency - 2026-06-15",
+    "startTime": "2026-06-15T05:00:00Z",
+    "endTime": "2026-06-15T21:00:00Z",
+    "baseSeparationSeconds": 150
+  },
+  "runways": [
+    {
+      "name": "08L",
+      "runwayType": 2,
+      "isActive": true
+    },
+    {
+      "name": "08R",
+      "runwayType": 0,
+      "isActive": true
+    }
+  ],
+  "flights": [
+    {
+      "callsign": "EZY8233",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:25:46Z",
+      "maxDelayMinutes": 44,
+      "maxEarlyMinutes": 4,
+      "priority": 1
+    },
+    {
+      "callsign": "EZY6201",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:48:36Z",
+      "maxDelayMinutes": 19,
+      "maxEarlyMinutes": 4,
+      "priority": 3
+    },
+    {
+      "callsign": "CSA7724",
+      "type": 2,
+      "scheduledTime": "2026-06-15T07:42:42Z",
+      "maxDelayMinutes": 45,
+      "maxEarlyMinutes": 5,
+      "priority": 1
+    },
+    {
+      "callsign": "VLG5672",
+      "type": 0,
+      "scheduledTime": "2026-06-15T15:33:24Z",
+      "maxDelayMinutes": 44,
+      "maxEarlyMinutes": 0,
+      "priority": 2
+    },
+    {
+      "callsign": "TAP4983",
+      "type": 1,
+      "scheduledTime": "2026-06-15T17:40:25Z",
+      "maxDelayMinutes": 31,
+      "maxEarlyMinutes": 4,
+      "priority": 1
+    },
+    {
+      "callsign": "CSA6599",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:15:05Z",
+      "maxDelayMinutes": 17,
+      "maxEarlyMinutes": 4,
+      "priority": 1
+    },
+    {
+      "callsign": "AUA3365",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:53:37Z",
+      "maxDelayMinutes": 36,
+      "maxEarlyMinutes": 0,
+      "priority": 2
+    },
+    {
+      "callsign": "AUA7688",
+      "type": 1,
+      "scheduledTime": "2026-06-15T18:11:40Z",
+      "maxDelayMinutes": 25,
+      "maxEarlyMinutes": 1,
+      "priority": 1
+    },
+    {
+      "callsign": "ROT4677",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:45:14Z",
+      "maxDelayMinutes": 37,
+      "maxEarlyMinutes": 3,
+      "priority": 2
+    },
+    {
+      "callsign": "SWR6333",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:48:07Z",
+      "maxDelayMinutes": 24,
+      "maxEarlyMinutes": 1,
+      "priority": 1
+    },
+    {
+      "callsign": "SAS7009",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:45:37Z",
+      "maxDelayMinutes": 19,
+      "maxEarlyMinutes": 4,
+      "priority": 2
+    },
+    {
+      "callsign": "LOT1068",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:00:57Z",
+      "maxDelayMinutes": 55,
+      "maxEarlyMinutes": 5,
+      "priority": 1
+    },
+    {
+      "callsign": "FIN4762",
+      "type": 0,
+      "scheduledTime": "2026-06-15T11:19:01Z",
+      "maxDelayMinutes": 16,
+      "maxEarlyMinutes": 3,
+      "priority": 2
+    },
+    {
+      "callsign": "TUI3045",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:36:51Z",
+      "maxDelayMinutes": 34,
+      "maxEarlyMinutes": 4,
+      "priority": 1
+    },
+    {
+      "callsign": "SAS7734",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:39:21Z",
+      "maxDelayMinutes": 21,
+      "maxEarlyMinutes": 5,
+      "priority": 1
+    },
+    {
+      "callsign": "VLG2571",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:26:19Z",
+      "maxDelayMinutes": 21,
+      "maxEarlyMinutes": 2,
+      "priority": 2
+    },
+    {
+      "callsign": "DLH3520",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:44:02Z",
+      "maxDelayMinutes": 18,
+      "maxEarlyMinutes": 0,
+      "priority": 3
+    },
+    {
+      "callsign": "TUI8825",
+      "type": 1,
+      "scheduledTime": "2026-06-15T07:53:47Z",
+      "maxDelayMinutes": 29,
+      "maxEarlyMinutes": 4,
+      "priority": 2
+    },
+    {
+      "callsign": "LOT3291",
+      "type": 2,
+      "scheduledTime": "2026-06-15T06:08:46Z",
+      "maxDelayMinutes": 28,
+      "maxEarlyMinutes": 2,
+      "priority": 2
+    },
+    {
+      "callsign": "AFR8545",
+      "type": 0,
+      "scheduledTime": "2026-06-15T18:28:02Z",
+      "maxDelayMinutes": 18,
+      "maxEarlyMinutes": 3,
+      "priority": 2
+    },
+    {
+      "callsign": "AFR8958",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:21:03Z",
+      "maxDelayMinutes": 50,
+      "maxEarlyMinutes": 5,
+      "priority": 1
+    },
+    {
+      "callsign": "SWR6074",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:06:58Z",
+      "maxDelayMinutes": 29,
+      "maxEarlyMinutes": 3,
+      "priority": 1
+    },
+    {
+      "callsign": "SAS1065",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:07:36Z",
+      "maxDelayMinutes": 40,
+      "maxEarlyMinutes": 3,
+      "priority": 1
+    },
+    {
+      "callsign": "UAE2246",
+      "type": 2,
+      "scheduledTime": "2026-06-15T05:54:34Z",
+      "maxDelayMinutes": 56,
+      "maxEarlyMinutes": 0,
+      "priority": 2
+    },
+    {
+      "callsign": "UAE6528",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:11:29Z",
+      "maxDelayMinutes": 55,
+      "maxEarlyMinutes": 3,
+      "priority": 3
+    },
+    {
+      "callsign": "EZY6264",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:17:13Z",
+      "maxDelayMinutes": 37,
+      "maxEarlyMinutes": 4,
+      "priority": 1
+    },
+    {
+      "callsign": "KLM7459",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:37:23Z",
+      "maxDelayMinutes": 42,
+      "maxEarlyMinutes": 4,
+      "priority": 1
+    },
+    {
+      "callsign": "SAS1164",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:47:53Z",
+      "maxDelayMinutes": 34,
+      "maxEarlyMinutes": 5,
+      "priority": 2
+    },
+    {
+      "callsign": "KLM8559",
+      "type": 1,
+      "scheduledTime": "2026-06-15T05:36:03Z",
+      "maxDelayMinutes": 38,
+      "maxEarlyMinutes": 1,
+      "priority": 2
+    },
+    {
+      "callsign": "TRA131",
+      "type": 1,
+      "scheduledTime": "2026-06-15T19:33:25Z",
+      "maxDelayMinutes": 56,
+      "maxEarlyMinutes": 0,
+      "priority": 1
+    },
+    {
+      "callsign": "EZY714",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:28:32Z",
+      "maxDelayMinutes": 19,
+      "maxEarlyMinutes": 1,
+      "priority": 3
+    },
+    {
+      "callsign": "FIN4817",
+      "type": 0,
+      "scheduledTime": "2026-06-15T07:19:47Z",
+      "maxDelayMinutes": 41,
+      "maxEarlyMinutes": 1,
+      "priority": 1
+    },
+    {
+      "callsign": "EZY4022",
+      "type": 1,
+      "scheduledTime": "2026-06-15T09:07:39Z",
+      "maxDelayMinutes": 27,
+      "maxEarlyMinutes": 4,
+      "priority": 2
+    },
+    {
+      "callsign": "CSA3087",
+      "type": 0,
+      "scheduledTime": "2026-06-15T06:54:24Z",
+      "maxDelayMinutes": 49,
+      "maxEarlyMinutes": 2,
+      "priority": 1
+    },
+    {
+      "callsign": "AFR8891",
+      "type": 0,
+      "scheduledTime": "2026-06-15T05:24:49Z",
+      "maxDelayMinutes": 54,
+      "maxEarlyMinutes": 0,
+      "priority": 3
+    }
+  ],
+  "weatherIntervals": [
+    {
+      "startTime": "2026-06-15T12:11:15Z",
+      "endTime": "2026-06-15T12:50:15Z",
+      "weatherType": 4
+    },
+    {
+      "startTime": "2026-06-15T19:57:03Z",
+      "endTime": "2026-06-15T20:26:03Z",
+      "weatherType": 2
+    }
+  ],
+  "randomEvents": [
+    {
+      "name": "Medical Emergency",
+      "description": "Passenger medical emergency; priority landing.",
+      "startTime": "2026-06-15T19:57:03Z",
+      "endTime": "2026-06-15T20:21:03Z",
+      "impactPercent": 47
+    },
+    {
+      "name": "Bird Strike",
+      "description": "Multiple bird strikes reported; inspection required.",
+      "startTime": "2026-06-15T11:39:25Z",
+      "endTime": "2026-06-15T12:06:25Z",
+      "impactPercent": 58
+    },
+    {
+      "name": "Fuel Leak Suspected",
+      "description": "Aircraft reports possible fuel leak; emergency services activated.",
+      "startTime": "2026-06-15T14:14:15Z",
+      "endTime": "2026-06-15T14:36:15Z",
+      "impactPercent": 66
+    },
+    {
+      "name": "Emergency Landing",
+      "description": "Aircraft declared MAYDAY; all traffic diverted.",
+      "startTime": "2026-06-15T06:33:52Z",
+      "endTime": "2026-06-15T06:52:52Z",
+      "impactPercent": 83
+    }
+  ]
+}
